@@ -7,4 +7,8 @@ router.post("/create", ProductDetailsCategoryControllers.createProductDetailsCat
 
 router.patch("/update/:id", ProductDetailsCategoryControllers.updateProductDetailsCategory);
 
+router.get("/single/:id", ProductDetailsCategoryControllers.getSingleProductDetailsCategory);
+
+router.get("/get-all", ProductDetailsCategoryControllers.getAllProductDetailsCategory);
+
 export const ProductDetailsCategoryRoutes = router;

@@ -30,7 +30,35 @@ const updateProductDetailsCategory = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleProductDetailsCategory = catchAsync(async (req, res) => {
+  const id = req.params.id;
+
+  const result = await ProductDetailsCategoryServices.getSingleProductDetailsCategoryFromDB(id);
+
+  sendResponse(res, {
+    data: result,
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "succesfull retrived product details category",
+  });
+});
+
+const getAllProductDetailsCategory = catchAsync(async (req, res) => {
+  const id = req.params.id;
+
+  const result = await ProductDetailsCategoryServices.getAllProductDetailsCategoryFromDB();
+
+  sendResponse(res, {
+    data: result,
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "succesfull retrived all product details categories",
+  });
+});
+
 export const ProductDetailsCategoryControllers = {
   createProductDetailsCategory,
   updateProductDetailsCategory,
+  getSingleProductDetailsCategory,
+  getAllProductDetailsCategory,
 };

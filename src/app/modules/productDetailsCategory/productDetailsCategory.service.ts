@@ -10,7 +10,7 @@ const createProductDetailsCategoryIntoDB = async (payload: TProductDetailsCatego
 };
 
 const updateProductDetailsCategoryIntoDB = async (id: string, payload: Partial<TProductDetailsCategory>) => {
-  const exist = await ProductDetailsCategory.findOne({_id: new ObjectId(id)});
+  const exist = await ProductDetailsCategory.findOne({_id: id});
 
   console.log(exist);
 
@@ -23,7 +23,19 @@ const updateProductDetailsCategoryIntoDB = async (id: string, payload: Partial<T
   return result;
 };
 
+const getSingleProductDetailsCategoryFromDB = async (id: string) => {
+  const result = await ProductDetailsCategory.findOne({_id: id});
+  return result;
+};
+
+const getAllProductDetailsCategoryFromDB = async () => {
+  const result = await ProductDetailsCategory.find();
+  return result;
+};
+
 export const ProductDetailsCategoryServices = {
   createProductDetailsCategoryIntoDB,
   updateProductDetailsCategoryIntoDB,
+  getSingleProductDetailsCategoryFromDB,
+  getAllProductDetailsCategoryFromDB,
 };
