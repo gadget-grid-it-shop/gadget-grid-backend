@@ -5,4 +5,6 @@ const router = Router();
 
 router.post("/create", ProductDetailsCategoryControllers.createProductDetailsCategory);
 
+router.patch("/update/:id", ProductDetailsCategoryControllers.updateProductDetailsCategory);
+
 export const ProductDetailsCategoryRoutes = router;
