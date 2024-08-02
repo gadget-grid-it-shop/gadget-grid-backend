@@ -6,7 +6,7 @@ const main = () => {
   try {
     mongoose.connect(config.database_url as string);
 
-    app.listen(4001, () => {
+    app.listen(config.port, () => {
       console.log(`IT shop server running on port ${config.port}`);
     });
   } catch (err) {
