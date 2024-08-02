@@ -33,9 +33,15 @@ const getAllProductDetailsCategoryFromDB = async () => {
   return result;
 };
 
+const deleteProductDetailsCategoryFromDB = async (id: string) => {
+  const result = await ProductDetailsCategory.findByIdAndDelete(id)
+  return result
+}
+
 export const ProductDetailsCategoryServices = {
   createProductDetailsCategoryIntoDB,
   updateProductDetailsCategoryIntoDB,
   getSingleProductDetailsCategoryFromDB,
   getAllProductDetailsCategoryFromDB,
+  deleteProductDetailsCategoryFromDB
 };

@@ -56,9 +56,22 @@ const getAllProductDetailsCategory = catchAsync(async (req, res) => {
   });
 });
 
+const deleteProductDetailsCategory = catchAsync(async (req, res) => {
+  const id = req.params.id
+  const result = await ProductDetailsCategoryServices.deleteProductDetailsCategoryFromDB(id)
+
+  sendResponse(res, {
+    data: result,
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "succesfull deleted product details category",
+  });
+})
+
 export const ProductDetailsCategoryControllers = {
   createProductDetailsCategory,
   updateProductDetailsCategory,
   getSingleProductDetailsCategory,
   getAllProductDetailsCategory,
+  deleteProductDetailsCategory
 };

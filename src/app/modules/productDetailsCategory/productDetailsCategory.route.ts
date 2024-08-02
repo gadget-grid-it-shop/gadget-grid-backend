@@ -21,4 +21,6 @@ router.get("/single/:id", ProductDetailsCategoryControllers.getSingleProductDeta
 
 router.get("/get-all", ProductDetailsCategoryControllers.getAllProductDetailsCategory);
 
+router.delete("/delete/:id", ProductDetailsCategoryControllers.deleteProductDetailsCategory);
+
 export const ProductDetailsCategoryRoutes = router;
