@@ -6,6 +6,7 @@ const ProductDetailsCategorySchema = new Schema<TProductDetailsCategory>({
     type: String,
     required: true,
     unique: true,
+    lowercase:true
   },
   fields: {
     type: [String],
