@@ -25,6 +25,17 @@ const getAllCategories = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleCategories = catchAsync(async (req, res) => {
+  const result = await CategoryServices.getSingleCategoryFromDB(req.params.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retirved category",
+    data: result,
+  });
+});
+
 const deleteCategory = catchAsync(async (req, res) => {
 
   const result = await CategoryServices.deleteCategoryFromDB(req.params.id)
@@ -57,6 +68,7 @@ const updateCategory = catchAsync(async (req, res) => {
 export const CategoryControllers = {
   createCategory,
   getAllCategories,
+  getSingleCategories,
   deleteCategory,
   updateCategory
 };

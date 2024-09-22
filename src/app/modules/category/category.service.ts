@@ -59,9 +59,26 @@ const updateCategoryIntoDB = async (id: string, payload: TUpdateCategory) => {
 
 }
 
+const getSingleCategoryFromDB = async (id: string) => {
+
+  const result = await Category.findById(id).populate([
+    {
+      path: 'product_details_categories',
+      select: "-__v",
+    }
+  ])
+
+  if (result === null) {
+    throw new Error('Categoy does not exist')
+  }
+
+  return result
+}
+
 export const CategoryServices = {
   createCategoryIntoDB,
   getAllCategoriesFromDB,
   deleteCategoryFromDB,
-  updateCategoryIntoDB
+  updateCategoryIntoDB,
+  getSingleCategoryFromDB
 };

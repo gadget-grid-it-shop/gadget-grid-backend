@@ -9,6 +9,8 @@ router.post("/create", validateRequest(CategoryValidations.createCategoryValidat
 
 router.get("/get-all", CategoryControllers.getAllCategories);
 
+router.get('/single/:id', CategoryControllers.getSingleCategories)
+
 router.delete('/:id', CategoryControllers.deleteCategory);
 
 router.patch('/:id', validateRequest(CategoryValidations.updateCategoryValidationSchema), CategoryControllers.updateCategory)
