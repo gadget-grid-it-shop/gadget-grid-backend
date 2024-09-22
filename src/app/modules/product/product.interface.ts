@@ -21,9 +21,10 @@ export interface TProduct {
     id: string;
     name: string;
     price: number;
+    special_price: number;
     discount?: {
-        type: string,
-        value: 'flat' | 'percent'
+        type: 'flat' | 'percent',
+        value: number
     };
     sku: string;
     brand: string;

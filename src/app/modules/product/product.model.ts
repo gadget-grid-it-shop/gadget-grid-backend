@@ -3,7 +3,7 @@ import { TMeta, TProduct, TProductCategory, TReview } from "./product.interface"
 
 const ProductCategorySchema = new Schema<TProductCategory>({
     main: { type: Boolean, required: [true, 'Main category flag is required'], default: false },
-    id: { type: String, required: [true, 'Category ID is required'] }
+    id: { type: String, required: [true, 'Category ID is required'], }
 });
 
 // const ReviewSchema = new Schema<TReview>({
@@ -17,20 +17,26 @@ const MetaSchema = new Schema<TMeta>({
     image: { type: String, default: '' }
 });
 
+const DiscountSchema = new Schema({
+    type: {
+        type: String, // The type of discount (e.g., 'flat' or 'percent')
+        enum: ['flat', 'percent'], // The allowed values for the discount type
+        default: 'flat' // Default value
+    },
+    value: {
+        type: Number, // The numeric value for the discount
+        default: 0 // Default discount value
+    },
+})
+
 const ProductSchema = new Schema<TProduct>({
     id: { type: String, required: [true, 'Product ID is required'] },
     name: { type: String, required: [true, 'Product title is required'] },
     price: { type: Number, required: [true, 'Product price is required'] },
+    special_price: { type: Number },
     discount: {
-        type: {
-            type: String,
-            enum: ['flat', 'percent'],
-            default: "flat"
-        },
-        value: {
-            type: Number,
-            default: 0
-        }
+        type: DiscountSchema,
+        required: [true, 'Discount is required'] // Validation for discount
     },
     sku: { type: String, required: [true, 'Product SKU is required'], unique: true },
     brand: { type: String, required: [true, 'Product brand is required'] },

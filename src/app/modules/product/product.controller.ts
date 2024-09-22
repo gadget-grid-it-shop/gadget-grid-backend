@@ -14,6 +14,18 @@ const createProduct = catchAsync(async (req, res) => {
     })
 })
 
+const getAllProduct = catchAsync(async (req, res) => {
+    const result = await ProductServices.getAllProductsFromDB()
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Successfully Created Product",
+        data: result
+    })
+})
+
 export const ProductControllers = {
-    createProduct
+    createProduct,
+    getAllProduct
 }
