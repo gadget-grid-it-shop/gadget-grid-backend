@@ -20,13 +20,13 @@ const MetaSchema = z.object({
 // Define the main product schema
 export const createProductValidationSchema = z.object({
     id: z.string({ required_error: "Product ID is required" }),
-    title: z.string({ required_error: "Product title is required" }),
-    product_price: z.number({ required_error: "Product price is required" }),
-    discount: z.array(z.object({
+    name: z.string({ required_error: "Product title is required" }),
+    price: z.number({ required_error: "Product price is required" }),
+    discount: z.object({
         type: z.string().optional(),
         value: z.number().optional()
-    })).optional(),
-    product_SKU: z.string({ required_error: "Product SKU is required" }),
+    }).optional(),
+    sku: z.string({ required_error: "Product SKU is required" }),
     brand: z.string({ required_error: "Product brand is required" }),
     model: z.string().optional(),
     warranty: z.string({ required_error: "Product warranty is required" }),
@@ -39,10 +39,20 @@ export const createProductValidationSchema = z.object({
     gallery: z.array(z.string()).optional(),
     thumbnail: z.string({ required_error: "Product thumbnail is required" }),
     slug: z.string({ required_error: "Product slug is required" }),
-    attributes: z.record(z.string()).optional(),
+    attributes: z.array(z.object(
+        {
+            name: z.string(),
+            fields: z.record(z.string())
+
+        })),
     meta: MetaSchema.optional(),
     tags: z.array(z.string()).optional(),
     isFeatured: z.boolean().optional(),
     sales: z.number().optional(),
     createdBy: z.string({ required_error: "Creator information is required" })
 });
+
+
+export const ProductValidations = {
+    createProductValidationSchema
+}

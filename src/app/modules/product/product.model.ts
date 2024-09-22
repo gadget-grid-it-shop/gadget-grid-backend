@@ -48,7 +48,12 @@ const ProductSchema = new Schema<TProduct>({
     gallery: [{ type: String, default: "" }],
     thumbnail: { type: String, required: [true, 'Product thumbnail is required'] },
     slug: { type: String, required: [true, 'Product slug is required'] },
-    attributes: { type: Map, of: String },
+    attributes: [
+        {
+            name: { type: String },
+            fields: { type: Map, of: String }
+        }
+    ],
     meta: {
         type: MetaSchema,
         required: [true, 'Meta information is required']
