@@ -1,7 +1,7 @@
-import {ObjectId} from "mongodb";
-import {TProductDetailsCategory} from "./productDetailsCategory.interface";
-import {ProductDetailsCategory} from "./productDetailsCategory.model";
-import {Types} from "mongoose";
+import { ObjectId } from "mongodb";
+import { TProductDetailsCategory } from "./productDetailsCategory.interface";
+import { ProductDetailsCategory } from "./productDetailsCategory.model";
+import { Types } from "mongoose";
 
 const createProductDetailsCategoryIntoDB = async (payload: TProductDetailsCategory) => {
   const result = await ProductDetailsCategory.create(payload);
@@ -10,21 +10,20 @@ const createProductDetailsCategoryIntoDB = async (payload: TProductDetailsCatego
 };
 
 const updateProductDetailsCategoryIntoDB = async (id: string, payload: Partial<TProductDetailsCategory>) => {
-  const exist = await ProductDetailsCategory.findOne({_id: id});
+  const exist = await ProductDetailsCategory.findOne({ _id: id });
 
-  console.log(exist);
 
   if (!exist) {
     throw new Error("Product details category not found");
   }
 
-  const result = await ProductDetailsCategory.findByIdAndUpdate(id, payload, {new: true});
+  const result = await ProductDetailsCategory.findByIdAndUpdate(id, payload, { new: true });
 
   return result;
 };
 
 const getSingleProductDetailsCategoryFromDB = async (id: string) => {
-  const result = await ProductDetailsCategory.findOne({_id: id});
+  const result = await ProductDetailsCategory.findOne({ _id: id });
   return result;
 };
 

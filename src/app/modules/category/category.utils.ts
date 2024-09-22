@@ -5,7 +5,6 @@ import { TCategory } from "./category.interface";
 export const generateCategoryTree = (categories: FilterQuery<TCategory[]>, parent_id = null) => {
   let categoryTree: TCategory[] = [];
 
-  console.log(categories)
 
   let filterCategories;
 
@@ -22,6 +21,7 @@ export const generateCategoryTree = (categories: FilterQuery<TCategory[]>, paren
       parent_id: category.parent_id,
       product_details_categories: category.product_details_categories,
       subCategories: generateCategoryTree(categories, category.id),
+      isDeleted: false
     });
   }
 

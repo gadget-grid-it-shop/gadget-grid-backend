@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import app from "./app";
 import config from "./app/config";
 
-const main = () => {
+const main = async () => {
   try {
-    mongoose.connect(config.database_url as string);
+    await mongoose.connect(config.database_url as string);
 
     app.listen(config.port, () => {
       console.log(`IT shop server running on port ${config.port}`);

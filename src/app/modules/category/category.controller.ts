@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import {CategoryServices} from "./category.service";
+import { CategoryServices } from "./category.service";
 
 const createCategory = catchAsync(async (req, res) => {
   const result = await CategoryServices.createCategoryIntoDB(req.body);
@@ -15,7 +15,7 @@ const createCategory = catchAsync(async (req, res) => {
 });
 
 const getAllCategories = catchAsync(async (req, res) => {
-  const result = await CategoryServices.getAllCategories();
+  const result = await CategoryServices.getAllCategoriesFromDB();
 
   sendResponse(res, {
     success: true,
@@ -25,7 +25,21 @@ const getAllCategories = catchAsync(async (req, res) => {
   });
 });
 
+const deleteCategory = catchAsync(async (req, res) => {
+
+  const result = await CategoryServices.deleteCategoryFromDB(req.params.id)
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Category deleted successfully',
+    data: result
+
+  })
+})
+
 export const CategoryControllers = {
   createCategory,
   getAllCategories,
+  deleteCategory
 };
