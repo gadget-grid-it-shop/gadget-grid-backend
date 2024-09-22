@@ -14,15 +14,17 @@ export const generateCategoryTree = (categories: FilterQuery<TCategory[]>, paren
     filterCategories = categories.filter((cat) => cat.parent_id === parent_id);
   }
 
-  for (const category of filterCategories) {
-    categoryTree.push({
-      _id: category._id,
-      name: category.name,
-      parent_id: category.parent_id,
-      product_details_categories: category.product_details_categories,
-      subCategories: generateCategoryTree(categories, category.id),
-      isDeleted: false
-    });
+  if (filterCategories.length !== 0) {
+    for (const category of filterCategories) {
+      categoryTree.push({
+        _id: category._id,
+        name: category.name,
+        parent_id: category.parent_id,
+        product_details_categories: category.product_details_categories,
+        subCategories: generateCategoryTree(categories, category.id),
+        isDeleted: false
+      });
+    }
   }
 
   return categoryTree;

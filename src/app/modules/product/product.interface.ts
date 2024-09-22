@@ -19,13 +19,13 @@ export interface TMeta {
 
 export interface TProduct {
     id: string;
-    title: string;
+    name: string;
     price: number;
     discount?: {
         type: string,
         value: 'flat' | 'percent'
     };
-    product_SKU: string;
+    sku: string;
     brand: string;
     model?: string;
     warranty: string;
