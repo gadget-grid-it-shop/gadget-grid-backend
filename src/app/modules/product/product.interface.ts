@@ -39,7 +39,7 @@ export interface TProduct {
     gallery?: string[];
     thumbnail: string;
     slug: string;
-    attributes?: Record<string, string>;
+    attributes?: { name: string, fields: Record<string, string>[] }[];
     meta?: TMeta,
     tags?: string[]
     isFeatured?: boolean,

@@ -12,13 +12,18 @@ const createCategoryIntoDB = async (payload: TCategory) => {
   return result;
 };
 
-const getAllCategoriesFromDB = async () => {
+const getAllCategoriesFromDB = async (isTree: string) => {
   const categories = await Category.find({ isDeleted: false }).populate([
     {
       path: "product_details_categories",
       select: "-__v",
     }
   ]);
+
+
+  if (isTree === 'false') {
+    return categories
+  }
 
   const categoryTree = generateCategoryTree(categories);
 

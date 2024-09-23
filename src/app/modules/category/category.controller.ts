@@ -15,7 +15,10 @@ const createCategory = catchAsync(async (req, res) => {
 });
 
 const getAllCategories = catchAsync(async (req, res) => {
-  const result = await CategoryServices.getAllCategoriesFromDB();
+
+  const isTree = req.query.isTree as string
+
+  const result = await CategoryServices.getAllCategoriesFromDB(isTree);
 
   sendResponse(res, {
     success: true,
