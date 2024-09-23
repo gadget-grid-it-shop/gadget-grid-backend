@@ -5,35 +5,42 @@ import { TImage } from "./image.interface"
 import { Image } from "./image.model"
 
 
-const uploadImageIntoDB = async (file: string) => {
+const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => {
     const session = await startSession()
+
+    console.log(files)
 
     try {
         session.startTransaction()
 
-        const uploadImage: UploadApiResponse = await cloudinary.uploader.upload(file || "", function (err: UploadApiErrorResponse, result: UploadApiResponse) {
-            if (err) {
-                throw new Error('upload failed')
-            }
+        const uploadImages = files.map(file => {
+            return cloudinary.uploader.upload(file.path, function (err: UploadApiErrorResponse, result: UploadApiResponse) {
+                if (err) {
+                    throw new Error('cloudinary upload failed')
+                }
 
-            return result
+                return result
+            })
         })
 
-        await session.commitTransaction()
+        const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new Error('upload failed') })
 
-        const image: TImage = {
-            extension: uploadImage.format,
-            height: uploadImage.height,
-            width: uploadImage.width,
-            image: uploadImage.url,
-            name: uploadImage.original_filename,
-            size: uploadImage.bytes
-        }
+        const payloadImages: TImage[] = uploadedImages.map((image: UploadApiResponse) => (
+            {
+                extension: image.format,
+                height: image.height,
+                width: image.width,
+                image: image.url,
+                name: image.original_filename,
+                size: image.bytes,
+                image_type: type
+            }
+        ))
 
-        const databaseResult = await Image.create(image)
+        const databaseResult = await Image.create(payloadImages)
 
         if (!databaseResult) {
-            throw new Error('upload failed')
+            throw new Error('databae upload failed')
         }
 
         await session.commitTransaction()
@@ -41,6 +48,7 @@ const uploadImageIntoDB = async (file: string) => {
         return databaseResult
     }
     catch (err) {
+        console.log(err)
         await session.abortTransaction()
         await session.endSession()
         throw new Error('upload failed')

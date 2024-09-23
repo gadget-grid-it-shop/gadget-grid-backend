@@ -4,7 +4,9 @@ import { ImageUploadController } from "./image.controller";
 
 const router = Router()
 
-router.post('/upload-image', upload.single('image'), ImageUploadController.uploadImage)
+router.post('/upload-image', upload.array('photos', 5), ImageUploadController.uploadImage)
+
+
 
 
 export const ImageRoutes = router

@@ -26,6 +26,10 @@ const ImageSchema = new Schema<TImage>({
         type: Number,
         required: [true, 'Image size is required']
     },
+    image_type: {
+        type: String,
+        required: [true, 'Image name is required']
+    },
 })
 
 export const Image = model<TImage>('Image', ImageSchema)
