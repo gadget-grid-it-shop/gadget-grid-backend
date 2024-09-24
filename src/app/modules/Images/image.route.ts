@@ -8,5 +8,7 @@ router.post('/upload-image', upload.array('photos', 5), ImageUploadController.up
 
 router.get('/get-all', ImageUploadController.getAllImages)
 
+router.delete('/delete-images', ImageUploadController.deleteImages)
+
 
 export const ImageRoutes = router

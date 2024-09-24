@@ -32,7 +32,23 @@ const getAllImages = catchAsync(async (req, res) => {
     })
 })
 
+const deleteImages = catchAsync(async (req, res) => {
+    const { public_ids, database_ids } = req.body
+
+    console.log(req.body)
+
+    const result = await ImageUploadServices.deleteImagesFromDB({ public_ids, database_ids })
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Successfully deleted image(s)",
+        data: result
+    })
+})
+
 export const ImageUploadController = {
     uploadImage,
-    getAllImages
+    getAllImages,
+    deleteImages
 }

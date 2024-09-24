@@ -1,6 +1,6 @@
 import { startSession } from "mongoose"
 import cloudinary from "../../lib/image/image.config"
-import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary"
+import { DeleteApiResponse, UploadApiErrorResponse, UploadApiResponse } from "cloudinary"
 import { TImage } from "./image.interface"
 import { Image } from "./image.model"
 
@@ -27,6 +27,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
 
         const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new Error('upload failed') })
 
+
         const payloadImages: TImage[] = uploadedImages.map((image: UploadApiResponse) => (
             {
                 extension: image.format,
@@ -35,7 +36,8 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
                 image: image.url,
                 name: image.original_filename,
                 size: image.bytes,
-                image_type: type
+                image_type: type,
+                public_id: image.public_id
             }
         ))
 
@@ -44,8 +46,6 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
         if (!databaseResult) {
             throw new Error('databae upload failed')
         }
-
-        console.log(databaseResult)
 
         await session.commitTransaction()
         await session.endSession()
@@ -61,12 +61,46 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
 
 
 const getAllImagesFromDB = async () => {
-    const result = await Image.find()
+    const result = await Image.find().sort({ 'createdAt': 1 })
     return result
 }
 
 
-export const ImageUploadServices = { uploadImageIntoDB, getAllImagesFromDB }
+const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: string[], database_ids: string[] }) => {
+
+    console.log(public_ids, database_ids)
+
+    const session = await startSession()
+
+    try {
+        session.startTransaction()
+        const deletedFromCloud: DeleteApiResponse = await cloudinary.api.delete_resources([...public_ids], { type: 'upload', resource_type: 'image' })
+
+        if (!deletedFromCloud) {
+            throw new Error('Failed to delete from cloud')
+        }
+
+        const deleteFromBD = await Image.deleteMany({ _id: { $in: [...database_ids] } })
+
+        if (!deleteFromBD) {
+            throw new Error('Failed to delete from database')
+        }
+
+        await session.commitTransaction()
+        await session.endSession()
+
+        return deleteFromBD
+    }
+    catch (err) {
+        console.log(err)
+        await session.abortTransaction()
+        await session.endSession()
+        throw new Error('Delete failed')
+    }
+}
+
+
+export const ImageUploadServices = { uploadImageIntoDB, getAllImagesFromDB, deleteImagesFromDB }
 
 
 

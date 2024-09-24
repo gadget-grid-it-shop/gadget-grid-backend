@@ -30,6 +30,12 @@ const ImageSchema = new Schema<TImage>({
         type: String,
         required: [true, 'Image name is required']
     },
+    public_id: {
+        type: String,
+        required: [true, 'Image public id is required']
+    }
+}, {
+    timestamps: true
 })
 
 export const Image = model<TImage>('Image', ImageSchema)
