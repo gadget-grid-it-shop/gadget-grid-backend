@@ -6,7 +6,7 @@ const router = Router()
 
 router.post('/upload-image', upload.array('photos', 5), ImageUploadController.uploadImage)
 
-
+router.get('/get-all', ImageUploadController.getAllImages)
 
 
 export const ImageRoutes = router

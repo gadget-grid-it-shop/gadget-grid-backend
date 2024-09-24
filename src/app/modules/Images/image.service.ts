@@ -8,6 +8,7 @@ import { Image } from "./image.model"
 const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => {
     const session = await startSession()
 
+
     console.log(files)
 
     try {
@@ -16,6 +17,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
         const uploadImages = files.map(file => {
             return cloudinary.uploader.upload(file.path, function (err: UploadApiErrorResponse, result: UploadApiResponse) {
                 if (err) {
+                    console.log('cloudeinaty failed')
                     throw new Error('cloudinary upload failed')
                 }
 
@@ -43,6 +45,8 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
             throw new Error('databae upload failed')
         }
 
+        console.log(databaseResult)
+
         await session.commitTransaction()
         await session.endSession()
         return databaseResult
@@ -56,7 +60,13 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
 }
 
 
-export const ImageUploadServices = { uploadImageIntoDB }
+const getAllImagesFromDB = async () => {
+    const result = await Image.find()
+    return result
+}
+
+
+export const ImageUploadServices = { uploadImageIntoDB, getAllImagesFromDB }
 
 
 
