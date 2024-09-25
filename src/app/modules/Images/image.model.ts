@@ -33,6 +33,10 @@ const ImageSchema = new Schema<TImage>({
     public_id: {
         type: String,
         required: [true, 'Image public id is required']
+    },
+    folder: {
+        type: String,
+        ref: "GalleryFolder"
     }
 }, {
     timestamps: true

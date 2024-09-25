@@ -6,7 +6,8 @@ export interface TImage {
     extension: string,
     name: string,
     image_type: string,
-    public_id: string
+    public_id: string,
+    folder?: string | null
 }
 
 export interface TUploadImage {

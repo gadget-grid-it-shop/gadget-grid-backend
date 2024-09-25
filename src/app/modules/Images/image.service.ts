@@ -5,7 +5,7 @@ import { TImage } from "./image.interface"
 import { Image } from "./image.model"
 
 
-const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => {
+const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, folder: string | null) => {
     const session = await startSession()
 
 
@@ -37,7 +37,8 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string) => 
                 name: image.original_filename,
                 size: image.bytes,
                 image_type: type,
-                public_id: image.public_id
+                public_id: image.public_id,
+                folder: folder
             }
         ))
 
@@ -68,7 +69,6 @@ const getAllImagesFromDB = async () => {
 
 const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: string[], database_ids: string[] }) => {
 
-    console.log(public_ids, database_ids)
 
     const session = await startSession()
 
@@ -80,11 +80,15 @@ const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: st
             throw new Error('Failed to delete from cloud')
         }
 
+        console.log(deletedFromCloud)
+
         const deleteFromBD = await Image.deleteMany({ _id: { $in: [...database_ids] } })
 
         if (!deleteFromBD) {
             throw new Error('Failed to delete from database')
         }
+
+        console.log(deleteFromBD)
 
         await session.commitTransaction()
         await session.endSession()
@@ -98,7 +102,6 @@ const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: st
         throw new Error('Delete failed')
     }
 }
-
 
 export const ImageUploadServices = { uploadImageIntoDB, getAllImagesFromDB, deleteImagesFromDB }
 

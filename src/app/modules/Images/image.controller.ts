@@ -5,9 +5,9 @@ import { ImageUploadServices } from "./image.service";
 
 const uploadImage = catchAsync(async (req, res) => {
 
-    // console.log(req.files)
+    const { type, folder } = req.body.type
 
-    const result = await ImageUploadServices.uploadImageIntoDB(req.files as Express.Multer.File[], req.body.type)
+    const result = await ImageUploadServices.uploadImageIntoDB(req.files as Express.Multer.File[], type, folder)
 
     sendResponse(res, {
         success: true,
