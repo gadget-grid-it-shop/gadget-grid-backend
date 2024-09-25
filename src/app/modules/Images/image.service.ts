@@ -8,9 +8,6 @@ import { Image } from "./image.model"
 const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, folder: string | null) => {
     const session = await startSession()
 
-
-    console.log(files)
-
     try {
         session.startTransaction()
 
@@ -27,6 +24,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
 
         const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new Error('upload failed') })
 
+        console.log(uploadImages)
 
         const payloadImages: TImage[] = uploadedImages.map((image: UploadApiResponse) => (
             {
@@ -34,7 +32,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
                 height: image.height,
                 width: image.width,
                 image: image.url,
-                name: image.original_filename,
+                name: image.original_filename || 'backup',
                 size: image.bytes,
                 image_type: type,
                 public_id: image.public_id,
@@ -61,8 +59,11 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
 }
 
 
-const getAllImagesFromDB = async () => {
-    const result = await Image.find().sort({ 'createdAt': 1 })
+const getAllImagesFromDB = async (parent_id: string | null) => {
+
+    const folder = parent_id || null
+
+    const result = await Image.find({ folder }).sort({ 'createdAt': 1 })
     return result
 }
 

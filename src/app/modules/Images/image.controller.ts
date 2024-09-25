@@ -5,7 +5,8 @@ import { ImageUploadServices } from "./image.service";
 
 const uploadImage = catchAsync(async (req, res) => {
 
-    const { type, folder } = req.body.type
+    const { type } = req.body
+    const folder = req.body.folder || null
 
     const result = await ImageUploadServices.uploadImageIntoDB(req.files as Express.Multer.File[], type, folder)
 
@@ -20,9 +21,9 @@ const uploadImage = catchAsync(async (req, res) => {
 
 const getAllImages = catchAsync(async (req, res) => {
 
-    // console.log(req.files)
+    const folder = req.query.folder as string
 
-    const result = await ImageUploadServices.getAllImagesFromDB()
+    const result = await ImageUploadServices.getAllImagesFromDB(folder)
 
     sendResponse(res, {
         success: true,

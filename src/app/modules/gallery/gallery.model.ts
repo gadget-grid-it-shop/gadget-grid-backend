@@ -8,7 +8,8 @@ const GalleryFolderSchema = new Schema<TGalleryFolder>({
     },
     parent_id: {
         type: String,
-        default: null
+        default: null,
+        ref: "GalleryFolder"
     }
 })
 

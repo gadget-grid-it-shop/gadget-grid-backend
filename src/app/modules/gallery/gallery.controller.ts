@@ -19,9 +19,8 @@ const createGalleryFolder = catchAsync(async (req, res) => {
 })
 
 const getFolders = catchAsync(async (req, res) => {
-    const parent_id = (typeof req.query.parent_id === 'string' || req.query.parent_id === null)
-        ? req.query.parent_id
-        : null;
+
+    const parent_id = req.query.parent_id as string
 
     const result = await GalleryFolderService.getFoldersFromDB(parent_id)
 

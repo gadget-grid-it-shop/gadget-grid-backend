@@ -5,9 +5,9 @@ import { generateCategoryTree } from "./category.utils";
 
 const createCategoryIntoDB = async (payload: TCategory) => {
 
-  console.log(payload)
+  const parent_id = payload.parent_id || null
 
-  const result = await Category.create(payload);
+  const result = await Category.create({ ...payload, parent_id });
 
   return result;
 };

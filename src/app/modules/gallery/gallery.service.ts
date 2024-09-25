@@ -3,6 +3,8 @@ import { TGalleryFolder } from "./gallery.interface";
 
 const createGalleryFolderIntoDB = async (payload: TGalleryFolder) => {
 
+    let parent_id: string | null = payload.parent_id || null
+
     if (payload.parent_id) {
         const exist = await GalleryFolder.findById(payload.parent_id)
 
@@ -11,14 +13,16 @@ const createGalleryFolderIntoDB = async (payload: TGalleryFolder) => {
         }
     }
 
-    const result = await GalleryFolder.create(payload)
+    const result = await GalleryFolder.create({ name: payload.name, parent_id })
 
     return result
 }
 
-const getFoldersFromDB = async (folder: string | null | undefined) => {
+const getFoldersFromDB = async (folder: string | null) => {
 
-    const result = await GalleryFolder.find({ parent_id: folder })
+    const parent_id = folder || null
+
+    const result = await GalleryFolder.find({ parent_id })
 
     return result
 }
