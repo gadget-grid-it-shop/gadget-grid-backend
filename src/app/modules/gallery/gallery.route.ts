@@ -7,6 +7,7 @@ const router = Router()
 
 router.post('/create-folder', validateRequest(GalleryFolderValidatonSchema.createGalleryFolderValidationSchema), GalleryFolderController.createGalleryFolder)
 router.get('/get-folders', GalleryFolderController.getFolders)
+router.patch('/update-folder/:id', GalleryFolderController.updateFolder)
 
 
 

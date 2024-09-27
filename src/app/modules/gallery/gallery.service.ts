@@ -28,4 +28,17 @@ const getFoldersFromDB = async (folder: string | null) => {
 }
 
 
-export const GalleryFolderService = { createGalleryFolderIntoDB, getFoldersFromDB }
+const updateFolderIntoDB = async (id: string, name: string) => {
+    const exist = await GalleryFolder.findById(id)
+
+    if (!exist) {
+        throw new Error('folder does not exist')
+    }
+
+    const result = await GalleryFolder.findByIdAndUpdate(id, { name }, { new: true })
+
+    return result
+}
+
+
+export const GalleryFolderService = { createGalleryFolderIntoDB, getFoldersFromDB, updateFolderIntoDB }

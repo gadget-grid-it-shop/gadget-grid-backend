@@ -34,8 +34,26 @@ const getFolders = catchAsync(async (req, res) => {
     )
 })
 
+const updateFolder = catchAsync(async (req, res) => {
+    const id = req.params.id
+    const { name } = req.body
+    console.log(id, name)
+
+    const result = await GalleryFolderService.updateFolderIntoDB(id, name)
+
+    sendResponse(res,
+        {
+            success: true,
+            statusCode: httpStatus.OK,
+            message: 'Successfully updated folder',
+            data: result
+        }
+    )
+})
+
 
 export const GalleryFolderController = {
     createGalleryFolder,
-    getFolders
+    getFolders,
+    updateFolder
 }
