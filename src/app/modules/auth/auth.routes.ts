@@ -4,3 +4,6 @@ import { AuthController } from "./auth.controller";
 const router = Router()
 
 router.post('/admin-login', AuthController.adminLogin)
+
+
+export const AuthRoutes = router

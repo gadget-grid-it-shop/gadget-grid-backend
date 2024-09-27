@@ -4,18 +4,12 @@ import sendResponse from "../../utils/sendResponse";
 import { TUser } from "./user.interface";
 import { UserServices } from "./user.service";
 import { UserValidations } from "./user.validation";
+import { TAdmin } from "../admin/admin.interface";
 
 const createUser = catchAsync(async (req, res, next) => {
-    const user: TUser = req.body
+    const admin: TAdmin = req.body
 
-    const validate = await UserValidations.createUserValidationSchema.parseAsync(user)
-
-    if (!validate) {
-        console.log(validate)
-        next()
-    }
-
-    const result = await UserServices.createUserIntoDB(user)
+    const result = await UserServices.createUserIntoDB(admin)
 
     sendResponse(res, {
         success: true,

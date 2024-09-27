@@ -1,6 +1,7 @@
+import config from "../../config";
 import { User } from "../user/user.model";
 import { TLoginCredentials } from "./auth.interface";
-import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
     const userExist = await User.isUserExistsByEmail(payload.email)
@@ -11,10 +12,19 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
 
     const matchPassword = await User.matchUserPassword(payload.password, userExist.password)
 
-    if (matchPassword) {
-        return {
-            token: 'fdjfjdfjdfsdjfsdkfjsdlkfjsdfjwer34'
-        }
+    if (!matchPassword) {
+        throw new Error('Wrong password')
+    }
+
+    const jwtPayload = {
+        role: userExist.role,
+        email: userExist.email
+    }
+
+    const accessToken = jwt.sign(jwtPayload, config.access_secret as string, { expiresIn: '20d' })
+
+    return {
+        accessToken,
     }
 }
 

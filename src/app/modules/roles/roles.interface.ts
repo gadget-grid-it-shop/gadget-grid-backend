@@ -11,7 +11,8 @@ export enum EAppFeatures {
     product = 'product',
     productDetails = 'productDetails',
     category = 'category',
-    photo = 'photo'
+    photo = 'photo',
+    user = 'user'
 }
 
 export interface TPermission {

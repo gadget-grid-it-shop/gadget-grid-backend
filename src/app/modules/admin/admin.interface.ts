@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface TAddress {
     street?: string;
     city?: string;
@@ -16,7 +18,9 @@ export interface TAdminName {
 export interface TAdmin {
     name: TAdminName,
     email: string,
-    address?: TAddress,
+    address: TAddress,
     phoneNumber: string,
-    user: string
+    password: string,
+    user: Types.ObjectId,
+    role: string
 }

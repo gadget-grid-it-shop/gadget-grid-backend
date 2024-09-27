@@ -6,6 +6,7 @@ import { ImageRoutes } from "../modules/Images/image.route";
 import { galleryRoutes } from "../modules/gallery/gallery.route";
 import { UserRoutes } from "../modules/user/user.routes";
 import { RolesRoutes } from "../modules/roles/roles.routes";
+import { AuthRoutes } from "../modules/auth/auth.routes";
 
 const router = Router();
 
@@ -19,6 +20,7 @@ const moduleRoutes = [
   { path: '/gallery', route: galleryRoutes },
   { path: '/user', route: UserRoutes },
   { path: '/roles', route: RolesRoutes },
+  { path: '/auth', route: AuthRoutes },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
