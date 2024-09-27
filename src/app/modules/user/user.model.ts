@@ -79,5 +79,9 @@ UserSchema.statics.findUserRoleByEmail = async function (email: string) {
     }
 }
 
+UserSchema.statics.matchUserPassword = async function (userPassword, databasePassword) {
+    return await bcrypt.compare(userPassword, databasePassword)
+}
+
 
 export const User = model<TUser, TUserModel>('User', UserSchema)
