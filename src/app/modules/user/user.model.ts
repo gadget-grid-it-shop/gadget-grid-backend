@@ -1,9 +1,10 @@
 import { model, Schema } from "mongoose";
-import { TUser } from "./user.interface";
+import { TUser, TUserModel } from "./user.interface";
 import bcrypt from 'bcrypt';
 import config from "../../config";
+import { boolean } from "zod";
 
-const UserSchema = new Schema<TUser>({
+const UserSchema = new Schema<TUser, TUserModel>({
     email: {
         type: String,
         required: [true, 'Email is required'],
@@ -30,6 +31,9 @@ const UserSchema = new Schema<TUser>({
     isVarified: {
         type: Boolean,
         default: false
+    },
+    isMasterAdmin: {
+        type: Boolean,
     }
 })
 
@@ -47,4 +51,33 @@ UserSchema.post('save', async function (doc, next) {
 })
 
 
-export const User = model<TUser>('User', UserSchema)
+// ================== static methods ==================
+UserSchema.statics.isUserExistsByEmail = async function (email: string) {
+    return await User.findOne({ email })
+}
+
+
+UserSchema.statics.isUserVarified = async function (email: string) {
+    const exist = await User.isUserExistsByEmail(email)
+    if (exist) {
+        return exist.isVarified
+    }
+    else {
+        return false
+    }
+}
+
+
+UserSchema.statics.findUserRoleByEmail = async function (email: string) {
+    const exist = await User.isUserExistsByEmail(email)
+
+    if (exist) {
+        return exist.role
+    }
+    else {
+        return null
+    }
+}
+
+
+export const User = model<TUser, TUserModel>('User', UserSchema)

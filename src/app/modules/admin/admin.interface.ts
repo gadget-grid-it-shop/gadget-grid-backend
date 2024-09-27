@@ -13,10 +13,10 @@ export interface TAdminName {
 }
 
 
-interface TAdmin {
+export interface TAdmin {
     name: TAdminName,
     email: string,
     address?: TAddress,
     phoneNumber: string,
-
+    user: string
 }
