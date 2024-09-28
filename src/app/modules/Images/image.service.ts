@@ -3,10 +3,24 @@ import cloudinary from "../../lib/image/image.config"
 import { DeleteApiResponse, UploadApiErrorResponse, UploadApiResponse } from "cloudinary"
 import { TImage } from "./image.interface"
 import { Image } from "./image.model"
+import AppError from "../../errors/AppError"
+import httpStatus from "http-status"
 
 
 const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, folder: string | null) => {
     const session = await startSession()
+
+    if (files.length === 0) {
+        throw new AppError(httpStatus.CONFLICT, 'Upload some files')
+    }
+
+    else {
+        files.forEach(file => {
+            if (file.size > 10485760) {
+                throw new AppError(httpStatus.CONFLICT, 'File size is too large. highest limit is 10 mb')
+            }
+        })
+    }
 
     try {
         session.startTransaction()
@@ -14,8 +28,8 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
         const uploadImages = files.map(file => {
             return cloudinary.uploader.upload(file.path, function (err: UploadApiErrorResponse, result: UploadApiResponse) {
                 if (err) {
-                    console.log('cloudeinaty failed')
-                    throw new Error('cloudinary upload failed')
+                    console.log(err)
+                    throw new AppError(httpStatus.OK, 'cloudinary upload failed')
                 }
 
                 return result
@@ -24,7 +38,9 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
 
         const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new Error('upload failed') })
 
-        console.log(uploadImages)
+        if (uploadImages.length === 0) {
+            throw new AppError(httpStatus.CONFLICT, 'Failed to upload to cloudinary')
+        }
 
         const payloadImages: TImage[] = uploadedImages.map((image: UploadApiResponse) => (
             {
@@ -43,7 +59,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
         const databaseResult = await Image.create(payloadImages)
 
         if (!databaseResult) {
-            throw new Error('databae upload failed')
+            throw new AppError(httpStatus.CONFLICT, 'databae upload failed')
         }
 
         await session.commitTransaction()
@@ -54,7 +70,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
         console.log(err)
         await session.abortTransaction()
         await session.endSession()
-        throw new Error('upload failed')
+        throw new AppError(httpStatus.CONFLICT, err instanceof AppError ? err?.message : 'upload failed')
     }
 }
 
