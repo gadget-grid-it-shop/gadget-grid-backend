@@ -14,7 +14,7 @@ const TPermissionSchema = z.object({
 })
 
 const createRoleValidationSchema = z.object({
-    role: z.string().min(1, 'Role is required'),
+    role: z.string({ required_error: 'Role title is required' }).min(1, 'Role is required'),
     permissions: z.array(TPermissionSchema).optional()
 })
 

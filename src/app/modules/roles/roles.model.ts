@@ -5,7 +5,7 @@ const PermissionsSchema = new Schema<TPermission>({
     feature: {
         type: String,
         enum: Object.values(EAppFeatures),
-        required: [true, 'Feature name is required']
+        required: [true, 'Feature name is required'],
     },
     access: {
         read: {
@@ -33,7 +33,42 @@ const RolesSchema = new Schema<TRole>({
         required: [true, 'Role is required'],
         unique: true
     },
-    permissions: [PermissionsSchema]
+    permissions: {
+        type: [PermissionsSchema],
+        default: Object.values(EAppFeatures).map(feature => ({
+            feature: feature,
+            access: {
+                read: false,
+                create: false,
+                update: false,
+                delete: false
+            }
+        }))
+    }
+})
+
+
+RolesSchema.pre('save', function (next) {
+    const role = this as TRole
+
+    const defaultPermissions: TPermission[] = Object.values(EAppFeatures).map(feature => ({
+        feature: feature,
+        access: {
+            read: false,
+            create: false,
+            update: false,
+            delete: false
+        }
+    }));
+
+    const modifiedPermissions = defaultPermissions.map(dPermission => {
+        const providedPermission = role.permissions.find(p => p.feature === dPermission.feature)
+
+        return providedPermission ? providedPermission : dPermission
+    })
+
+    role.permissions = modifiedPermissions
+    next()
 })
 
 

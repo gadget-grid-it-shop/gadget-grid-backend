@@ -1,5 +1,4 @@
 import express, { Application } from "express";
-import config from "./app/config";
 import cors from "cors";
 import router from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";

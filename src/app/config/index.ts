@@ -10,5 +10,6 @@ export default {
   cloud_api: process.env.CLOUD_API_KEY,
   cloud_secret: process.env.CLOUD_API_SECRET,
   bcrypt_hash_rounds: process.env.BCRYPT_HASH_ROUNDS,
-  access_secret: process.env.ACCESS_SECRET
+  access_secret: process.env.ACCESS_SECRET,
+  node_environment: process.env.ENVIRONMENT
 };

@@ -7,6 +7,7 @@ import { galleryRoutes } from "../modules/gallery/gallery.route";
 import { UserRoutes } from "../modules/user/user.routes";
 import { RolesRoutes } from "../modules/roles/roles.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
+import validateAuth from "../middleware/auth";
 
 const router = Router();
 
@@ -23,6 +24,13 @@ const moduleRoutes = [
   { path: '/auth', route: AuthRoutes },
 ];
 
-moduleRoutes.forEach((route) => router.use(route.path, route.route));
+moduleRoutes.forEach((route) => {
+  if (route.path === '/auth') {
+    router.use(route.path, route.route)
+  }
+  else {
+    router.use(route.path, validateAuth(), route.route)
+  }
+});
 
 export default router;
