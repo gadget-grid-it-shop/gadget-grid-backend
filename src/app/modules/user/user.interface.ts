@@ -7,7 +7,8 @@ export interface TUser {
     role: 'customer' | string,
     isDeleted?: boolean,
     isVarified?: boolean,
-    isMasterAdmin?: boolean
+    isMasterAdmin?: boolean,
+    passwordChangedAt: string
 }
 
 

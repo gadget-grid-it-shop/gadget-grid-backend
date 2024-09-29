@@ -16,6 +16,8 @@ const createCategory = catchAsync(async (req, res) => {
 
 const getAllCategories = catchAsync(async (req, res) => {
 
+  console.log(req.cookies)
+
   const isTree = req.query.isTree as string
 
   const result = await CategoryServices.getAllCategoriesFromDB(isTree);

@@ -12,16 +12,18 @@ const validateAuth = () => {
         }
 
         // check if varified user
-        jwt.verify(token, config.access_secret as string, function (err, decoded) {
-            if (err) {
-                throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized', 'unauthorized access request')
-            }
-            else if (decoded) {
-                console.log(decoded)
-                req.user = decoded as JwtPayload
-                next()
-            }
-        })
+        const decoded = jwt.verify(token, config.access_secret as string) as JwtPayload
+
+        if (!decoded) {
+            throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized', 'unauthorized access request')
+        }
+
+        req.user = {
+            userRole: decoded.userRole,
+            email: decoded.email
+        }
+
+        next()
     })
 }
 

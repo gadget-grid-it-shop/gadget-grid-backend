@@ -12,7 +12,7 @@ const UserSchema = new Schema<TUser, TUserModel>({
     },
     password: {
         type: String,
-        required: [true, 'Password is required']
+        required: [true, 'Password is required'],
     },
     isActive: {
         type: Boolean,
@@ -34,6 +34,9 @@ const UserSchema = new Schema<TUser, TUserModel>({
     },
     isMasterAdmin: {
         type: Boolean,
+    },
+    passwordChangedAt: {
+        type: String
     }
 })
 

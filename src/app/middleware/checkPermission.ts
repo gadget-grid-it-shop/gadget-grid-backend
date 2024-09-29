@@ -20,6 +20,13 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
         // if (userExist.isMasterAdmin) {
         //     return next()
         // }
+        if (userExist.isDeleted) {
+            throw new AppError(httpStatus.UNAUTHORIZED, 'Your account was deleted', 'unauthorized access request')
+        }
+
+        if (!userExist.isActive) {
+            throw new AppError(httpStatus.UNAUTHORIZED, 'Your account is blocked', 'unauthorized access request')
+        }
 
         const role: TRole | null = await Roles.findById(user.userRole)
 
