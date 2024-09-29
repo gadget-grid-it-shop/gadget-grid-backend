@@ -19,7 +19,13 @@ const AddressSchema = new Schema<TAddress>({
 const AdminSchema = new Schema<TAdmin>({
     address: {
         type: AddressSchema,
-        required: true
+        default: {
+            street: "",
+            city: "",
+            state: "",
+            postalCode: "",
+            country: ""
+        }
     },
     email: {
         type: String,

@@ -9,7 +9,7 @@ import { TAdmin } from "../admin/admin.interface";
 const createUser = catchAsync(async (req, res, next) => {
     const admin: TAdmin = req.body
 
-    const result = await UserServices.createUserIntoDB(admin)
+    const result = await UserServices.createAdminIntoDB(admin)
 
     sendResponse(res, {
         success: true,

@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken'
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
     const userExist = await User.isUserExistsByEmail(payload.email)
 
+
     if (!userExist) {
         throw new AppError(httpStatus.CONFLICT, 'User does not exist')
     }
@@ -19,9 +20,11 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     }
 
     const jwtPayload = {
-        role: userExist.role,
+        userRole: userExist.role,
         email: userExist.email
     }
+
+    console.log(jwtPayload)
 
     const accessToken = jwt.sign(jwtPayload, config.access_secret as string, { expiresIn: '20d' })
 

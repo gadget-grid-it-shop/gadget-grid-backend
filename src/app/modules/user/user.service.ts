@@ -1,12 +1,13 @@
-import { Document, startSession } from "mongoose";
+import mongoose from "mongoose";
 import { TUser } from "./user.interface";
 import { User } from "./user.model";
 import { TAdmin } from "../admin/admin.interface";
 import { Admin } from "../admin/admin.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
+import { Roles } from "../roles/roles.model";
 
-const createUserIntoDB = async (admin: TAdmin) => {
+const createAdminIntoDB = async (admin: TAdmin) => {
 
     const user: TUser = {
         email: admin.email,
@@ -14,12 +15,18 @@ const createUserIntoDB = async (admin: TAdmin) => {
         role: admin.role
     }
 
+    const roleExist = await Roles.findById(admin.role)
+
+    if (!roleExist) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Role does not exist')
+    }
+
 
     if (await User.isUserExistsByEmail(admin.email)) {
         throw new AppError(httpStatus.CONFLICT, 'User already exists. Try signing in')
     }
 
-    const session = await startSession()
+    const session = await mongoose.startSession()
 
     try {
         session.startTransaction()
@@ -34,8 +41,9 @@ const createUserIntoDB = async (admin: TAdmin) => {
 
         const adminRes = await Admin.create(admin)
 
+
         if (!adminRes) {
-            throw new AppError(httpStatus.CONFLICT, 'failed to create user')
+            throw new AppError(httpStatus.CONFLICT, 'failed to create Admin')
         }
 
         await session.commitTransaction()
@@ -45,10 +53,11 @@ const createUserIntoDB = async (admin: TAdmin) => {
     catch (err) {
         await session.abortTransaction()
         await session.endSession()
+        throw new AppError(httpStatus.CONFLICT, err instanceof AppError ? err?.message : 'Failed to create user')
     }
 }
 
 
 export const UserServices = {
-    createUserIntoDB
+    createAdminIntoDB
 }
