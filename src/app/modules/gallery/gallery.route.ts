@@ -2,12 +2,14 @@ import { Router } from "express";
 import { validateRequest } from "../../middleware/validateRequest";
 import { GalleryFolderValidatonSchema } from "./gallery.validation";
 import { GalleryFolderController } from "./gallery.controller";
+import checkPermission from "../../middleware/checkPermission";
+import { EAppFeatures } from "../roles/roles.interface";
 
 const router = Router()
 
-router.post('/create-folder', validateRequest(GalleryFolderValidatonSchema.createGalleryFolderValidationSchema), GalleryFolderController.createGalleryFolder)
-router.get('/get-folders', GalleryFolderController.getFolders)
-router.patch('/update-folder/:id', GalleryFolderController.updateFolder)
+router.post('/create-folder', validateRequest(GalleryFolderValidatonSchema.createGalleryFolderValidationSchema), checkPermission(EAppFeatures.gallery, 'create'), GalleryFolderController.createGalleryFolder)
+router.get('/get-folders', checkPermission(EAppFeatures.gallery, 'read'), GalleryFolderController.getFolders)
+router.patch('/update-folder/:id', checkPermission(EAppFeatures.gallery, 'update'), GalleryFolderController.updateFolder)
 
 
 
