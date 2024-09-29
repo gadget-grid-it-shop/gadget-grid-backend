@@ -2,6 +2,8 @@ import { ObjectId } from "mongodb";
 import { TProductDetailsCategory } from "./productDetailsCategory.interface";
 import { ProductDetailsCategory } from "./productDetailsCategory.model";
 import { Types } from "mongoose";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createProductDetailsCategoryIntoDB = async (payload: TProductDetailsCategory) => {
   const result = await ProductDetailsCategory.create(payload);
@@ -14,7 +16,7 @@ const updateProductDetailsCategoryIntoDB = async (id: string, payload: Partial<T
 
 
   if (!exist) {
-    throw new Error("Product details category not found");
+    throw new AppError(httpStatus.NOT_FOUND, "Product details category not found");
   }
 
   const result = await ProductDetailsCategory.findByIdAndUpdate(id, payload, { new: true });

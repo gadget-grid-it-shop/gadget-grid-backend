@@ -3,6 +3,8 @@ import { TUser } from "./user.interface";
 import { User } from "./user.model";
 import { TAdmin } from "../admin/admin.interface";
 import { Admin } from "../admin/admin.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createUserIntoDB = async (admin: TAdmin) => {
 
@@ -14,7 +16,7 @@ const createUserIntoDB = async (admin: TAdmin) => {
 
 
     if (await User.isUserExistsByEmail(admin.email)) {
-        throw new Error('User already exists. Try signing in')
+        throw new AppError(httpStatus.CONFLICT, 'User already exists. Try signing in')
     }
 
     const session = await startSession()
@@ -25,7 +27,7 @@ const createUserIntoDB = async (admin: TAdmin) => {
         const userRes = await User.create(user)
 
         if (!userRes) {
-            throw new Error('failed to create user')
+            throw new AppError(httpStatus.CONFLICT, 'failed to create user')
         }
 
         admin.user = userRes._id
@@ -33,7 +35,7 @@ const createUserIntoDB = async (admin: TAdmin) => {
         const adminRes = await Admin.create(admin)
 
         if (!adminRes) {
-            throw new Error('failed to create user')
+            throw new AppError(httpStatus.CONFLICT, 'failed to create user')
         }
 
         await session.commitTransaction()

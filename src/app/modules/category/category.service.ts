@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import { TCategory, TUpdateCategory } from "./category.interface";
 import { Category } from "./category.model";
 import { generateCategoryTree } from "./category.utils";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createCategoryIntoDB = async (payload: TCategory) => {
 
@@ -42,7 +44,7 @@ const deleteCategoryFromDB = async (id: string) => {
   }
 
   else {
-    throw new Error('Categoy does not exist')
+    throw new AppError(httpStatus.CONFLICT, 'Categoy does not exist')
   }
 
 }
@@ -59,7 +61,7 @@ const updateCategoryIntoDB = async (id: string, payload: TUpdateCategory) => {
   }
 
   else {
-    throw new Error('Categoy does not exist')
+    throw new AppError(httpStatus.CONFLICT, 'Categoy does not exist')
   }
 
 }
@@ -74,7 +76,7 @@ const getSingleCategoryFromDB = async (id: string) => {
   ])
 
   if (result === null) {
-    throw new Error('Categoy does not exist')
+    throw new AppError(httpStatus.CONFLICT, 'Categoy does not exist')
   }
 
   return result

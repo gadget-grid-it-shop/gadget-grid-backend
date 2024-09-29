@@ -1,4 +1,6 @@
+import httpStatus from "http-status";
 import config from "../../config";
+import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
 import { TLoginCredentials } from "./auth.interface";
 import jwt from 'jsonwebtoken'
@@ -7,13 +9,13 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     const userExist = await User.isUserExistsByEmail(payload.email)
 
     if (!userExist) {
-        throw new Error('User does not exist')
+        throw new AppError(httpStatus.CONFLICT, 'User does not exist')
     }
 
     const matchPassword = await User.matchUserPassword(payload.password, userExist.password)
 
     if (!matchPassword) {
-        throw new Error('Wrong password')
+        throw new AppError(httpStatus.CONFLICT, 'Wrong password')
     }
 
     const jwtPayload = {

@@ -36,7 +36,7 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
             })
         })
 
-        const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new Error('upload failed') })
+        const uploadedImages: UploadApiResponse[] = await Promise.all(uploadImages).catch(err => { throw new AppError(httpStatus.CONFLICT, 'upload failed') })
 
         if (uploadImages.length === 0) {
             throw new AppError(httpStatus.CONFLICT, 'Failed to upload to cloudinary')
@@ -94,7 +94,7 @@ const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: st
         const deletedFromCloud: DeleteApiResponse = await cloudinary.api.delete_resources([...public_ids], { type: 'upload', resource_type: 'image' })
 
         if (!deletedFromCloud) {
-            throw new Error('Failed to delete from cloud')
+            throw new AppError(httpStatus.CONFLICT, 'Failed to delete from cloud')
         }
 
         console.log(deletedFromCloud)
@@ -102,7 +102,7 @@ const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: st
         const deleteFromBD = await Image.deleteMany({ _id: { $in: [...database_ids] } })
 
         if (!deleteFromBD) {
-            throw new Error('Failed to delete from database')
+            throw new AppError(httpStatus.CONFLICT, 'Failed to delete from database')
         }
 
         console.log(deleteFromBD)
@@ -116,7 +116,7 @@ const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: st
         console.log(err)
         await session.abortTransaction()
         await session.endSession()
-        throw new Error('Delete failed')
+        throw new AppError(httpStatus.CONFLICT, 'Delete failed')
     }
 }
 

@@ -1,5 +1,7 @@
 import { GalleryFolder } from "./gallery.model";
 import { TGalleryFolder } from "./gallery.interface";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createGalleryFolderIntoDB = async (payload: TGalleryFolder) => {
 
@@ -9,7 +11,7 @@ const createGalleryFolderIntoDB = async (payload: TGalleryFolder) => {
         const exist = await GalleryFolder.findById(payload.parent_id)
 
         if (!exist) {
-            throw new Error('parent does not exist')
+            throw new AppError(httpStatus.CONFLICT, 'parent does not exist')
         }
     }
 
@@ -32,7 +34,7 @@ const updateFolderIntoDB = async (id: string, name: string) => {
     const exist = await GalleryFolder.findById(id)
 
     if (!exist) {
-        throw new Error('folder does not exist')
+        throw new AppError(httpStatus.CONFLICT, 'folder does not exist')
     }
 
     const result = await GalleryFolder.findByIdAndUpdate(id, { name }, { new: true })
