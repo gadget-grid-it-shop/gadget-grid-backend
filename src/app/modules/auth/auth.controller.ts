@@ -13,7 +13,7 @@ const adminLogin = catchAsync(async (req, res) => {
     const { refreshToken, accessToken } = result
 
     res.cookie('refreshToken', refreshToken, {
-        secure: config.node_environment !== 'development'
+        secure: config.node_environment !== 'development',
     })
 
     sendResponse(res, {
@@ -41,8 +41,21 @@ const refreshToken = catchAsync(async (req, res) => {
     })
 })
 
+const getMyData = catchAsync(async (req, res) => {
+    const user = req.user
+    const result = await AuthServices.getMyDataFromDB(user.email)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Successfully retrived data',
+        data: result
+    })
+})
+
 
 export const AuthController = {
     adminLogin,
-    refreshToken
+    refreshToken,
+    getMyData
 }

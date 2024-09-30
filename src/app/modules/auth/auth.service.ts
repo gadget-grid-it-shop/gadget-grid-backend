@@ -5,6 +5,7 @@ import { User } from "../user/user.model";
 import { TLoginCredentials } from "./auth.interface";
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { createToken } from "./auth.utils";
+import { Admin } from "../admin/admin.model";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
     const userExist = await User.isUserExistsByEmail(payload.email)
@@ -76,7 +77,23 @@ const refreshToken = async (token: string) => {
 }
 
 
+const getMyDataFromDB = async (email: string) => {
+    const result = await Admin.findOne({ email }).populate([
+        {
+            path: 'user',
+            select: '-password'
+        },
+        {
+            path: 'role'
+        }
+    ])
+
+    return result
+}
+
+
 export const AuthServices = {
     adminLoginFromDB,
-    refreshToken
+    refreshToken,
+    getMyDataFromDB
 }
