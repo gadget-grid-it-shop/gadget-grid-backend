@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 type TCreateToken = {
-  payload: {userRole: string; email: string};
+  payload: {email: string};
   secret: string;
   expiresIn: string;
 };

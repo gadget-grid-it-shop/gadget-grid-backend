@@ -7,16 +7,13 @@ import jwt, {JwtPayload} from "jsonwebtoken";
 import {createToken, generateResetPassHtml} from "./auth.utils";
 import {Admin} from "../admin/admin.model";
 import {sendEmail} from "../../utils/sendEmail";
+import bcrypt from "bcrypt";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
   const userExist = await User.isUserExistsByEmail(payload.email);
 
   if (!userExist) {
     throw new AppError(httpStatus.CONFLICT, "User does not exist");
-  }
-
-  if (userExist.isVarified === false) {
-    throw new AppError(httpStatus.CONFLICT, "Please verify you email first, a verification code has been sent to your email");
   }
 
   const matchPassword = await User.matchUserPassword(payload.password, userExist.password);
@@ -26,7 +23,7 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
   }
 
   const jwtPayload = {
-    userRole: userExist.role,
+    // userRole: userExist.role,
     email: userExist.email,
   };
 
@@ -95,7 +92,7 @@ const forgotPasswordService = async (email: string) => {
     email: user.email,
   };
 
-  const resetToken = createToken({payload: jwtPayload, secret: config.access_secret as string, expiresIn: "10m"});
+  const resetToken = createToken({payload: jwtPayload, secret: config.access_secret as string, expiresIn: "60m"});
 
   const resetUILink = `${config.client_url}/email=${user.email}&token=${resetToken}`;
   const mailBody = generateResetPassHtml(resetUILink);
@@ -112,6 +109,20 @@ const resetPasswordService = async (email: string, password: string, token: stri
   if (!user) {
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
+
+  const decoded = jwt.verify(token, config.access_secret as string) as JwtPayload;
+
+  console.log(decoded);
+
+  if (email !== decoded.email) {
+    throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
+  }
+
+  const hashPassword = await bcrypt.hash(password, Number(config.bcrypt_hash_rounds));
+
+  const updatePasswordRes = await User.findOneAndUpdate({email}, {password: hashPassword});
+
+  return updatePasswordRes;
 };
 
 const getMyDataFromDB = async (email: string) => {
