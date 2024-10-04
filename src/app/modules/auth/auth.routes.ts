@@ -1,14 +1,17 @@
-import { Router } from "express";
-import { AuthController } from "./auth.controller";
+import {Router} from "express";
+import {AuthController} from "./auth.controller";
 import validateAuth from "../../middleware/auth";
+import {validateRequest} from "../../middleware/validateRequest";
+import {authValidations} from "./auth.validation";
 
-const router = Router()
+const router = Router();
 
-router.post('/admin-login', AuthController.adminLogin)
+router.post("/admin-login", AuthController.adminLogin);
 
-router.post('/refresh-token', AuthController.refreshToken)
+router.post("/refresh-token", validateAuth(), AuthController.refreshToken);
 
-router.get('/getMyData', validateAuth(), AuthController.getMyData)
+router.post("/forgot-password", AuthController.forgotPassword);
 
+router.get("/getMyData", validateAuth(), AuthController.getMyData);
 
-export const AuthRoutes = router
+export const AuthRoutes = router;
