@@ -4,8 +4,9 @@ import AppError from "../../errors/AppError";
 import {User} from "../user/user.model";
 import {TLoginCredentials} from "./auth.interface";
 import jwt, {JwtPayload} from "jsonwebtoken";
-import {createToken} from "./auth.utils";
+import {createToken, generateResetPassHtml} from "./auth.utils";
 import {Admin} from "../admin/admin.model";
+import {sendEmail} from "../../utils/sendEmail";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
   const userExist = await User.isUserExistsByEmail(payload.email);
@@ -96,9 +97,21 @@ const forgotPasswordService = async (email: string) => {
 
   const resetToken = createToken({payload: jwtPayload, secret: config.access_secret as string, expiresIn: "10m"});
 
-  const resetUILink = `http://localhost:3000/email=${user.email}&token=${resetToken}`;
+  const resetUILink = `${config.client_url}/email=${user.email}&token=${resetToken}`;
+  const mailBody = generateResetPassHtml(resetUILink);
 
-  return resetUILink;
+  await sendEmail(user.email, mailBody);
+};
+
+const resetPasswordService = async (email: string, token: string | undefined) => {
+  if (!token) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+  }
+  const user = await User.isUserExistsByEmail(email);
+
+  if (!user) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
+  }
 };
 
 const getMyDataFromDB = async (email: string) => {
@@ -120,4 +133,5 @@ export const AuthServices = {
   refreshToken,
   getMyDataFromDB,
   forgotPasswordService,
+  resetPasswordService,
 };

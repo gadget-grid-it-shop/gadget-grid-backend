@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
 
-dotenv.config({ path: [path.join(process.cwd(), ".env")] });
+dotenv.config({path: [path.join(process.cwd(), ".env")]});
 
 export default {
   port: process.env.PORT,
@@ -15,4 +15,7 @@ export default {
   node_environment: process.env.ENVIRONMENT,
   access_token_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
   refresh_token_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+  smtp_app_password: process.env.SMTP_APP_PASSWORD,
+  smtp_user: process.env.SMTP_USER,
+  client_url: process.env.CLIENT_URL,
 };
