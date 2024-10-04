@@ -15,9 +15,9 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     throw new AppError(httpStatus.CONFLICT, "User does not exist");
   }
 
-  // if (userExist.isVarified === false) {
-  //     throw new AppError(httpStatus.CONFLICT, 'Please verify you email first, a verification code has been sent to your email')
-  // }
+  if (userExist.isVarified === false) {
+    throw new AppError(httpStatus.CONFLICT, "Please verify you email first, a verification code has been sent to your email");
+  }
 
   const matchPassword = await User.matchUserPassword(payload.password, userExist.password);
 
@@ -103,7 +103,7 @@ const forgotPasswordService = async (email: string) => {
   await sendEmail(user.email, mailBody);
 };
 
-const resetPasswordService = async (email: string, token: string | undefined) => {
+const resetPasswordService = async (email: string, password: string, token: string | undefined) => {
   if (!token) {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
   }

@@ -10,7 +10,9 @@ router.post("/admin-login", AuthController.adminLogin);
 
 router.post("/refresh-token", validateAuth(), AuthController.refreshToken);
 
-router.post("/forgot-password", AuthController.forgotPassword);
+router.post("/forgot-password", validateRequest(authValidations.forgotPassValidatioSchema), AuthController.forgotPassword);
+
+router.post("/reset-password", validateRequest(authValidations.resetPassValidatioSchema), AuthController.resetPassword);
 
 router.get("/getMyData", validateAuth(), AuthController.getMyData);
 
