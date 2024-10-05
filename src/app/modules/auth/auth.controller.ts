@@ -67,6 +67,19 @@ const resetPassword = catchAsync(async (req, res) => {
   });
 });
 
+const SendVerificationEmail = catchAsync(async (req, res) => {
+  const email = req.body.email;
+
+  const result = await AuthServices.SendVerificationEmailService(email);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "A varificatin mail was sent to your email address. The link will expire in 10 minutes",
+    data: result,
+  });
+});
+
 const getMyData = catchAsync(async (req, res) => {
   const user = req.user;
   console.log(user);
@@ -86,4 +99,5 @@ export const AuthController = {
   getMyData,
   forgotPassword,
   resetPassword,
+  SendVerificationEmail,
 };

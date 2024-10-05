@@ -14,6 +14,8 @@ router.post("/forgot-password", validateRequest(authValidations.forgotPassValida
 
 router.post("/reset-password", validateRequest(authValidations.resetPassValidatioSchema), AuthController.resetPassword);
 
+router.post("/send-verification", validateRequest(authValidations.forgotPassValidatioSchema), AuthController.SendVerificationEmail);
+
 router.get("/getMyData", validateAuth(), AuthController.getMyData);
 
 export const AuthRoutes = router;

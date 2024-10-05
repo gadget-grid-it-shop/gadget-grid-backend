@@ -12,6 +12,7 @@ export default {
   bcrypt_hash_rounds: process.env.BCRYPT_HASH_ROUNDS,
   access_secret: process.env.ACCESS_SECRET,
   refresh_secret: process.env.REFRESH_SECRET,
+  verify_secret: process.env.VERIFY_SECRET,
   node_environment: process.env.ENVIRONMENT,
   access_token_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
   refresh_token_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
