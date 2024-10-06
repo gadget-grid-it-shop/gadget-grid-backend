@@ -1,4 +1,4 @@
-import {Types} from "mongoose";
+import { Types } from "mongoose";
 
 export interface TAddress {
   street?: string;
@@ -22,4 +22,5 @@ export interface TAdmin {
   password: string;
   user: string;
   role: string;
+  profilePicture: string
 }
