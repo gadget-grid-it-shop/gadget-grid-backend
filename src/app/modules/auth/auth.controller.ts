@@ -111,7 +111,6 @@ const updatePassword = catchAsync(async (req, res) => {
 
 const getMyData = catchAsync(async (req, res) => {
   const user = req.user;
-  console.log(user);
   const result = await AuthServices.getMyDataFromDB(user.email);
 
   sendResponse(res, {

@@ -28,7 +28,6 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     email: userExist.email,
   };
 
-  console.log(jwtPayload);
 
   const accessToken = createToken({ payload: jwtPayload, secret: config.access_secret as string, expiresIn: config.access_token_expires_in as string });
   const refreshToken = createToken({
@@ -112,7 +111,6 @@ const resetPasswordService = async (email: string, password: string, token: stri
 
   const decoded = varifyToken(token, config.access_secret as string);
 
-  console.log(decoded);
 
   if (email !== decoded.email) {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");

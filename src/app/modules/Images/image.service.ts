@@ -1,8 +1,8 @@
-import {startSession} from "mongoose";
+import { startSession } from "mongoose";
 import cloudinary from "../../lib/image/image.config";
-import {DeleteApiResponse, UploadApiErrorResponse, UploadApiResponse} from "cloudinary";
-import {TImage} from "./image.interface";
-import {Image} from "./image.model";
+import { DeleteApiResponse, UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
+import { TImage } from "./image.interface";
+import { Image } from "./image.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 
@@ -29,7 +29,6 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
     const uploadImages = files.map((file) => {
       return cloudinary.uploader.upload(file.path, function (err: UploadApiErrorResponse, result: UploadApiResponse) {
         if (err) {
-          console.log(err);
           throw new AppError(httpStatus.OK, "cloudinary upload failed");
         }
 
@@ -67,7 +66,6 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
     await session.endSession();
     return databaseResult;
   } catch (err) {
-    console.log(err);
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(httpStatus.CONFLICT, err instanceof AppError ? err?.message : "upload failed");
@@ -77,41 +75,37 @@ const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, fol
 const getAllImagesFromDB = async (parent_id: string | null) => {
   const folder = parent_id || null;
 
-  const result = await Image.find({folder}).sort({createdAt: 1});
+  const result = await Image.find({ folder }).sort({ createdAt: 1 });
   return result;
 };
 
-const deleteImagesFromDB = async ({public_ids, database_ids}: {public_ids: string[]; database_ids: string[]}) => {
+const deleteImagesFromDB = async ({ public_ids, database_ids }: { public_ids: string[]; database_ids: string[] }) => {
   const session = await startSession();
 
   try {
     session.startTransaction();
-    const deletedFromCloud: DeleteApiResponse = await cloudinary.api.delete_resources([...public_ids], {type: "upload", resource_type: "image"});
+    const deletedFromCloud: DeleteApiResponse = await cloudinary.api.delete_resources([...public_ids], { type: "upload", resource_type: "image" });
 
     if (!deletedFromCloud) {
       throw new AppError(httpStatus.CONFLICT, "Failed to delete from cloud");
     }
 
-    console.log(deletedFromCloud);
 
-    const deleteFromBD = await Image.deleteMany({_id: {$in: [...database_ids]}});
+    const deleteFromBD = await Image.deleteMany({ _id: { $in: [...database_ids] } });
 
     if (!deleteFromBD) {
       throw new AppError(httpStatus.CONFLICT, "Failed to delete from database");
     }
-
-    console.log(deleteFromBD);
 
     await session.commitTransaction();
     await session.endSession();
 
     return deleteFromBD;
   } catch (err) {
-    console.log(err);
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(httpStatus.CONFLICT, "Delete failed");
   }
 };
 
-export const ImageUploadServices = {uploadImageIntoDB, getAllImagesFromDB, deleteImagesFromDB};
+export const ImageUploadServices = { uploadImageIntoDB, getAllImagesFromDB, deleteImagesFromDB };

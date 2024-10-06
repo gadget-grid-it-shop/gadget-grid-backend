@@ -37,7 +37,6 @@ const getFolders = catchAsync(async (req, res) => {
 const updateFolder = catchAsync(async (req, res) => {
     const id = req.params.id
     const { name } = req.body
-    console.log(id, name)
 
     const result = await GalleryFolderService.updateFolderIntoDB(id, name)
 

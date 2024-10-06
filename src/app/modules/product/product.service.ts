@@ -7,12 +7,9 @@ const createProductIntoDB = async (payload: TProduct) => {
 
     if (payload.discount && payload.discount?.value > 0) {
 
-        console.log('condition works')
         if (payload.discount.type === 'flat') {
             const discount = payload.price - payload.discount.value
             productData.special_price = Math.round(discount)
-            console.log(discount)
-            console.log(productData)
         }
         else {
             const discount = payload.price - Math.floor(payload.price * payload.discount.value / 100)
@@ -20,7 +17,6 @@ const createProductIntoDB = async (payload: TProduct) => {
         }
     }
 
-    // console.log(productData)
 
     const result = await Product.create(productData)
 

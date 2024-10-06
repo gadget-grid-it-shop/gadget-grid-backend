@@ -1,9 +1,9 @@
-import {NextFunction, Request, Response} from "express";
+import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-import {ZodError, ZodIssue} from "zod";
-import {TErrorSourse, TGenericErrorResponse} from "../interface/error.interface";
-import {handleZodError} from "../errors/handleZodError";
-import {handleCastError} from "../errors/handleCastError";
+import { ZodError, ZodIssue } from "zod";
+import { TErrorSourse, TGenericErrorResponse } from "../interface/error.interface";
+import { handleZodError } from "../errors/handleZodError";
+import { handleCastError } from "../errors/handleCastError";
 import handleDuplicateError from "../errors/handleDuplicateError";
 import handleMulterError from "../errors/handleMulterError";
 import AppError from "../errors/AppError";
@@ -12,8 +12,6 @@ import config from "../config";
 export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   let message = err.message || "Something went wrong";
   let statusCode = err.statusCode || 500;
-
-  console.log(err);
 
   let errorSources: TErrorSourse = [
     {

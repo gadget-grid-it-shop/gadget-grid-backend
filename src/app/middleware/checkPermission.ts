@@ -9,7 +9,6 @@ type TAccessType = keyof TCrud;
 
 const checkPermission = (feature: string, accessType: TAccessType) => {
     return catchAsync(async (req, res, next) => {
-        console.log(req.body);
         const user = req.user;
 
         const userExist = await User.isUserExistsByEmail(user.email);
