@@ -94,7 +94,7 @@ const forgotPasswordService = async (email: string) => {
   const resetUILink = `${config.client_url}/reset-password/email=${user.email}&token=${resetToken}`;
   const mailBody = generateResetPassHtml(resetUILink, admin?.name);
 
-  await sendEmail(user.email, mailBody);
+  await sendEmail(user.email, mailBody, "Reset your password");
 };
 
 const resetPasswordService = async (email: string, password: string, token: string | undefined) => {
@@ -117,7 +117,7 @@ const resetPasswordService = async (email: string, password: string, token: stri
 
   const hashPassword = await bcrypt.hash(password, Number(config.bcrypt_hash_rounds));
 
-  const updatePasswordRes = await User.findOneAndUpdate({email}, {password: hashPassword});
+  const updatePasswordRes = await User.findOneAndUpdate({email}, {password: hashPassword}).select("-password");
 
   return updatePasswordRes;
 };
@@ -141,10 +141,37 @@ const SendVerificationEmailService = async (email: string) => {
 
   const admin = await Admin.findOne({user: user._id});
 
-  const resetUILink = `${config.client_url}/verify-email/email=${user.email}&token=${verifyToken}`;
-  const mailBody = generateVerifyEmailHtml(resetUILink, admin?.name);
+  const verifyUILink = `${config.client_url}/verify-email/email=${user.email}&token=${verifyToken}`;
+  const mailBody = generateVerifyEmailHtml(verifyUILink, admin?.name);
 
-  await sendEmail(user.email, mailBody);
+  await sendEmail(user.email, mailBody, "Verify your email");
+};
+
+const verifyEmailService = async (email: string, token: string | undefined) => {
+  if (!token) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+  }
+  const user = await User.isUserExistsByEmail(email);
+
+  if (!user) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
+  }
+
+  if (user.isVarified) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are already verified. Please try signing in.");
+  }
+
+  const decoded = jwt.verify(token, config.verify_secret as string) as JwtPayload;
+
+  console.log(decoded);
+
+  if (email !== decoded.email) {
+    throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
+  }
+
+  const verifiedUser = await User.findOneAndUpdate({email}, {isVarified: true}).select("-password");
+
+  return verifiedUser;
 };
 
 const getMyDataFromDB = async (email: string) => {
@@ -168,4 +195,5 @@ export const AuthServices = {
   forgotPasswordService,
   resetPasswordService,
   SendVerificationEmailService,
+  verifyEmailService,
 };
