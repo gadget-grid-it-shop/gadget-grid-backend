@@ -80,6 +80,20 @@ const SendVerificationEmail = catchAsync(async (req, res) => {
   });
 });
 
+const verifyEmail = catchAsync(async (req, res) => {
+  const email = req.body.email;
+  const token = req.headers.authorization;
+
+  const result = await AuthServices.verifyEmailService(email, token);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Email verification successfull. Please login",
+    data: result,
+  });
+});
+
 const getMyData = catchAsync(async (req, res) => {
   const user = req.user;
   console.log(user);
@@ -100,4 +114,5 @@ export const AuthController = {
   forgotPassword,
   resetPassword,
   SendVerificationEmail,
+  verifyEmail,
 };

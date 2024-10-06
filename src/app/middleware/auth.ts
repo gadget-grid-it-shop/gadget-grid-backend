@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
 import catchAsync from "../utils/catchAsync";
 import AppError from "../errors/AppError";
-import jwt, {JwtPayload} from "jsonwebtoken";
 import config from "../config";
 import {User} from "../modules/user/user.model";
+import varifyToken from "../utils/verifyToken";
 
 const validateAuth = () => {
   return catchAsync(async (req, res, next) => {
@@ -13,7 +13,7 @@ const validateAuth = () => {
     }
 
     // check if varified user
-    const decoded = jwt.verify(token, config.access_secret as string) as JwtPayload;
+    const decoded = varifyToken(token, config.access_secret as string);
 
     if (!decoded) {
       throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
