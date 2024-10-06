@@ -9,7 +9,7 @@ export interface TUser {
   isDeleted?: boolean;
   isVarified?: boolean;
   isMasterAdmin?: boolean;
-  passwordChangedAt: string;
+  passwordChangedAt?: string;
 }
 
 export interface TUserModel extends Model<TUser> {

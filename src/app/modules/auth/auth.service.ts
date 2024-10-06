@@ -8,6 +8,7 @@ import {createToken, generateResetPassHtml, generateVerifyEmailHtml} from "./aut
 import {Admin} from "../admin/admin.model";
 import {sendEmail} from "../../utils/sendEmail";
 import bcrypt from "bcrypt";
+import varifyToken from "../../utils/verifyToken";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
   const userExist = await User.isUserExistsByEmail(payload.email);
@@ -48,7 +49,7 @@ const refreshToken = async (token: string) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
   }
 
-  const decoded = jwt.verify(token, config.refresh_secret as string) as JwtPayload;
+  const decoded = varifyToken(token, config.refresh_secret as string);
 
   if (!decoded) {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
@@ -107,7 +108,7 @@ const resetPasswordService = async (email: string, password: string, token: stri
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
 
-  const decoded = jwt.verify(token, config.access_secret as string) as JwtPayload;
+  const decoded = varifyToken(token, config.access_secret as string);
 
   console.log(decoded);
 
@@ -137,11 +138,11 @@ const SendVerificationEmailService = async (email: string) => {
     email: user.email,
   };
 
-  const verifyToken = createToken({payload: jwtPayload, secret: config.verify_secret as string, expiresIn: "60m"});
+  const verificationToken = createToken({payload: jwtPayload, secret: config.verify_secret as string, expiresIn: "10m"});
 
   const admin = await Admin.findOne({user: user._id});
 
-  const verifyUILink = `${config.client_url}/verify-email/email=${user.email}&token=${verifyToken}`;
+  const verifyUILink = `${config.client_url}/verify-email/email=${user.email}&token=${verificationToken}`;
   const mailBody = generateVerifyEmailHtml(verifyUILink, admin?.name);
 
   await sendEmail(user.email, mailBody, "Verify your email");
@@ -161,9 +162,7 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are already verified. Please try signing in.");
   }
 
-  const decoded = jwt.verify(token, config.verify_secret as string) as JwtPayload;
-
-  console.log(decoded);
+  const decoded = varifyToken(token, config.verify_secret as string);
 
   if (email !== decoded.email) {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
