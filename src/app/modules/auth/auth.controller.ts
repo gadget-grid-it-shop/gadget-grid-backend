@@ -1,8 +1,8 @@
 import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import {TLoginCredentials} from "./auth.interface";
-import {AuthServices} from "./auth.service";
+import { TLoginCredentials } from "./auth.interface";
+import { AuthServices } from "./auth.service";
 import config from "../../config";
 
 const adminLogin = catchAsync(async (req, res) => {
@@ -10,7 +10,7 @@ const adminLogin = catchAsync(async (req, res) => {
 
   const result = await AuthServices.adminLoginFromDB(payload);
 
-  const {refreshToken, accessToken, isVarified} = result;
+  const { refreshToken, accessToken, isVarified } = result;
 
   res.cookie("refreshToken", refreshToken, {
     secure: config.node_environment !== "development",
@@ -28,7 +28,7 @@ const adminLogin = catchAsync(async (req, res) => {
 });
 
 const refreshToken = catchAsync(async (req, res) => {
-  const {refreshToken} = req.cookies;
+  const { refreshToken } = req.cookies;
 
   const result = await AuthServices.refreshToken(refreshToken);
 
@@ -41,7 +41,7 @@ const refreshToken = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  const {email} = req.body;
+  const { email } = req.body;
 
   const result = await AuthServices.forgotPasswordService(email);
 
@@ -54,7 +54,7 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
   const token = req.headers.authorization;
 
   const result = await AuthServices.resetPasswordService(email, password, token);
@@ -94,6 +94,21 @@ const verifyEmail = catchAsync(async (req, res) => {
   });
 });
 
+
+const updatePassword = catchAsync(async (req, res) => {
+  const user = req.user;
+  const { newPassword, currentPassword } = req.body;
+
+  const result = await AuthServices.updatePasswordService(newPassword, currentPassword, user.email);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Email verification successfull. Please login",
+    data: result,
+  });
+});
+
 const getMyData = catchAsync(async (req, res) => {
   const user = req.user;
   console.log(user);
@@ -115,4 +130,5 @@ export const AuthController = {
   resetPassword,
   SendVerificationEmail,
   verifyEmail,
+  updatePassword
 };
