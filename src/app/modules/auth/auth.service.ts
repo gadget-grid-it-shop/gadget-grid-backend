@@ -91,7 +91,7 @@ const forgotPasswordService = async (email: string) => {
 
   const admin = await Admin.findOne({ user: user._id });
 
-  const resetUILink = `${config.client_url}/reset-password/email=${user.email}&token=${resetToken}`;
+  const resetUILink = `${config.client_url}/reset-password?email=${user.email}&token=${resetToken}`;
   const mailBody = generateResetPassHtml(resetUILink, admin?.name);
 
   await sendEmail(user.email, mailBody, "Reset your password");
