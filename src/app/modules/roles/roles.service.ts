@@ -7,6 +7,13 @@ const createRoleIntoDB = async (payload: TRole) => {
     return result
 }
 
+const getAllRolesFromDB = async () => {
+    const result = await Roles.find()
+
+    return result
+}
+
 export const RolesService = {
-    createRoleIntoDB
+    createRoleIntoDB,
+    getAllRolesFromDB
 }

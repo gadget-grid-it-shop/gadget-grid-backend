@@ -33,6 +33,10 @@ const RolesSchema = new Schema<TRole>({
         required: [true, 'Role is required'],
         unique: true
     },
+    description: {
+        type: String,
+        default: ''
+    },
     permissions: {
         type: [PermissionsSchema],
         default: Object.values(EAppFeatures).map(feature => ({

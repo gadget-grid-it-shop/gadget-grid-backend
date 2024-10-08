@@ -9,4 +9,6 @@ const router = Router()
 
 router.post('/create-role', validateRequest(RolesValidations.createRoleValidationSchema), checkPermission(EAppFeatures.role, 'create'), RolesController.createRole)
 
+router.get('/get-all', checkPermission(EAppFeatures.role, 'read'), RolesController.getAllRoles)
+
 export const RolesRoutes = router

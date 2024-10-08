@@ -17,7 +17,20 @@ const createRole = catchAsync(async (req, res) => {
     })
 })
 
+const getAllRoles = catchAsync(async (req, res) => {
+
+    const result = await RolesService.getAllRolesFromDB()
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'retrived all roles successfully',
+        data: result
+    })
+})
+
 
 export const RolesController = {
-    createRole
+    createRole,
+    getAllRoles
 }
