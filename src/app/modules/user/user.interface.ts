@@ -1,4 +1,4 @@
-import {Model} from "mongoose";
+import { Model } from "mongoose";
 
 export interface TUser {
   _id?: string;
@@ -7,7 +7,7 @@ export interface TUser {
   isActive?: boolean;
   role: "customer" | string;
   isDeleted?: boolean;
-  isVarified?: boolean;
+  isVerified?: boolean;
   isMasterAdmin?: boolean;
   passwordChangedAt?: string;
 }

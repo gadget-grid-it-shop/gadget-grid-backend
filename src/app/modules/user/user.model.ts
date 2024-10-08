@@ -28,7 +28,7 @@ const UserSchema = new Schema<TUser, TUserModel>({
         default: 'customer',
         ref: 'Roles'
     },
-    isVarified: {
+    isVerified: {
         type: Boolean,
         default: false
     },
@@ -63,7 +63,7 @@ UserSchema.statics.isUserExistsByEmail = async function (email: string) {
 UserSchema.statics.isUserVarified = async function (email: string) {
     const exist = await User.isUserExistsByEmail(email)
     if (exist) {
-        return exist.isVarified
+        return exist.isVerified
     }
     else {
         return false

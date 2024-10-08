@@ -10,7 +10,7 @@ const adminLogin = catchAsync(async (req, res) => {
 
   const result = await AuthServices.adminLoginFromDB(payload);
 
-  const { refreshToken, accessToken, isVarified } = result;
+  const { refreshToken, accessToken, isVerified } = result;
 
   res.cookie("refreshToken", refreshToken, {
     secure: config.node_environment !== "development",
@@ -19,10 +19,10 @@ const adminLogin = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: isVarified ? "Login successfull, welcome back" : "Please varify your email and try again",
+    message: isVerified ? "Login successfull, welcome back" : "Please varify your email and try again",
     data: {
-      accessToken: isVarified ? accessToken : null,
-      isVarified,
+      accessToken: isVerified ? accessToken : null,
+      isVerified,
     },
   });
 });

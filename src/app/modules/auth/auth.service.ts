@@ -39,7 +39,7 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
   return {
     accessToken,
     refreshToken,
-    isVarified: userExist.isVarified,
+    isVerified: userExist.isVerified,
   };
 };
 
@@ -133,7 +133,7 @@ const SendVerificationEmailService = async (email: string) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
 
-  if (user.isVarified) {
+  if (user.isVerified) {
     throw new AppError(httpStatus.UNAUTHORIZED, "User already verified. Please try signing in.");
   }
 
@@ -145,7 +145,7 @@ const SendVerificationEmailService = async (email: string) => {
 
   const admin = await Admin.findOne({ user: user._id });
 
-  const verifyUILink = `${config.client_url}/verify-email/email=${user.email}&token=${verificationToken}`;
+  const verifyUILink = `${config.client_url}/verify-email?email=${user.email}&token=${verificationToken}`;
   const mailBody = generateVerifyEmailHtml(verifyUILink, admin?.name);
 
   await sendEmail(user.email, mailBody, "Verify your email");
@@ -163,7 +163,7 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
 
-  if (user.isVarified) {
+  if (user.isVerified) {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are already verified. Please try signing in.");
   }
 
@@ -173,7 +173,7 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
   }
 
-  const verifiedUser = await User.findOneAndUpdate({ email }, { isVarified: true }).select("-password");
+  const verifiedUser = await User.findOneAndUpdate({ email }, { isVerified: true }).select("-password");
 
   return verifiedUser;
 };

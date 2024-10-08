@@ -47,10 +47,12 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
       success: false,
       statusCode: err.statusCode,
       message: err.message,
-      errorSources: {
-        path: "",
-        message: err.message,
-      },
+      errorSources: [
+        {
+          path: "",
+          message: err.message,
+        }
+      ],
       stack: config.node_environment === "development" ? err?.stack : null,
     });
   }
@@ -60,10 +62,12 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
       success: false,
       statusCode: statusCode,
       message: err.message,
-      errorSources: {
-        path: "",
-        message: err.message,
-      },
+      errorSources: [
+        {
+          path: "",
+          message: err.message,
+        }
+      ],
       stack: config.node_environment === "development" ? err?.stack : null,
     });
   }
