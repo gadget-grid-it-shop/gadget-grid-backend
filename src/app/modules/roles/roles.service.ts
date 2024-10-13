@@ -19,8 +19,6 @@ const getAllRolesFromDB = async () => {
 const updateRoleIntoDB = async (payload: TRole, email: string, id: string) => {
   const ThisUser = await User.isUserExistsByEmail(email);
 
-  console.log(payload, email, id);
-
   if (!ThisUser) {
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
@@ -40,17 +38,30 @@ const updateRoleIntoDB = async (payload: TRole, email: string, id: string) => {
 
     if (payloadPermission) {
       return {
-        ...permission,
-        access: payloadPermission.access,
+        feature: permission.feature,
+        access: {
+          read: payloadPermission.access.read ?? permission.access.read,
+          create: payloadPermission.access.create ?? permission.access.create,
+          update: payloadPermission.access.update ?? permission.access.update,
+          delete: payloadPermission.access.delete ?? permission.access.delete,
+        },
       };
     } else {
-      return permission;
+      return {
+        feature: permission.feature,
+        access: permission.access,
+      };
     }
   });
-
-  console.log(newPermissions);
-
-  const result = await Roles.findByIdAndUpdate(id, {role: payload.role, description: payload.description, permissions: newPermissions}, {new: true});
+  const result = await Roles.findByIdAndUpdate(
+    id,
+    {
+      role: payload.role,
+      description: payload.description,
+      $set: {permissions: newPermissions},
+    },
+    {new: true}
+  );
 
   return result;
 };
