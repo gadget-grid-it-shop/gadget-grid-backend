@@ -18,4 +18,6 @@ router.get("/get-all", checkPermission(EAppFeatures.role, "read"), RolesControll
 
 router.patch("/update-role/:id", checkPermission(EAppFeatures.role, "update"), RolesController.updateRole);
 
+router.delete("/delete-role/:id", checkPermission(EAppFeatures.role, "delete"), RolesController.deleteRole);
+
 export const RolesRoutes = router;

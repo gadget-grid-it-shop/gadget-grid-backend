@@ -11,7 +11,7 @@ const createRoleIntoDB = async (payload: TRole) => {
 };
 
 const getAllRolesFromDB = async () => {
-  const result = await Roles.find();
+  const result = await Roles.find({isDeleted: false});
 
   return result;
 };
@@ -27,7 +27,7 @@ const updateRoleIntoDB = async (payload: TRole, email: string, id: string) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "You can't update your own role");
   }
 
-  const thisRole: TRole | null = await Roles.findById(id);
+  const thisRole: TRole | null = await Roles.isRoleExist(id);
 
   if (!thisRole) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Role does not exist");
@@ -66,8 +66,20 @@ const updateRoleIntoDB = async (payload: TRole, email: string, id: string) => {
   return result;
 };
 
+const deleteRoleFromDB = async (id: string) => {
+  const thisRole: TRole | null = await Roles.isRoleExist(id);
+  if (!thisRole) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Role does not exist");
+  }
+
+  const result = await Roles.findByIdAndUpdate(id, {isDeleted: true}, {new: true});
+
+  return result;
+};
+
 export const RolesService = {
   createRoleIntoDB,
   getAllRolesFromDB,
   updateRoleIntoDB,
+  deleteRoleFromDB,
 };

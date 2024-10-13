@@ -43,8 +43,22 @@ const updateRole = catchAsync(async (req, res) => {
   });
 });
 
+const deleteRole = catchAsync(async (req, res) => {
+  const id = req.params.id;
+
+  const result = await RolesService.deleteRoleFromDB(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Role deleted successfully",
+    data: result,
+  });
+});
+
 export const RolesController = {
   createRole,
   getAllRoles,
   updateRole,
+  deleteRole,
 };
