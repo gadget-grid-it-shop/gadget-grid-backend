@@ -19,7 +19,19 @@ const createUser = catchAsync(async (req, res, next) => {
     })
 })
 
+const getAllUsers = catchAsync(async (req, res) => {
+    const result = await UserServices.getAllAdminsFromDB()
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Successfully retrived all users',
+        data: result
+    })
+})
+
 
 export const UserController = {
-    createUser
+    createUser,
+    getAllUsers
 }

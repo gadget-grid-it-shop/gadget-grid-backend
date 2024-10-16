@@ -49,7 +49,7 @@ const AdminSchema = new Schema<TAdmin>({
     default: ""
   },
   user: {
-    type: String,
+    type: Schema.ObjectId,
     required: [true, "User is required"],
     ref: "User",
   },

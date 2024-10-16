@@ -1,17 +1,17 @@
-import mongoose, {Types} from "mongoose";
-import {TUser} from "./user.interface";
-import {User} from "./user.model";
-import {TAdmin} from "../admin/admin.interface";
-import {Admin} from "../admin/admin.model";
+import mongoose, { Types } from "mongoose";
+import { TUser } from "./user.interface";
+import { User } from "./user.model";
+import { TAdmin } from "../admin/admin.interface";
+import { Admin } from "../admin/admin.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
-import {Roles} from "../roles/roles.model";
+import { Roles } from "../roles/roles.model";
 
 const createAdminIntoDB = async (admin: TAdmin) => {
   const user: TUser = {
     email: admin.email,
     password: admin.password,
-    role: admin.role,
+    role: admin.role
   };
 
   const roleExist = await Roles.findById(admin.role);
@@ -53,6 +53,22 @@ const createAdminIntoDB = async (admin: TAdmin) => {
   }
 };
 
+const getAllAdminsFromDB = async () => {
+  const result = await Admin.find().populate([
+    {
+      path: 'user',
+      select: '-password'
+    },
+    {
+      path: 'role',
+      select: 'role -_id'
+    }
+  ])
+
+  return result
+}
+
 export const UserServices = {
   createAdminIntoDB,
+  getAllAdminsFromDB
 };

@@ -20,7 +20,7 @@ export interface TAdmin {
   address: TAddress;
   phoneNumber: string;
   password: string;
-  user: string;
+  user: Types.ObjectId;
   role: string;
   profilePicture: string
 }

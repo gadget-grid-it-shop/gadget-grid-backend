@@ -15,5 +15,7 @@ router.post('/create-admin',
     UserController.createUser
 )
 
+router.get('/admin/get-all', checkPermission(EAppFeatures.user, 'read'), UserController.getAllUsers)
+
 
 export const UserRoutes = router
