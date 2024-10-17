@@ -50,8 +50,6 @@ const refreshToken = async (token: string) => {
 
   const decoded = varifyToken(token, config.refresh_secret as string);
 
-  console.log(decoded)
-
   if (!decoded) {
     throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
   }

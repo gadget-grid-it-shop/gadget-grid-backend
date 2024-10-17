@@ -1,4 +1,4 @@
-import jwt, {JwtPayload} from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import AppError from "../errors/AppError";
 import httpStatus from "http-status";
 
@@ -7,7 +7,7 @@ const varifyToken = (token: string, secret: string) => {
     const decoded = jwt.verify(token, secret as string) as JwtPayload;
     return decoded;
   } catch (err) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Token expired. Please try again");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Session expired. Please try again");
   }
 };
 
