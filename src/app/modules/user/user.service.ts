@@ -61,7 +61,7 @@ const getAllAdminsFromDB = async () => {
     },
     {
       path: 'role',
-      select: 'role -_id'
+      select: 'role isDeleted -_id'
     }
   ])
 

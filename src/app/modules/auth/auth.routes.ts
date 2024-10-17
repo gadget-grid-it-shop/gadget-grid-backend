@@ -8,7 +8,7 @@ const router = Router();
 
 router.post("/admin-login", AuthController.adminLogin);
 
-router.post("/refresh-token", validateAuth(), AuthController.refreshToken);
+router.post("/refresh-token", AuthController.refreshToken);
 
 router.post("/forgot-password", validateRequest(authValidations.forgotPassValidationSchema), AuthController.forgotPassword);
 
