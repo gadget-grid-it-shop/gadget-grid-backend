@@ -42,7 +42,7 @@ const AdminSchema = new Schema<TAdmin>({
   },
   phoneNumber: {
     type: String,
-    required: [true, "Phone number is required"],
+    default: ""
   },
   profilePicture: {
     type: String,

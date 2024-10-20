@@ -17,10 +17,10 @@ const AddressValidationSchema = z.object({
 
 const CreateAdminValidationSchema = z.object({
     address: AddressValidationSchema.optional(),
-    email: z.string().email({ message: "Invalid email address" }),
+    email: z.string({ required_error: "Email is required" }).email({ message: "Invalid email address" }),
     name: AdminNameValidationSchema,
-    role: z.string().min(1, { message: "Role is required" }),
-    phoneNumber: z.string().min(1, { message: "Phone number is required" })
+    role: z.string({ required_error: "Role is required" }).min(1, { message: "Role is required" }),
+    phoneNumber: z.string().optional()
 });
 
 
