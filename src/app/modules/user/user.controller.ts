@@ -30,8 +30,23 @@ const getAllUsers = catchAsync(async (req, res) => {
     })
 })
 
+const deleteUser = catchAsync(async (req, res) => {
+    const userId = req.params.userId
+    const role: 'admin' | 'customer' = req.body.role
+
+    const result = await UserServices.deleteUserFromDB(userId, role)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Successfully deleted user',
+        data: result
+    })
+})
+
 
 export const UserController = {
     createUser,
-    getAllUsers
+    getAllUsers,
+    deleteUser
 }

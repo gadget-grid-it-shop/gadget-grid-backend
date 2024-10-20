@@ -53,6 +53,10 @@ const AdminSchema = new Schema<TAdmin>({
     required: [true, "User is required"],
     ref: "User",
   },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  }
 });
 
 export const Admin = model<TAdmin>("Admin", AdminSchema);

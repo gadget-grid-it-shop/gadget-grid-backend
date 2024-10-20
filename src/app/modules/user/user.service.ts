@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { startSession, Types } from "mongoose";
 import { TUser } from "./user.interface";
 import { User } from "./user.model";
 import { TAdmin } from "../admin/admin.interface";
@@ -8,6 +8,9 @@ import httpStatus from "http-status";
 import { Roles } from "../roles/roles.model";
 
 const createAdminIntoDB = async (admin: TAdmin) => {
+
+  delete admin.isDeleted
+
   const user: TUser = {
     email: admin.email,
     password: admin.password,
@@ -54,7 +57,7 @@ const createAdminIntoDB = async (admin: TAdmin) => {
 };
 
 const getAllAdminsFromDB = async () => {
-  const result = await Admin.find().populate([
+  const result = await Admin.find({ isDeleted: false }).populate([
     {
       path: 'user',
       select: '-password'
@@ -68,7 +71,46 @@ const getAllAdminsFromDB = async () => {
   return result
 }
 
+
+const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer') => {
+  if (!userId) {
+    throw new AppError(httpStatus.CONFLICT, 'User not found')
+  }
+
+  console.log(userId, role)
+
+  const session = await startSession()
+
+  try {
+
+    session.startTransaction()
+    const deletedUser = await User.findByIdAndUpdate(userId, { isDeleted: true }, { new: true })
+    if (!deletedUser) {
+      throw new AppError(httpStatus.CONFLICT, 'Failed to delete user')
+    }
+
+    if (role === "admin") {
+      const deletedAdmin = await Admin.findOneAndUpdate({ user: deletedUser._id }, { isDeleted: true }, { new: true })
+      session.commitTransaction()
+      session.endSession()
+      return deletedAdmin
+    }
+
+
+  } catch (err) {
+    await session.abortTransaction()
+    await session.endSession()
+    if (err instanceof AppError) {
+      throw new AppError(err.statusCode, err.message)
+    }
+    else {
+      throw new AppError(httpStatus.CONFLICT, "Failed to delete user")
+    }
+  }
+}
+
 export const UserServices = {
   createAdminIntoDB,
-  getAllAdminsFromDB
+  getAllAdminsFromDB,
+  deleteUserFromDB
 };

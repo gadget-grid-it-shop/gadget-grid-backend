@@ -17,5 +17,7 @@ router.post('/create-admin',
 
 router.get('/admin/get-all', checkPermission(EAppFeatures.user, 'read'), UserController.getAllUsers)
 
+router.delete('/:userId', checkPermission(EAppFeatures.user, 'delete'), UserController.deleteUser)
+
 
 export const UserRoutes = router

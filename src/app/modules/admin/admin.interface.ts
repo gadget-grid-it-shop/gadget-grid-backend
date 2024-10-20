@@ -22,5 +22,6 @@ export interface TAdmin {
   password: string;
   user: Types.ObjectId;
   role: string;
-  profilePicture: string
+  profilePicture: string,
+  isDeleted?: boolean
 }
