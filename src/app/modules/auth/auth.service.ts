@@ -17,6 +17,10 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     throw new AppError(httpStatus.CONFLICT, "User does not exist");
   }
 
+  if (userExist.isDeleted) {
+    throw new AppError(httpStatus.CONFLICT, "Sorry, your account was deleted");
+  }
+
   const matchPassword = await User.matchUserPassword(payload.password, userExist.password);
 
   if (!matchPassword) {
@@ -214,6 +218,10 @@ const getMyDataFromDB = async (email: string) => {
       path: "role",
     },
   ]);
+
+  // if (result?.isDeleted) {
+  //   throw new AppError(httpStatus.UNAUTHORIZED, 'Your account was deleted')
+  // }
 
   return result;
 };
