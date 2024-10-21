@@ -30,6 +30,19 @@ const getAllUsers = catchAsync(async (req, res) => {
     })
 })
 
+const getSingleUser = catchAsync(async (req, res) => {
+    const id = req.params.id;
+    const query = req.query
+    const result = await UserServices.getSingleUserFromDB(id, query)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Successfully retrived user data',
+        data: result
+    })
+})
+
 const deleteUser = catchAsync(async (req, res) => {
     const userId = req.params.userId
     const role: 'admin' | 'customer' = req.body.role
@@ -48,5 +61,6 @@ const deleteUser = catchAsync(async (req, res) => {
 export const UserController = {
     createUser,
     getAllUsers,
-    deleteUser
+    deleteUser,
+    getSingleUser
 }

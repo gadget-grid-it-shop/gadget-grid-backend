@@ -19,5 +19,7 @@ router.get('/admin/get-all', checkPermission(EAppFeatures.user, 'read'), UserCon
 
 router.delete('/:userId', checkPermission(EAppFeatures.user, 'delete'), UserController.deleteUser)
 
+router.get('/:id', checkPermission(EAppFeatures.user, 'read'), UserController.getSingleUser)
+
 
 export const UserRoutes = router

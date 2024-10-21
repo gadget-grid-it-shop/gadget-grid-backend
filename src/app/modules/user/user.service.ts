@@ -6,6 +6,7 @@ import { Admin } from "../admin/admin.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { Roles } from "../roles/roles.model";
+import { ObjectId } from 'mongodb'
 
 const createAdminIntoDB = async (admin: TAdmin) => {
 
@@ -72,6 +73,46 @@ const getAllAdminsFromDB = async () => {
 }
 
 
+const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) => {
+
+  const userType: 'admin' | 'customer' | unknown = query?.userType
+
+  if (!userType) {
+    throw new AppError(httpStatus.CONFLICT, 'User type is required')
+  }
+
+  console.log(userType)
+
+  if (userType !== 'admin' && userType !== 'customer') {
+    throw new AppError(httpStatus.CONFLICT, 'Wrong user type')
+  }
+
+  const model = userType === 'admin' ? Admin : userType === 'customer' ? Admin : undefined
+
+
+  const userData = await model?.findById(id).populate([
+    {
+      path: 'user',
+      select: '-password'
+    },
+    {
+      path: 'role',
+      select: 'role isDeleted -_id'
+    }
+  ])
+
+  if (!userData) {
+    throw new AppError(httpStatus.CONFLICT, 'Failed to get user data')
+  }
+
+  if (userData.isDeleted) {
+    throw new AppError(httpStatus.CONFLICT, 'User was deleted')
+  }
+
+  return userData
+}
+
+
 const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer') => {
   if (!userId) {
     throw new AppError(httpStatus.CONFLICT, 'User not found')
@@ -112,5 +153,6 @@ const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer') => {
 export const UserServices = {
   createAdminIntoDB,
   getAllAdminsFromDB,
-  deleteUserFromDB
+  deleteUserFromDB,
+  getSingleUserFromDB
 };
