@@ -31,8 +31,16 @@ const updateBrandIntoDB = async (id: string, payload: Partial<TBrand>) => {
 }
 
 
+const getAllBrandsFromDB = async () => {
+    const result = await Brand.find()
+
+    return result
+}
+
+
 
 export const BrandService = {
     createBrandIntoDB,
-    updateBrandIntoDB
+    updateBrandIntoDB,
+    getAllBrandsFromDB
 }

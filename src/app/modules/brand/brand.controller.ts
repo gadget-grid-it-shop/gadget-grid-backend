@@ -30,8 +30,20 @@ const updateBrand = catchAsync(async (req, res) => {
     })
 })
 
+const getAllBrands = catchAsync(async (req, res) => {
+    const result = await BrandService.getAllBrandsFromDB()
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Successfully retrived all brands",
+        data: result
+    })
+})
+
 
 export const BrandController = {
     createBrand,
-    updateBrand
+    updateBrand,
+    getAllBrands
 }
