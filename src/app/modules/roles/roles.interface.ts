@@ -1,4 +1,4 @@
-import {Model} from "mongoose";
+import { Model } from "mongoose";
 
 export interface TCrud {
   read: boolean;
@@ -15,6 +15,7 @@ export enum EAppFeatures {
   category = "category",
   photo = "photo",
   user = "user",
+  brand = 'brand'
 }
 
 export interface TPermission {

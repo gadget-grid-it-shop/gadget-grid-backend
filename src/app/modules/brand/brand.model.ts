@@ -27,7 +27,15 @@ export interface TBrandModel extends Model<TBrand> {
 brandSchema.statics.findBrandByName = async (name: string) => {
     const exists = await Brand.findOne({ name })
 
-    return exists ? true : false
+    if (!exists) {
+        return false
+    }
+    else if (exists.isDeleted) {
+        return false
+    }
+    else {
+        return true
+    }
 }
 
 export const Brand = model<TBrand, TBrandModel>('Brand', brandSchema)
