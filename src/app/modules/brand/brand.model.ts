@@ -1,5 +1,5 @@
-import { Model, model, Schema } from "mongoose";
-import { TBrand } from "./brand.interface";
+import { model, Schema } from "mongoose";
+import { TBrand, TBrandModel } from "./brand.interface";
 
 const brandSchema = new Schema<TBrand>({
     image: {
@@ -20,10 +20,6 @@ const brandSchema = new Schema<TBrand>({
     }
 })
 
-export interface TBrandModel extends Model<TBrand> {
-    findBrandByName(name: string): Promise<boolean>
-}
-
 brandSchema.statics.findBrandByName = async (name: string) => {
     const exists = await Brand.findOne({ name })
 
@@ -36,6 +32,12 @@ brandSchema.statics.findBrandByName = async (name: string) => {
     else {
         return true
     }
+}
+
+brandSchema.statics.findBrandById = async (id: string) => {
+    const res = await Brand.findById(id)
+
+    return res
 }
 
 export const Brand = model<TBrand, TBrandModel>('Brand', brandSchema)

@@ -6,7 +6,7 @@ import { Brand } from "./brand.model";
 const createBrandIntoDB = async (payload: TBrand) => {
     const exists = await Brand.findBrandByName(payload.name)
 
-    if (!exists) {
+    if (exists) {
         throw new AppError(httpStatus.CONFLICT, 'Brand already exists')
     }
 
@@ -16,7 +16,23 @@ const createBrandIntoDB = async (payload: TBrand) => {
 }
 
 
+const updateBrandIntoDB = async (id: string, payload: Partial<TBrand>) => {
+    const exists = await Brand.findBrandById(id)
+
+    if (!exists) {
+        throw new AppError(httpStatus.CONFLICT, 'Brand does not exists')
+    }
+
+    delete payload.isDeleted
+
+    const result = await Brand.findByIdAndUpdate(id, payload, { new: true })
+
+    return result
+}
+
+
 
 export const BrandService = {
-    createBrandIntoDB
+    createBrandIntoDB,
+    updateBrandIntoDB
 }

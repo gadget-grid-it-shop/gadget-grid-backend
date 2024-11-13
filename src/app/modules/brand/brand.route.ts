@@ -9,4 +9,6 @@ const router = Router()
 
 router.post('/create', checkPermission(EAppFeatures.brand, 'create'), validateRequest(BrandValidationSchema.createBrandValidationSchema), BrandController.createBrand)
 
+router.patch('/update/:id', checkPermission(EAppFeatures.brand, 'update'), validateRequest(BrandValidationSchema.updateBrandValidationSchema), BrandController.updateBrand)
+
 export const BrandRoutes = router

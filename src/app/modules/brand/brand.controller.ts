@@ -16,7 +16,22 @@ const createBrand = catchAsync(async (req, res) => {
     })
 })
 
+const updateBrand = catchAsync(async (req, res) => {
+    const payload = req.body
+    const id = req.params.id
+
+    const result = await BrandService.updateBrandIntoDB(id, payload)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Brand updated successfully",
+        data: result
+    })
+})
+
 
 export const BrandController = {
-    createBrand
+    createBrand,
+    updateBrand
 }
