@@ -8,6 +8,7 @@ import { UserRoutes } from "../modules/user/user.routes";
 import { RolesRoutes } from "../modules/roles/roles.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
 import validateAuth from "../middleware/auth";
+import { BrandRoutes } from "../modules/brand/brand.route";
 
 const router = Router();
 
@@ -22,6 +23,7 @@ const moduleRoutes = [
   { path: '/user', route: UserRoutes },
   { path: '/roles', route: RolesRoutes },
   { path: '/auth', route: AuthRoutes },
+  { path: '/brand', route: BrandRoutes },
 ];
 
 moduleRoutes.forEach((route) => {

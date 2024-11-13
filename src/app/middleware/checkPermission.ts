@@ -19,9 +19,9 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
             throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
         }
 
-        // if (userExist.isMasterAdmin) {
-        //     return next()
-        // }
+        if (userExist.isMasterAdmin) {
+            return next()
+        }
         if (userExist.isDeleted) {
             throw new AppError(httpStatus.UNAUTHORIZED, "Your account was deleted", "unauthorized access request");
         }
