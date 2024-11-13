@@ -13,4 +13,6 @@ router.patch('/update/:id', checkPermission(EAppFeatures.brand, 'update'), valid
 
 router.get('/get-all', checkPermission(EAppFeatures.brand, 'read'), BrandController.getAllBrands)
 
+router.delete('/delete/:id', checkPermission(EAppFeatures.brand, 'delete'), BrandController.deleteBrand)
+
 export const BrandRoutes = router

@@ -32,7 +32,20 @@ const updateBrandIntoDB = async (id: string, payload: Partial<TBrand>) => {
 
 
 const getAllBrandsFromDB = async () => {
-    const result = await Brand.find()
+    const result = await Brand.find({ isDeleted: false })
+
+    return result
+}
+
+
+const deleteBrandFromDB = async (id: string) => {
+    const exists = await Brand.findBrandById(id)
+
+    if (!exists) {
+        throw new AppError(httpStatus.CONFLICT, 'Brand does not exists')
+    }
+
+    const result = await Brand.findByIdAndUpdate(id, { isDeleted: true }, { new: true })
 
     return result
 }
@@ -42,5 +55,6 @@ const getAllBrandsFromDB = async () => {
 export const BrandService = {
     createBrandIntoDB,
     updateBrandIntoDB,
-    getAllBrandsFromDB
+    getAllBrandsFromDB,
+    deleteBrandFromDB
 }

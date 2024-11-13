@@ -42,8 +42,22 @@ const getAllBrands = catchAsync(async (req, res) => {
 })
 
 
+const deleteBrand = catchAsync(async (req, res) => {
+    const id = req.params.id
+
+    const result = await BrandService.deleteBrandFromDB(id)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Successfully deleted all brand",
+        data: result
+    })
+})
+
 export const BrandController = {
     createBrand,
     updateBrand,
-    getAllBrands
+    getAllBrands,
+    deleteBrand
 }
