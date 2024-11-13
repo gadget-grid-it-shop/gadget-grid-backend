@@ -101,6 +101,8 @@ const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) =
     }
   ])
 
+  // console.log(userData)
+
   if (!userData) {
     throw new AppError(httpStatus.CONFLICT, 'Failed to get user data')
   }

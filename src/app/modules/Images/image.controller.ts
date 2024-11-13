@@ -10,6 +10,8 @@ const uploadImage = catchAsync(async (req, res) => {
 
     const result = await ImageUploadServices.uploadImageIntoDB(req.files as Express.Multer.File[], type, folder)
 
+    console.log(req.files)
+
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,

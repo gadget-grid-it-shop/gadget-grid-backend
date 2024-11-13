@@ -9,6 +9,8 @@ import httpStatus from "http-status";
 const uploadImageIntoDB = async (files: Express.Multer.File[], type: string, folder: string | null) => {
   const session = await startSession();
 
+  console.log(files)
+
   if (!files) {
     throw new AppError(httpStatus.CONFLICT, "Failed to upload");
   }

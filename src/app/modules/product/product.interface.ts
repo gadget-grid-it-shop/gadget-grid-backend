@@ -6,6 +6,11 @@ export interface TProductCategory {
 }
 
 
+// export interface TProductCategoryTree {
+
+// }
+
+
 export interface TReview {
     rating: number,
     review: string
@@ -33,7 +38,7 @@ export interface TProduct {
     reviews?: TReview[];
     key_features: string;
     quantity: number;
-    category: TProductCategory[]; // Linked to Category
+    category: TProductCategory[];
     description: string;
     videos?: string[];
     gallery?: string[];

@@ -59,4 +59,15 @@ const AdminSchema = new Schema<TAdmin>({
   }
 });
 
+AdminSchema.virtual('fullName').get(function () {
+  if (!this.name) return
+  console.log(this.toObject)
+  const { firstName, middleName, lastName } = this.name;
+  return [firstName, middleName, lastName].filter(Boolean).join(' ');
+})
+
+AdminSchema.set('toJSON', {
+  virtuals: true
+})
+
 export const Admin = model<TAdmin>("Admin", AdminSchema);

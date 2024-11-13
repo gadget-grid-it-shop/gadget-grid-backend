@@ -11,6 +11,8 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
     return catchAsync(async (req, res, next) => {
         const user = req.user;
 
+        console.log(req.body)
+
         const userExist = await User.isUserExistsByEmail(user.email);
 
         if (!userExist) {
