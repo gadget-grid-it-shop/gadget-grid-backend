@@ -17,6 +17,11 @@ const brandSchema = new Schema<TBrand>({
     name: {
         type: String,
         required: [true, 'Name is required']
+    },
+    createdBy: {
+        type: String,
+        required: true,
+        ref: 'User'
     }
 })
 

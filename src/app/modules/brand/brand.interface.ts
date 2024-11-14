@@ -5,7 +5,8 @@ export type TBrand = {
     name: string,
     image: string,
     isDeleted: boolean,
-    isActive: boolean
+    isActive: boolean,
+    createdBy: string
 }
 
 export interface TBrandModel extends Model<TBrand> {

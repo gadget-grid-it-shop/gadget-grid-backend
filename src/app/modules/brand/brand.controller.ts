@@ -5,8 +5,9 @@ import { BrandService } from "./brand.service";
 
 const createBrand = catchAsync(async (req, res) => {
     const payload = req.body
+    const email = req.user.email
 
-    const result = await BrandService.createBrandIntoDB(payload)
+    const result = await BrandService.createBrandIntoDB(payload, email)
 
     sendResponse(res, {
         success: true,
