@@ -47,7 +47,9 @@ const deleteUser = catchAsync(async (req, res) => {
     const userId = req.params.userId
     const role: 'admin' | 'customer' = req.body.role
 
-    const result = await UserServices.deleteUserFromDB(userId, role)
+    const authUser = req.user.email
+
+    const result = await UserServices.deleteUserFromDB(userId, role, authUser)
 
     sendResponse(res, {
         success: true,

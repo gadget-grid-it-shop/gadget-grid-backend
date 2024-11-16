@@ -24,14 +24,28 @@ const createAdminIntoDB = async (admin: TAdmin) => {
     throw new AppError(httpStatus.NOT_FOUND, "Role does not exist");
   }
 
-  if (await User.isUserExistsByEmail(admin.email)) {
-    throw new AppError(httpStatus.CONFLICT, "User already exists. Try signing in");
-  }
+
 
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
+
+    const adminExist = await User.isUserExistsByEmail(admin.email)
+
+    if (adminExist) {
+      const deletedAdmin = await Admin.findOneAndDelete({ email: admin.email })
+
+      if (!deletedAdmin) {
+        throw new AppError(httpStatus.CONFLICT, "failed to create user");
+      }
+
+      const deleteUser = await User.findOneAndDelete({ email: admin.email })
+
+      if (!deleteUser) {
+        throw new AppError(httpStatus.CONFLICT, "failed to create user");
+      }
+    }
 
     const userRes = await User.create(user);
 
@@ -115,12 +129,16 @@ const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) =
 }
 
 
-const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer') => {
+const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer', authUserEmail: string) => {
   if (!userId) {
     throw new AppError(httpStatus.CONFLICT, 'User not found')
   }
 
-  console.log(userId, role)
+  const user: TUser | null = await User.findById(userId)
+
+  if (user?.email === authUserEmail) {
+    throw new AppError(httpStatus.CONFLICT, "You can't delete your own account")
+  }
 
   const session = await startSession()
 
