@@ -41,7 +41,10 @@ const ProductSchema = new Schema<TProduct>({
     sku: { type: String, required: [true, 'Product SKU is required'], unique: true },
     brand: { type: String, required: [true, 'Product brand is required'] },
     model: { type: String, default: "" },
-    warranty: { type: String, required: [true, 'Product warranty is required'] },
+    warranty: {
+        days: { type: Number, default: 0 },
+        lifetime: { type: Boolean, default: false }
+    },
     // reviews: [ReviewSchema],
     key_features: { type: String, required: [true, 'Key features are required'] },
     quantity: { type: Number, required: [true, 'Product quantity is required'], default: 0 },

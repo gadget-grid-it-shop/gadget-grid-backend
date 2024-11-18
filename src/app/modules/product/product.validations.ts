@@ -29,7 +29,10 @@ export const createProductValidationSchema = z.object({
     sku: z.string({ required_error: "Product SKU is required" }),
     brand: z.string({ required_error: "Product brand is required" }),
     model: z.string().optional(),
-    warranty: z.string({ required_error: "Product warranty is required" }),
+    warranty: z.object({
+        days: z.number(),
+        lifetime: z.boolean()
+    }),
     // reviews: z.array(ReviewSchema).optional(),
     key_features: z.string({ required_error: "Key features are required" }),
     quantity: z.number({ required_error: "Product quantity is required" }),

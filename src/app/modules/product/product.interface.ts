@@ -5,11 +5,10 @@ export interface TProductCategory {
     id: string
 }
 
-
-// export interface TProductCategoryTree {
-
-// }
-
+export type TProductWarrenty = {
+    days: number,
+    lifetime: boolean
+}
 
 export interface TReview {
     rating: number,
@@ -34,7 +33,7 @@ export interface TProduct {
     sku: string;
     brand: string;
     model?: string;
-    warranty: string;
+    warranty: TProductWarrenty;
     reviews?: TReview[];
     key_features: string;
     quantity: number;
