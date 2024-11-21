@@ -30,15 +30,14 @@ const DiscountSchema = new Schema({
 })
 
 const ProductSchema = new Schema<TProduct>({
-    id: { type: String, required: [true, 'Product ID is required'] },
     name: { type: String, required: [true, 'Product title is required'] },
     price: { type: Number, required: [true, 'Product price is required'] },
     special_price: { type: Number },
     discount: {
         type: DiscountSchema,
-        required: [true, 'Discount is required'] // Validation for discount
+        // required: [true, 'Discount is required'] 
     },
-    sku: { type: String, required: [true, 'Product SKU is required'], unique: true },
+    sku: { type: String, required: [true, 'Product sku is required'], unique: true },
     brand: { type: String, required: [true, 'Product brand is required'] },
     model: { type: String, default: "" },
     warranty: {
@@ -60,7 +59,7 @@ const ProductSchema = new Schema<TProduct>({
     attributes: [
         {
             name: { type: String },
-            fields: { type: Map, of: String }
+            fields: [{ type: Map, of: String }]
         }
     ],
     meta: {

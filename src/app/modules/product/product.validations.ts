@@ -19,8 +19,7 @@ const MetaSchema = z.object({
 
 // Define the main product schema
 export const createProductValidationSchema = z.object({
-    id: z.string({ required_error: "Product ID is required" }),
-    name: z.string({ required_error: "Product title is required" }),
+    name: z.string({ required_error: "Product name is required" }),
     price: z.number({ required_error: "Product price is required" }),
     discount: z.object({
         type: z.string().optional(),
@@ -45,9 +44,9 @@ export const createProductValidationSchema = z.object({
     attributes: z.array(z.object(
         {
             name: z.string(),
-            fields: z.record(z.string())
-
-        })),
+            fields: z.array(z.record(z.string(), z.string()))
+        }
+    )),
     meta: MetaSchema.optional(),
     tags: z.array(z.string()).optional(),
     isFeatured: z.boolean().optional(),

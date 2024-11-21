@@ -95,8 +95,6 @@ const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) =
     throw new AppError(httpStatus.CONFLICT, 'User type is required')
   }
 
-  console.log(userType)
-
   if (userType !== 'admin' && userType !== 'customer') {
     throw new AppError(httpStatus.CONFLICT, 'Wrong user type')
   }
@@ -115,7 +113,6 @@ const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) =
     }
   ])
 
-  // console.log(userData)
 
   if (!userData) {
     throw new AppError(httpStatus.CONFLICT, 'Failed to get user data')

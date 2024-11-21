@@ -8,12 +8,13 @@ import handleDuplicateError from "../errors/handleDuplicateError";
 import handleMulterError from "../errors/handleMulterError";
 import AppError from "../errors/AppError";
 import config from "../config";
+import mongoose from "mongoose";
+import { handleValidationError } from "../errors/handleValidationError";
 
 export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   let message = err.message || "Something went wrong";
   let statusCode = err.statusCode || 500;
 
-  console.log(err)
 
   let errorSources: TErrorSourse = [
     {
@@ -29,6 +30,11 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
 
   if (err?.name === "CastError") {
     const simplifiedError = handleCastError(err);
+    return res.status(simplifiedError.statusCode).json(simplifiedError);
+  }
+
+  if (err instanceof mongoose.Error.ValidationError) {
+    const simplifiedError = handleValidationError(err)
     return res.status(simplifiedError.statusCode).json(simplifiedError);
   }
 
