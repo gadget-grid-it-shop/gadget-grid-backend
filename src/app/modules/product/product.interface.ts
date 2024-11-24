@@ -1,3 +1,4 @@
+import { Types } from "mongoose"
 
 
 export interface TProductCategory {
@@ -43,10 +44,10 @@ export interface TProduct {
     gallery?: string[];
     thumbnail: string;
     slug: string;
-    attributes?: { name: string, fields: Record<string, string>[] }[];
+    attributes?: { name: string, fields: Record<string, string> }[];
     meta?: TMeta,
     tags?: string[]
     isFeatured?: boolean,
     sales?: number,
-    createdBy: string
+    createdBy: Types.ObjectId
 }

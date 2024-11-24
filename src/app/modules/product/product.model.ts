@@ -59,7 +59,11 @@ const ProductSchema = new Schema<TProduct>({
     attributes: [
         {
             name: { type: String },
-            fields: [{ type: Map, of: String }]
+            fields:
+            {
+                type: Object
+            }
+
         }
     ],
     meta: {
@@ -69,7 +73,7 @@ const ProductSchema = new Schema<TProduct>({
     tags: [{ type: String, default: "" }],
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
-    createdBy: { type: String, required: [true, 'Creator information is required'] },
+    createdBy: { type: Schema.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
 }, { timestamps: true });
 
 

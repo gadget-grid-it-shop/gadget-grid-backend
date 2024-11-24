@@ -44,7 +44,7 @@ export const createProductValidationSchema = z.object({
     attributes: z.array(z.object(
         {
             name: z.string(),
-            fields: z.array(z.record(z.string(), z.string()))
+            fields: z.record(z.string(), z.string())
         }
     )),
     meta: MetaSchema.optional(),
