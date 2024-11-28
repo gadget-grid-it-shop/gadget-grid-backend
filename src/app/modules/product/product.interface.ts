@@ -11,6 +11,11 @@ export type TProductWarrenty = {
     lifetime: boolean
 }
 
+export type TShipping = {
+    free: boolean,
+    cost: number
+}
+
 export interface TReview {
     rating: number,
     review: string
@@ -49,5 +54,6 @@ export interface TProduct {
     tags?: string[]
     isFeatured?: boolean,
     sales?: number,
-    createdBy: Types.ObjectId
+    createdBy: Types.ObjectId,
+    shipping: TShipping
 }

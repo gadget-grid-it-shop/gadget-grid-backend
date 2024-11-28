@@ -38,6 +38,16 @@ const getAllProductsFromDB = async () => {
     const result = await Product.find().populate([
         {
             path: 'createdBy',
+        },
+        {
+            path: 'brand',
+            select: 'name image'
+        },
+        {
+            path: 'category.id',
+            model: 'Category',
+            // match: { main: true },
+            select: 'name'
         }
     ])
 

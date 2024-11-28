@@ -3,7 +3,7 @@ import { TMeta, TProduct, TProductCategory, TReview } from "./product.interface"
 
 const ProductCategorySchema = new Schema<TProductCategory>({
     main: { type: Boolean, required: [true, 'Main category flag is required'], default: false },
-    id: { type: String, required: [true, 'Category ID is required'], }
+    id: { type: String, required: [true, 'Category ID is required'], ref: "Category" }
 });
 
 // const ReviewSchema = new Schema<TReview>({
@@ -38,7 +38,7 @@ const ProductSchema = new Schema<TProduct>({
         // required: [true, 'Discount is required'] 
     },
     sku: { type: String, required: [true, 'Product sku is required'], unique: true },
-    brand: { type: String, required: [true, 'Product brand is required'] },
+    brand: { type: String, required: [true, 'Product brand is required'], ref: 'Brand' },
     model: { type: String, default: "" },
     warranty: {
         days: { type: Number, default: 0 },
@@ -74,6 +74,12 @@ const ProductSchema = new Schema<TProduct>({
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
     createdBy: { type: Schema.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
+    shipping: {
+        free: { type: Boolean, default: false },
+        cost: {
+            type: Number, default: 0
+        }
+    }
 }, { timestamps: true });
 
 
