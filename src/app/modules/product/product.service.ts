@@ -4,6 +4,7 @@ import { User } from "../user/user.model";
 import { TProduct } from "./product.interface";
 import { Product } from "./product.model";
 import { TUser } from "../user/user.interface";
+import slugify from "slugify";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -13,8 +14,11 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
         throw new AppError(httpStatus.CONFLICT, 'Could not find admin information')
     }
 
+    const slug = slugify(payload.name)
+
     const productData = payload
     productData.createdBy = user._id
+    productData.slug = slug
 
     if (payload.discount && payload.discount?.value > 0) {
 

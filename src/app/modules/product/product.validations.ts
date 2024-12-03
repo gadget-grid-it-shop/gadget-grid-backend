@@ -40,7 +40,6 @@ export const createProductValidationSchema = z.object({
     videos: z.array(z.string()).optional(),
     gallery: z.array(z.string()).optional(),
     thumbnail: z.string({ required_error: "Product thumbnail is required" }),
-    slug: z.string({ required_error: "Product slug is required" }),
     attributes: z.array(z.object(
         {
             name: z.string(),

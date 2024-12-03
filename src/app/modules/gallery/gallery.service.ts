@@ -2,6 +2,7 @@ import { GalleryFolder } from "./gallery.model";
 import { TGalleryFolder } from "./gallery.interface";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
+import { Image } from "../Images/image.model";
 
 const createGalleryFolderIntoDB = async (payload: TGalleryFolder) => {
 
@@ -42,5 +43,20 @@ const updateFolderIntoDB = async (id: string, name: string) => {
     return result
 }
 
+const deleteFolderFromDB = async (id: string) => {
+    const hasFolder = await GalleryFolder.findOne({ parent_id: id })
+    if (hasFolder) {
+        throw new AppError(httpStatus.FORBIDDEN, 'Unable to delete the folder because it contains subfolders.')
+    }
+    const hasImages = await Image.findOne({ folder: id })
+    if (hasImages) {
+        throw new AppError(httpStatus.FORBIDDEN, 'Unable to delete the folder because it contains images.')
+    }
 
-export const GalleryFolderService = { createGalleryFolderIntoDB, getFoldersFromDB, updateFolderIntoDB }
+    const result = await GalleryFolder.findByIdAndDelete(id)
+
+    return result
+}
+
+
+export const GalleryFolderService = { createGalleryFolderIntoDB, getFoldersFromDB, updateFolderIntoDB, deleteFolderFromDB }
