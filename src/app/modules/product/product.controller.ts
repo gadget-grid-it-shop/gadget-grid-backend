@@ -26,7 +26,15 @@ const getAllProduct = catchAsync(async (req, res) => {
     })
 })
 
+const bulkUpload = catchAsync(async (req, res) => {
+    const file = req.file
+    const mapedFields = JSON.parse(req.body.mapedFields)
+    console.log(mapedFields)
+    const result = await ProductServices.bulkUploadToDB(file)
+})
+
 export const ProductControllers = {
     createProduct,
-    getAllProduct
+    getAllProduct,
+    bulkUpload
 }

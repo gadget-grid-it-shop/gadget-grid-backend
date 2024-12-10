@@ -5,6 +5,9 @@ import { TProduct } from "./product.interface";
 import { Product } from "./product.model";
 import { TUser } from "../user/user.interface";
 import slugify from "slugify";
+import Papa from 'papaparse';
+import fs from 'fs';
+import path from 'path';
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -58,7 +61,37 @@ const getAllProductsFromDB = async () => {
     return result
 }
 
+
+const bulkUploadToDB = async (file: Express.Multer.File | undefined) => {
+    if (!file) {
+        throw new AppError(httpStatus.CONFLICT, 'No upload file provided')
+    }
+
+    const filePath = path.resolve(file.path)
+
+    return new Promise((resolve, reject) => {
+        const fileStream = fs.createReadStream(filePath)
+
+        Papa.parse(fileStream, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (result) => {
+                const { data, errors } = result
+
+                if (errors.length > 0) {
+                    reject(new AppError(httpStatus.CONFLICT, 'Failed to read file'))
+                    return
+                }
+
+
+            }
+        })
+    })
+
+}
+
 export const ProductServices = {
     createProductIntoDB,
-    getAllProductsFromDB
+    getAllProductsFromDB,
+    bulkUploadToDB
 }
