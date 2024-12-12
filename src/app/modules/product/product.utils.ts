@@ -1,5 +1,5 @@
 import { TCategory } from "../category/category.interface";
-import { TDiscount, TProductCategory } from "./product.interface";
+import { TDiscount, TProduct, TProductCategory } from "./product.interface";
 const typeMap: Record<string, 'string' | 'number' | 'boolean'> = {
     price: 'number',
     'discount.value': 'number',
@@ -20,8 +20,8 @@ export const claculateSpecialPrice = (discount: TDiscount, price: number) => {
     }
 }
 
-export const transformSvgProductData = (flatData: Record<string, any>) => {
-    const nestedData: Record<string, any> = {};
+export const transformSvgProductData = (flatData: Record<string, any>): TProduct => {
+    const nestedData = {};
 
     Object.keys(flatData).forEach((key) => {
         const keys = key.split('.'); // Split keys by dot notation

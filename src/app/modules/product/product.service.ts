@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
-import { defaultFields, THeader, TProduct, TProductCategory } from "./product.interface";
+import { defaultFields, TDiscount, THeader, TProduct, TProductCategory } from "./product.interface";
 import { Product } from "./product.model";
 import { TUser } from "../user/user.interface";
 import slugify from "slugify";
@@ -13,6 +13,10 @@ import { TCategory } from "../category/category.interface";
 import { claculateSpecialPrice, createCategoryArray, transformSvgProductData } from "./product.utils";
 import { Brand } from "../brand/brand.model";
 import { TBrand } from "../brand/brand.interface";
+import { ProductValidations } from "./product.validations";
+import handleDuplicateError from "../../errors/handleDuplicateError";
+import { TErrorSourse } from "../../interface/error.interface";
+import { ObjectId } from 'mongodb';
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -39,14 +43,17 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
 }
 
 const getAllProductsFromDB = async () => {
-    const result = await Product.find().populate([
+
+    console.log('get all product')
+
+    const result = await Product.find().limit(20).populate([
         {
             path: 'createdBy',
         },
-        {
-            path: 'brand',
-            select: 'name image'
-        },
+        // {
+        //     path: 'brand',
+        //     select: 'name image'
+        // },
         {
             path: 'category.id',
             model: 'Category',
@@ -55,11 +62,13 @@ const getAllProductsFromDB = async () => {
         }
     ])
 
+    console.log(result)
+
     return result
 }
 
 
-const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields: THeader[]) => {
+const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields: THeader[], email: string) => {
     if (!file) {
         throw new AppError(httpStatus.CONFLICT, 'No upload file provided')
     }
@@ -67,8 +76,11 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
     const filePath = path.resolve(file.path)
 
     const categories = await Category.find()
+    const brands = await Brand.find()
+    const user: TUser | undefined = await User.isUserExistsByEmail(email)
+    console.log('working')
 
-    return new Promise((resolve, reject) => {
+    const payload: TProduct[] = await new Promise((resolve, reject) => {
         const fileStream = fs.createReadStream(filePath)
 
         Papa.parse(fileStream, {
@@ -82,7 +94,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                     return
                 }
 
-                const filteredData = []
+                const filteredData: TProduct[] = []
 
                 for (const data of csvData) {
                     const newData: Partial<TProduct> = {
@@ -125,7 +137,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                     };
 
 
-                    mapedFields.map(async (field: THeader) => {
+                    for (const field of mapedFields) {
                         if (!field.key || !field.value) return;
 
                         if (defaultFields.includes(field.value)) {
@@ -149,7 +161,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                                 }
                                 else if (field.value === 'shipping.free') {
                                     newData.shipping = {
-                                        free: value == 'true' ? true : false,
+                                        free: String(value).toLowerCase() == 'true' ? true : false,
                                         cost: value == 'true' ? 0 : (newData.shipping?.cost || 0)
                                     };
                                 }
@@ -208,51 +220,68 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                                     newData.warranty = newData.warranty || {
                                         days: 0,
                                         lifetime: false
-                                    },
-                                        newData.warranty.lifetime = value
+                                    }
+                                    newData.warranty.lifetime = String(value).toLowerCase() == 'true' || 'TRUE' ? true : false
                                 }
 
-                                else if (field.value === 'brand') {
-                                    const exist: TBrand | undefined | null = await Brand.findOne({ name: value })
+                                else if (field.value in newData) {
+                                    newData[field.value] = value;
+                                }
+
+                                if (field.value === 'brand') {
+                                    const exist = brands.find(b => b.name === value)
+
                                     if (exist) {
-                                        newData.brand = exist._id
+                                        newData.brand = exist._id || 'add brand'
                                     }
                                 }
 
-                                else {
-                                    newData[field.value] = value;
-                                }
+                                newData.slug = slugify(newData.name as string)
+                                newData.sku = slugify(newData.name as string)
+                                newData.createdBy = user._id
+                                newData.special_price = claculateSpecialPrice(newData.discount as TDiscount, Number(newData.price))
                             }
                         }
 
-
-
-                    })
-                    // console.log(newData)
+                    }
 
                     filteredData.push(transformSvgProductData(newData))
                 }
 
-                console.log(filteredData)
+                resolve(filteredData)
 
-                // try {
-
-                //     const res = await Product.insertMany(filteredData)
-                //     console.log(res)
-                // }
-                // catch (err) {
-                //     console.log(err)
-                // }
-
-                // resolve(res)
             },
             error: (err) => {
+                console.log(err)
                 reject(new AppError(httpStatus.CONFLICT, `Error parsing file: ${err.message}`));
             }
         },
         )
     },
     )
+
+
+    const withError: { name: string, errors: TErrorSourse }[] = [];
+    const successData: { name: string, slug: string, sku: string, _id: ObjectId }[] = [];
+
+    for (const record of payload) {
+        try {
+            const res = await Product.create(record);
+            if (res) {
+                successData.push({ name: record.name, slug: record.slug, sku: record.sku, _id: res._id });
+            }
+        } catch (err: any) {
+            if (err.code === 11000) {
+                const simplifiedError = handleDuplicateError(err);
+                withError.push({
+                    name: record.name,
+                    errors: simplifiedError.errorSources
+                })
+            }
+        }
+    }
+
+    return { withError, successData }
 
 }
 

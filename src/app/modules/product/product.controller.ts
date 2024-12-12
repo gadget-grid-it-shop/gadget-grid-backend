@@ -27,9 +27,10 @@ const getAllProduct = catchAsync(async (req, res) => {
 })
 
 const bulkUpload = catchAsync(async (req, res) => {
+    const email = req.user.email
     const file = req.file
     const mapedFields = JSON.parse(req.body.mapedFields)
-    const result = await ProductServices.bulkUploadToDB(file, mapedFields)
+    const result = await ProductServices.bulkUploadToDB(file, mapedFields, email)
 
     sendResponse(res, {
         success: true,

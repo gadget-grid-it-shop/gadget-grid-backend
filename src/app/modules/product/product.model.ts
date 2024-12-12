@@ -6,10 +6,6 @@ const ProductCategorySchema = new Schema<TProductCategory>({
     id: { type: String, required: [true, 'Category ID is required'], ref: "Category" }
 });
 
-// const ReviewSchema = new Schema<TReview>({
-//     rating: { type: Number, required: [true, 'Review rating is required'] },
-//     review: { type: String, required: [true, 'Review text is required'] }
-// });
 
 const MetaSchema = new Schema<TMeta>({
     title: { type: String, default: '' },
