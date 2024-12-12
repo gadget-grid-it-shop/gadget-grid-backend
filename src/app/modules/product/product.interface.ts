@@ -27,15 +27,17 @@ export interface TMeta {
     image: string
 }
 
+export type TDiscount = {
+    type: 'flat' | 'percent',
+    value: number
+}
+
 export interface TProduct {
-    id: string;
+    id?: string;
     name: string;
     price: number;
     special_price: number;
-    discount?: {
-        type: 'flat' | 'percent',
-        value: number
-    };
+    discount?: TDiscount;
     sku: string;
     brand: string;
     model?: string;
@@ -57,3 +59,52 @@ export interface TProduct {
     createdBy: Types.ObjectId,
     shipping: TShipping
 }
+
+export const defaultFields: string[] = [
+    'name',
+    'price',
+    'discount.type',
+    'discount.value',
+    'sku',
+    'brand',
+    'model',
+    'warranty.days',
+    'warranty.lifetime',
+    'key_features',
+    'quantity',
+    'category',
+    'description',
+    'thumbnail',
+    'meta.title',
+    'meta.description',
+    'meta.image',
+    'tags',
+    'shipping.free',
+    'shipping.cost',
+];
+
+
+export type THeader = {
+    key: string;
+    value:
+    | 'name'
+    | 'price'
+    | 'discount.type'
+    | 'discount.value'
+    | 'sku'
+    | 'brand'
+    | 'model'
+    | 'warranty.days'
+    | 'warranty.lifetime'
+    | 'key_features'
+    | 'quantity'
+    | 'category'
+    | 'description'
+    | 'thumbnail'
+    | 'meta.title'
+    | 'meta.description'
+    | 'meta.image'
+    | 'tags'
+    | 'shipping.free'
+    | 'shipping.cost';
+};
