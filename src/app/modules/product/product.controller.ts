@@ -35,7 +35,7 @@ const bulkUpload = catchAsync(async (req, res) => {
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
-        message: "Successfully Created Product",
+        message: "Product bulk upload complete",
         data: result
     })
 })

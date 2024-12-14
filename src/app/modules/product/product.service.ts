@@ -17,6 +17,7 @@ import { ProductValidations } from "./product.validations";
 import handleDuplicateError from "../../errors/handleDuplicateError";
 import { TErrorSourse } from "../../interface/error.interface";
 import { ObjectId } from 'mongodb';
+import { Error } from "mongoose";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -260,8 +261,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
     },
     )
 
-
-    const withError: { name: string, errors: TErrorSourse }[] = [];
+    const withError: { name: string, errors: TErrorSourse, data: TProduct }[] = [];
     const successData: { name: string, slug: string, sku: string, _id: ObjectId }[] = [];
 
     for (const record of payload) {
@@ -275,7 +275,41 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                 const simplifiedError = handleDuplicateError(err);
                 withError.push({
                     name: record.name,
-                    errors: simplifiedError.errorSources
+                    errors: simplifiedError.errorSources,
+                    data: record
+                })
+            }
+
+            else if (err?.name === 'CastError') {
+            }
+
+
+            else if (err instanceof Error.ValidationError) {
+                const errors: TErrorSourse = []
+                Object.keys(err.errors).map(key => {
+                    errors.push({
+                        path: key,
+                        message: err.errors[key].message
+                    })
+                })
+
+                withError.push({
+                    name: record.name,
+                    errors,
+                    data: record
+                })
+            }
+
+            else {
+                withError.push({
+                    name: record.name,
+                    errors: [
+                        {
+                            path: '',
+                            message: 'Failed to create product'
+                        }
+                    ],
+                    data: record
                 })
             }
         }
