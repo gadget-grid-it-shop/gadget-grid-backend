@@ -9,6 +9,7 @@ import { RolesRoutes } from "../modules/roles/roles.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
 import validateAuth from "../middleware/auth";
 import { BrandRoutes } from "../modules/brand/brand.route";
+import { bulkUploadRoutes } from "../modules/bulkUpload/bulkUpload.route";
 
 const router = Router();
 
@@ -24,6 +25,7 @@ const moduleRoutes = [
   { path: '/roles', route: RolesRoutes },
   { path: '/auth', route: AuthRoutes },
   { path: '/brand', route: BrandRoutes },
+  { path: '/upload-history', route: bulkUploadRoutes },
 ];
 
 moduleRoutes.forEach((route) => {

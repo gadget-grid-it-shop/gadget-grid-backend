@@ -15,7 +15,8 @@ export enum EAppFeatures {
   category = "category",
   photo = "photo",
   user = "user",
-  brand = "brand"
+  brand = "brand",
+  bulkUpload = 'bulkUpload'
 }
 
 export interface TPermission {

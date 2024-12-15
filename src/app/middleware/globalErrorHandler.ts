@@ -15,6 +15,7 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
   let message = err.message || "Something went wrong";
   let statusCode = err.statusCode || 500;
 
+  console.log(err)
 
   let errorSources: TErrorSourse = [
     {
