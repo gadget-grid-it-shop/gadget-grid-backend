@@ -45,7 +45,8 @@ const ProductSchema = new Schema<TProduct>({
     quantity: { type: Number, required: [true, 'Product quantity is required'], default: 0 },
     category: {
         type: [ProductCategorySchema],
-        required: [true, 'At least one product category is required']
+        required: [true, 'At least one product category is required'],
+        minlength: [1, 'At least one category is required']
     },
     description: { type: String, required: [true, 'Product description is required'] },
     videos: [{ type: String, default: "" }],
@@ -69,7 +70,7 @@ const ProductSchema = new Schema<TProduct>({
     tags: [{ type: String, default: "" }],
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
-    createdBy: { type: Schema.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
+    createdBy: { type: Schema.Types.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
     shipping: {
         free: { type: Boolean, default: false },
         cost: {

@@ -17,7 +17,9 @@ import { ProductValidations } from "./product.validations";
 import handleDuplicateError from "../../errors/handleDuplicateError";
 import { TErrorSourse } from "../../interface/error.interface";
 import { ObjectId } from 'mongodb';
-import { Error } from "mongoose";
+import { Error, startSession } from "mongoose";
+import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
+import BulkUpload from "../bulkUpload/bulkUpload.model";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -79,7 +81,6 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
     const categories = await Category.find()
     const brands = await Brand.find()
     const user: TUser | undefined = await User.isUserExistsByEmail(email)
-    console.log('working')
 
     const payload: TProduct[] = await new Promise((resolve, reject) => {
         const fileStream = fs.createReadStream(filePath)
@@ -88,9 +89,9 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
             header: true,
             skipEmptyLines: true,
             complete: async (result) => {
-                const { data: csvData, errors } = result
+                const { data: csvData, errors: csvErrors } = result
 
-                if (errors.length > 0) {
+                if (csvErrors.length > 0) {
                     reject(new AppError(httpStatus.CONFLICT, 'Failed to read file'))
                     return
                 }
@@ -246,14 +247,13 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
 
                     }
 
-                    filteredData.push(transformSvgProductData(newData))
+                    filteredData.push(transformSvgProductData(newData) as TProduct)
                 }
 
                 resolve(filteredData)
 
             },
             error: (err) => {
-                console.log(err)
                 reject(new AppError(httpStatus.CONFLICT, `Error parsing file: ${err.message}`));
             }
         },
@@ -261,7 +261,12 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
     },
     )
 
-    const withError: { name: string, errors: TErrorSourse, data: TProduct }[] = [];
+    if (payload.length === 0 || !payload) {
+        throw new AppError(httpStatus.CONFLICT, 'Failed to parse data. Pelase map all the fields properly')
+    }
+
+
+    const withError: { name: string, errorSources: TErrorSourse, data: TProduct }[] = [];
     const successData: { name: string, slug: string, sku: string, _id: ObjectId }[] = [];
 
     for (const record of payload) {
@@ -275,19 +280,29 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                 const simplifiedError = handleDuplicateError(err);
                 withError.push({
                     name: record.name,
-                    errors: simplifiedError.errorSources,
+                    errorSources: simplifiedError.errorSources,
                     data: record
                 })
             }
 
-            else if (err?.name === 'CastError') {
+            else if (err instanceof Error.CastError) {
+                withError.push({
+                    name: record.name,
+                    errorSources: [
+                        {
+                            path: err?.path,
+                            message: err.message || 'Failed to create product'
+                        }
+                    ],
+                    data: record
+                })
             }
 
 
             else if (err instanceof Error.ValidationError) {
-                const errors: TErrorSourse = []
+                const errorSources: TErrorSourse = []
                 Object.keys(err.errors).map(key => {
-                    errors.push({
+                    errorSources.push({
                         path: key,
                         message: err.errors[key].message
                     })
@@ -295,7 +310,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
 
                 withError.push({
                     name: record.name,
-                    errors,
+                    errorSources,
                     data: record
                 })
             }
@@ -303,7 +318,7 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
             else {
                 withError.push({
                     name: record.name,
-                    errors: [
+                    errorSources: [
                         {
                             path: '',
                             message: 'Failed to create product'
@@ -312,11 +327,27 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
                     data: record
                 })
             }
+
+
         }
     }
 
-    return { withError, successData }
+    try {
+        const bulkResult = await BulkUpload.create({
+            withError,
+            successData,
+            createdBy: user._id
+        })
+    }
+    catch (err) {
+        // throw new AppError(httpStatus.CONFLICT, 'Failed to store bulk upload history')
+    }
 
+
+
+    const result: TBulkUploadData = { withError, successData, createdBy: user._id as ObjectId }
+
+    return result
 }
 
 export const ProductServices = {

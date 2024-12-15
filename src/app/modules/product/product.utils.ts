@@ -1,56 +1,60 @@
 import { TCategory } from "../category/category.interface";
 import { TDiscount, TProduct, TProductCategory } from "./product.interface";
+
 const typeMap: Record<string, 'string' | 'number' | 'boolean'> = {
     price: 'number',
+    special_price: 'number',
     'discount.value': 'number',
     quantity: 'number',
     'warranty.days': 'number',
+    'warranty.lifetime': 'boolean',
     'shipping.free': 'boolean',
     'shipping.cost': 'number',
-};
-
-export const claculateSpecialPrice = (discount: TDiscount, price: number) => {
-    if (discount.type === 'flat') {
-        const newDiscount = price - discount.value
-        return Math.round(newDiscount)
-    }
-    else {
-        const newDiscount = price - Math.floor(price * discount.value / 100)
-        return Math.round(newDiscount)
-    }
+    isFeatured: 'boolean',
 }
 
-export const transformSvgProductData = (flatData: Record<string, any>): TProduct => {
-    const nestedData = {};
+export const claculateSpecialPrice = (discount: TDiscount, price: number): number => {
+    if (discount.type === 'flat') {
+        const newDiscount = price - discount.value;
+        return Math.max(0, Math.round(newDiscount)); // Ensure no negative price
+    } else {
+        const newDiscount = price - Math.floor((price * discount.value) / 100);
+        return Math.max(0, Math.round(newDiscount)); // Ensure no negative price
+    }
+};
 
-    Object.keys(flatData).forEach((key) => {
-        const keys = key.split('.'); // Split keys by dot notation
-        let current = nestedData;
 
-        keys.forEach((k, index) => {
-            if (index === keys.length - 1) {
-                // Apply type conversion based on the typeMap
-                const value = flatData[key];
+export const transformSvgProductData = (data: Partial<TProduct>): Partial<TProduct> => {
+    const result: Partial<TProduct> = { ...data };
+
+    Object.keys(typeMap).forEach((key) => {
+        const keys = key.split('.'); // Handle nested keys
+        let current: any = result;
+
+        for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+
+            if (i === keys.length - 1) {
+                // Leaf node
                 const expectedType = typeMap[key];
+                const value = current[k];
 
                 if (expectedType === 'number') {
-                    current[k] = Number(value); // Convert to number
+                    current[k] = isNaN(Number(value)) ? 0 : Number(value);
                 } else if (expectedType === 'boolean') {
-                    current[k] = value === 'true'; // Convert to boolean
-                } else {
-                    current[k] = value; // Default to string
+                    current[k] = value === true || value === 'true'; // Convert to boolean
                 }
             } else {
-                // Ensure the key exists as an object
+                // Ensure nested objects exist
                 if (!current[k]) {
                     current[k] = {};
                 }
                 current = current[k];
             }
-        });
+        }
     });
 
-    return nestedData;
+    return result;
 };
 
 
