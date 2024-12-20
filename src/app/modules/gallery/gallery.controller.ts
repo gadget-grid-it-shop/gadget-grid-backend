@@ -50,9 +50,24 @@ const updateFolder = catchAsync(async (req, res) => {
     )
 })
 
+const deleteFolder = (catchAsync(async (req, res) => {
+    const id = req.params.id
+    const result = await GalleryFolderService.deleteFolderFromDB(id)
+
+    sendResponse(res,
+        {
+            success: true,
+            statusCode: httpStatus.OK,
+            message: 'Successfully deleted folder',
+            data: result
+        }
+    )
+}))
+
 
 export const GalleryFolderController = {
     createGalleryFolder,
     getFolders,
-    updateFolder
+    updateFolder,
+    deleteFolder
 }

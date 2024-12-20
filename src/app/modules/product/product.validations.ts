@@ -19,8 +19,7 @@ const MetaSchema = z.object({
 
 // Define the main product schema
 export const createProductValidationSchema = z.object({
-    id: z.string({ required_error: "Product ID is required" }),
-    name: z.string({ required_error: "Product title is required" }),
+    name: z.string({ required_error: "Product name is required" }),
     price: z.number({ required_error: "Product price is required" }),
     discount: z.object({
         type: z.string().optional(),
@@ -29,7 +28,10 @@ export const createProductValidationSchema = z.object({
     sku: z.string({ required_error: "Product SKU is required" }),
     brand: z.string({ required_error: "Product brand is required" }),
     model: z.string().optional(),
-    warranty: z.string({ required_error: "Product warranty is required" }),
+    warranty: z.object({
+        days: z.number(),
+        lifetime: z.boolean()
+    }),
     // reviews: z.array(ReviewSchema).optional(),
     key_features: z.string({ required_error: "Key features are required" }),
     quantity: z.number({ required_error: "Product quantity is required" }),
@@ -38,13 +40,12 @@ export const createProductValidationSchema = z.object({
     videos: z.array(z.string()).optional(),
     gallery: z.array(z.string()).optional(),
     thumbnail: z.string({ required_error: "Product thumbnail is required" }),
-    slug: z.string({ required_error: "Product slug is required" }),
     attributes: z.array(z.object(
         {
             name: z.string(),
-            fields: z.record(z.string())
-
-        })),
+            fields: z.record(z.string(), z.string())
+        }
+    )),
     meta: MetaSchema.optional(),
     tags: z.array(z.string()).optional(),
     isFeatured: z.boolean().optional(),

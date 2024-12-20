@@ -1,3 +1,4 @@
+import { Types } from "mongoose"
 
 
 export interface TProductCategory {
@@ -5,11 +6,15 @@ export interface TProductCategory {
     id: string
 }
 
+export type TProductWarrenty = {
+    days: number,
+    lifetime: boolean
+}
 
-// export interface TProductCategoryTree {
-
-// }
-
+export type TShipping = {
+    free: boolean,
+    cost: number
+}
 
 export interface TReview {
     rating: number,
@@ -22,19 +27,21 @@ export interface TMeta {
     image: string
 }
 
+export type TDiscount = {
+    type: 'flat' | 'percent',
+    value: number
+}
+
 export interface TProduct {
-    id: string;
+    id?: string;
     name: string;
     price: number;
     special_price: number;
-    discount?: {
-        type: 'flat' | 'percent',
-        value: number
-    };
+    discount?: TDiscount;
     sku: string;
     brand: string;
     model?: string;
-    warranty: string;
+    warranty: TProductWarrenty;
     reviews?: TReview[];
     key_features: string;
     quantity: number;
@@ -44,10 +51,60 @@ export interface TProduct {
     gallery?: string[];
     thumbnail: string;
     slug: string;
-    attributes?: { name: string, fields: Record<string, string>[] }[];
+    attributes?: { name: string, fields: Record<string, string> }[];
     meta?: TMeta,
     tags?: string[]
     isFeatured?: boolean,
     sales?: number,
-    createdBy: string
+    createdBy: Types.ObjectId,
+    shipping: TShipping
 }
+
+export const defaultFields: string[] = [
+    'name',
+    'price',
+    'discount.type',
+    'discount.value',
+    'sku',
+    'brand',
+    'model',
+    'warranty.days',
+    'warranty.lifetime',
+    'key_features',
+    'quantity',
+    'category',
+    'description',
+    'thumbnail',
+    'meta.title',
+    'meta.description',
+    'meta.image',
+    'tags',
+    'shipping.free',
+    'shipping.cost',
+];
+
+
+export type THeader = {
+    key: string;
+    value:
+    | 'name'
+    | 'price'
+    | 'discount.type'
+    | 'discount.value'
+    | 'sku'
+    | 'brand'
+    | 'model'
+    | 'warranty.days'
+    | 'warranty.lifetime'
+    | 'key_features'
+    | 'quantity'
+    | 'category'
+    | 'description'
+    | 'thumbnail'
+    | 'meta.title'
+    | 'meta.description'
+    | 'meta.image'
+    | 'tags'
+    | 'shipping.free'
+    | 'shipping.cost';
+};

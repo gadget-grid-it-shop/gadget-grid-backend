@@ -3,13 +3,9 @@ import { TMeta, TProduct, TProductCategory, TReview } from "./product.interface"
 
 const ProductCategorySchema = new Schema<TProductCategory>({
     main: { type: Boolean, required: [true, 'Main category flag is required'], default: false },
-    id: { type: String, required: [true, 'Category ID is required'], }
+    id: { type: String, required: [true, 'Category ID is required'], ref: "Category" }
 });
 
-// const ReviewSchema = new Schema<TReview>({
-//     rating: { type: Number, required: [true, 'Review rating is required'] },
-//     review: { type: String, required: [true, 'Review text is required'] }
-// });
 
 const MetaSchema = new Schema<TMeta>({
     title: { type: String, default: '' },
@@ -30,24 +26,27 @@ const DiscountSchema = new Schema({
 })
 
 const ProductSchema = new Schema<TProduct>({
-    id: { type: String, required: [true, 'Product ID is required'] },
     name: { type: String, required: [true, 'Product title is required'] },
     price: { type: Number, required: [true, 'Product price is required'] },
     special_price: { type: Number },
     discount: {
         type: DiscountSchema,
-        required: [true, 'Discount is required'] // Validation for discount
+        // required: [true, 'Discount is required'] 
     },
-    sku: { type: String, required: [true, 'Product SKU is required'], unique: true },
-    brand: { type: String, required: [true, 'Product brand is required'] },
+    sku: { type: String, required: [true, 'Product sku is required'], unique: true },
+    brand: { type: String, required: [true, 'Product brand is required'], ref: 'Brand' },
     model: { type: String, default: "" },
-    warranty: { type: String, required: [true, 'Product warranty is required'] },
+    warranty: {
+        days: { type: Number, default: 0 },
+        lifetime: { type: Boolean, default: false }
+    },
     // reviews: [ReviewSchema],
     key_features: { type: String, required: [true, 'Key features are required'] },
     quantity: { type: Number, required: [true, 'Product quantity is required'], default: 0 },
     category: {
         type: [ProductCategorySchema],
-        required: [true, 'At least one product category is required']
+        required: [true, 'At least one product category is required'],
+        minlength: [1, 'At least one category is required']
     },
     description: { type: String, required: [true, 'Product description is required'] },
     videos: [{ type: String, default: "" }],
@@ -57,7 +56,11 @@ const ProductSchema = new Schema<TProduct>({
     attributes: [
         {
             name: { type: String },
-            fields: { type: Map, of: String }
+            fields:
+            {
+                type: Object
+            }
+
         }
     ],
     meta: {
@@ -67,7 +70,13 @@ const ProductSchema = new Schema<TProduct>({
     tags: [{ type: String, default: "" }],
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
-    createdBy: { type: String, required: [true, 'Creator information is required'] },
+    createdBy: { type: Schema.Types.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
+    shipping: {
+        free: { type: Boolean, default: false },
+        cost: {
+            type: Number, default: 0
+        }
+    }
 }, { timestamps: true });
 
 
