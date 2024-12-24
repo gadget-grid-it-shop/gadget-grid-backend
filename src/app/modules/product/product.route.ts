@@ -14,5 +14,8 @@ router.get('/get-all', checkPermission(EAppFeatures.product, 'read'), ProductCon
 
 router.post('/bulk-upload', checkPermission(EAppFeatures.product, 'create'), upload.single('bulkFile'), ProductControllers.bulkUpload)
 
+router.get('/single/:id', checkPermission(EAppFeatures.product, 'read'), ProductControllers.getSingleProduct)
+
+router.patch('/update-product/:id', checkPermission(EAppFeatures.product, 'update'), ProductControllers.updateProduct)
 
 export const productRoutes = router

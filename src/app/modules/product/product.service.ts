@@ -6,7 +6,7 @@ import { Product } from "./product.model";
 import { TUser } from "../user/user.interface";
 import slugify from "slugify";
 import Papa from 'papaparse';
-import fs from 'fs';
+import fs, { appendFile } from 'fs';
 import path from 'path';
 import { Category } from "../category/category.model";
 import { TCategory } from "../category/category.interface";
@@ -68,6 +68,19 @@ const getAllProductsFromDB = async () => {
     console.log(result)
 
     return result
+}
+
+const getSingleProductFromDB = async (id:string) => {
+    if(!id){
+        throw new AppError(httpStatus.CONFLICT, 'Please provide product id to get details')
+    }
+
+    console.log(id)
+
+    const result = await Product.findById(id)
+
+    return result
+
 }
 
 
@@ -350,8 +363,27 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
     return result
 }
 
+
+const updateProductIntoDB = async (id:string, payload:Partial<TProduct>) => {
+    if(!id){
+        throw new AppError(httpStatus.FORBIDDEN, 'Please provide product id')
+    }
+
+    const exist = await Product.findById(id)
+
+    if(!exist){
+        throw new AppError(httpStatus.CONFLICT, 'Product does not exist')
+    }
+
+    const result  = await Product.findByIdAndUpdate(id, payload)
+
+    return result
+}
+
 export const ProductServices = {
     createProductIntoDB,
     getAllProductsFromDB,
-    bulkUploadToDB
+    bulkUploadToDB,
+    getSingleProductFromDB,
+    updateProductIntoDB
 }
