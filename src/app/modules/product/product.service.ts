@@ -20,6 +20,7 @@ import { ObjectId } from 'mongodb';
 import { Error, startSession } from "mongoose";
 import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
+import QueryBuilder from "../../builder/queryBuilder";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -45,33 +46,44 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
     return result
 }
 
-const getAllProductsFromDB = async () => {
+const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
-    console.log('get all product')
 
-    const result = await Product.find().limit(20).populate([
-        {
-            path: 'createdBy',
-        },
-        // {
-        //     path: 'brand',
-        //     select: 'name image'
-        // },
-        {
-            path: 'category.id',
-            model: 'Category',
-            // match: { main: true },
-            select: 'name'
-        }
-    ])
+    const searchFields = ['name', 'model', 'key_features', 'description', 'slug']
+    const excludeFields = ['searchTerm', 'page', 'limit', 'category', 'sort', 'fields']
 
-    console.log(result)
+   const productQuery = new QueryBuilder(Product.find(), query)
+   .search(searchFields)
+   .filter(excludeFields)
+   .sort()
+   .paginate()
+   .fields()
+
+    const result = await productQuery.modelQuery
+        .populate([
+            {
+                path: 'createdBy',
+            },
+            {
+                path: 'brand',
+                select: 'name image'
+            },
+            // {
+            //     path: 'category.id',
+            //     model: 'Category',
+
+            //     // match: { main: true },
+            //     select: 'name'
+            // }
+        ])
+
+
 
     return result
 }
 
-const getSingleProductFromDB = async (id:string) => {
-    if(!id){
+const getSingleProductFromDB = async (id: string) => {
+    if (!id) {
         throw new AppError(httpStatus.CONFLICT, 'Please provide product id to get details')
     }
 
@@ -364,18 +376,18 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
 }
 
 
-const updateProductIntoDB = async (id:string, payload:Partial<TProduct>) => {
-    if(!id){
+const updateProductIntoDB = async (id: string, payload: Partial<TProduct>) => {
+    if (!id) {
         throw new AppError(httpStatus.FORBIDDEN, 'Please provide product id')
     }
 
     const exist = await Product.findById(id)
 
-    if(!exist){
+    if (!exist) {
         throw new AppError(httpStatus.CONFLICT, 'Product does not exist')
     }
 
-    const result  = await Product.findByIdAndUpdate(id, payload)
+    const result = await Product.findByIdAndUpdate(id, payload)
 
     return result
 }
