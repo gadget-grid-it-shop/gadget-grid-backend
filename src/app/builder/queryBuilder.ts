@@ -4,10 +4,12 @@ import { Query } from "mongoose";
 class QueryBuilder<T> {
     public modelQuery: Query<T[], T>
     public query: Record<string, unknown>
+    public total: number
 
     constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
         this.modelQuery = modelQuery
         this.query = query
+        this.total = 0
     }
 
 
@@ -39,10 +41,18 @@ class QueryBuilder<T> {
         return this
     }
 
-    paginate(){
+    async countTotal (){
+        this.total = await this.modelQuery.clone().countDocuments()
+        this.modelQuery = this.modelQuery
+        return this
+    }
+
+    async paginate(){
         const limit = this?.query?.limit ? Number(this?.query?.limit): 10
         const page = this?.query?.page ? Number(this?.query?.page): 1
         const skip = (page - 1) * limit
+
+        await this.countTotal()
 
         this.modelQuery = this?.modelQuery.limit(limit).skip(skip)
 

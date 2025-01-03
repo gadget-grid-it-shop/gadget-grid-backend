@@ -21,6 +21,7 @@ import { Error, startSession } from "mongoose";
 import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
+import dayjs from 'dayjs'
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -48,16 +49,37 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
 
 const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
-
-    const searchFields = ['name', 'model', 'key_features', 'description', 'slug']
+    const searchFields = ['name', 'model', 'key_features', 'description', 'slug', 'sku']
     const excludeFields = ['searchTerm', 'page', 'limit', 'category', 'sort', 'fields']
 
-   const productQuery = new QueryBuilder(Product.find(), query)
-   .search(searchFields)
-   .filter(excludeFields)
-   .sort()
-   .paginate()
-   .fields()
+    const pagination = {
+        total: 0,
+        currentPage: query.page ? Number(query.page) : 1,
+        limit: query.limit ? Number(query.limit) : 10
+    }
+
+    if (query.createdBy) {
+        query.createdBy = new ObjectId(query.createdBy as string)
+    }
+
+    if (query.createdAt) {
+        const startOfDay = dayjs(query.createdAt as string).startOf("day").toDate();
+        const endOfDay = dayjs(query.createdAt as string).endOf("day").toDate();
+
+
+        query.createdAt = {
+            $gte: startOfDay,
+            $lt: endOfDay,
+        }
+    }
+
+    const productQuery = new QueryBuilder(Product.find(), query)
+        .search(searchFields)
+        .filter(excludeFields)
+        .sort()
+        .fields()
+
+    await productQuery.paginate()
 
     const result = await productQuery.modelQuery
         .populate([
@@ -77,9 +99,12 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
             // }
         ])
 
+    pagination.total = productQuery.total
 
-
-    return result
+    return {
+        products: result,
+        pagination
+    }
 }
 
 const getSingleProductFromDB = async (id: string) => {
