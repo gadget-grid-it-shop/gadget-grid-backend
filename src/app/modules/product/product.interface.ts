@@ -55,6 +55,7 @@ export interface TProduct {
     meta?: TMeta,
     tags?: string[]
     isFeatured?: boolean,
+    mainCategory?: string
     sales?: number,
     createdBy: Types.ObjectId,
     shipping: TShipping

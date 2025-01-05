@@ -36,6 +36,7 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
     const productData = payload
     productData.createdBy = user._id
     productData.slug = slug
+    productData.mainCategory = productData.category?.find(c => c.main === true)?.id
 
     if (payload.discount && payload.discount?.value > 0) {
         productData.special_price = claculateSpecialPrice(payload.discount, payload.price)
@@ -56,6 +57,11 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
         total: 0,
         currentPage: query.page ? Number(query.page) : 1,
         limit: query.limit ? Number(query.limit) : 10
+    }
+
+    if(query.category){
+     query.mainCategory = new ObjectId(query.category as string)
+    delete query.categroy
     }
 
     if (query.createdBy) {
@@ -90,13 +96,10 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
                 path: 'brand',
                 select: 'name image'
             },
-            // {
-            //     path: 'category.id',
-            //     model: 'Category',
-
-            //     // match: { main: true },
-            //     select: 'name'
-            // }
+            {
+                path: 'mainCategory',
+                model: 'Category',
+            }
         ])
 
     pagination.total = productQuery.total

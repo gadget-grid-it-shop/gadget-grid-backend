@@ -70,6 +70,8 @@ const ProductSchema = new Schema<TProduct>({
     tags: [{ type: String, default: "" }],
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
+    mainCategory: { type: 
+        String, required:[true, 'Main category is required'] },
     createdBy: { type: Schema.Types.ObjectId, required: [true, 'Creator information is required'], ref: 'User' },
     shipping: {
         free: { type: Boolean, default: false },
