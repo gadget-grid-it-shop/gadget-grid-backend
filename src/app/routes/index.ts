@@ -10,6 +10,7 @@ import { AuthRoutes } from "../modules/auth/auth.routes";
 import validateAuth from "../middleware/auth";
 import { BrandRoutes } from "../modules/brand/brand.route";
 import { bulkUploadRoutes } from "../modules/bulkUpload/bulkUpload.route";
+import { FilterRoutes } from "../modules/productFilters/filter.routes";
 
 const router = Router();
 
@@ -26,6 +27,7 @@ const moduleRoutes = [
   { path: '/auth', route: AuthRoutes },
   { path: '/brand', route: BrandRoutes },
   { path: '/upload-history', route: bulkUploadRoutes },
+  { path: '/product-filters', route: FilterRoutes },
 ];
 
 moduleRoutes.forEach((route) => {

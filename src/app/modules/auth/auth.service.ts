@@ -11,6 +11,9 @@ import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
+
+  console.log(payload)
+
   const userExist = await User.isUserExistsByEmail(payload.email);
 
   if (!userExist) {

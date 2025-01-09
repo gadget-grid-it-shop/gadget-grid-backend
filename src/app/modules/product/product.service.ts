@@ -59,9 +59,9 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
         limit: query.limit ? Number(query.limit) : 10
     }
 
-    if(query.category){
-     query.mainCategory = new ObjectId(query.category as string)
-    delete query.categroy
+    if (query.category) {
+        query.mainCategory = new ObjectId(query.category as string)
+        delete query.categroy
     }
 
     if (query.createdBy) {
@@ -94,6 +94,7 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
             },
             {
                 path: 'brand',
+                match: { _id: { $type: "objectId" } },
                 select: 'name image'
             },
             {
@@ -415,7 +416,7 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>) => {
         throw new AppError(httpStatus.CONFLICT, 'Product does not exist')
     }
 
-    const result = await Product.findByIdAndUpdate(id, payload)
+    const result = await Product.findByIdAndUpdate(id, payload, { new: true })
 
     return result
 }
