@@ -2,7 +2,7 @@ import { Model } from "mongoose"
 
 export type TProductFilter = {
     title: string,
-    attributes: string[]
+    options: string[]
 }
 
 export interface TFilterModel extends Model<TProductFilter> {

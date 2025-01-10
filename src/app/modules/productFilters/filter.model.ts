@@ -7,7 +7,7 @@ const FilterSchema = new Schema<TProductFilter>({
         required: [true, 'Filter Title is required'],
         unique: true
     },
-    attributes: {
+    options: {
         type: [String],
         required: [true, 'Add at least one attribute']
     }

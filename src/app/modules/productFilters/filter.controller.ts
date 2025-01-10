@@ -41,4 +41,15 @@ const getAllFilters = catchAsync(async (req, res) => {
 
 })
 
-export const FilterControllers = { createFilter, updateFilter, getAllFilters }
+const deleteFilter = catchAsync(async (req, res) => {
+    const result = await FilterServices.deleteFilterFromDB(req.params.id)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'successfully deleted product fitlers',
+        data: result
+    })
+})
+
+export const FilterControllers = { createFilter, updateFilter, getAllFilters, deleteFilter }

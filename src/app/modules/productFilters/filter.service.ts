@@ -14,6 +14,18 @@ const getAllFiltersFromDB = async () => {
     return result
 }
 
+const deleteFilterFromDB = async (id: string) => {
+    const exist = ProductFilter.findFilterById(id)
+
+    if (!exist) {
+        throw new AppError(httpStatus.FORBIDDEN, 'Product filter does not exists')
+    }
+
+    const result = await ProductFilter.findByIdAndDelete(id)
+
+    return result
+}
+
 const updateFilterIntoDB = async (payload: Partial<TProductFilter>, id: string) => {
     const exist = ProductFilter.findFilterById(id)
 
@@ -26,4 +38,4 @@ const updateFilterIntoDB = async (payload: Partial<TProductFilter>, id: string) 
     return result
 }
 
-export const FilterServices = { createFilterIntoDB, updateFilterIntoDB, getAllFiltersFromDB }
+export const FilterServices = { createFilterIntoDB, updateFilterIntoDB, getAllFiltersFromDB, deleteFilterFromDB }
