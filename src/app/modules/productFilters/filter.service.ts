@@ -9,6 +9,11 @@ const createFilterIntoDB = async (payload: TProductFilter) => {
     return result
 }
 
+const getAllFiltersFromDB = async () => {
+    const result = await ProductFilter.find()
+    return result
+}
+
 const updateFilterIntoDB = async (payload: Partial<TProductFilter>, id: string) => {
     const exist = ProductFilter.findFilterById(id)
 
@@ -21,4 +26,4 @@ const updateFilterIntoDB = async (payload: Partial<TProductFilter>, id: string) 
     return result
 }
 
-export const FilterServices = { createFilterIntoDB, updateFilterIntoDB }
+export const FilterServices = { createFilterIntoDB, updateFilterIntoDB, getAllFiltersFromDB }

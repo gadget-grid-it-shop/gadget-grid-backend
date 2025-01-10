@@ -52,6 +52,7 @@ export interface TProduct {
     thumbnail: string;
     slug: string;
     attributes?: { name: string, fields: Record<string, string> }[];
+    filters: { filter: string, key: string, value: string }[]
     meta?: TMeta,
     tags?: string[]
     isFeatured?: boolean,
