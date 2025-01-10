@@ -14,4 +14,19 @@ const createFilter = catchAsync(async (req, res) => {
     })
 })
 
-export const FilterControllers = { createFilter }
+const updateFilter = catchAsync(async (req, res) => {
+    const payload = req.body
+    const id = req.params.id
+
+    const result = await FilterServices.updateFilterIntoDB(payload, id)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'updated product filter successfully',
+        data: result
+    })
+
+})
+
+export const FilterControllers = { createFilter, updateFilter }

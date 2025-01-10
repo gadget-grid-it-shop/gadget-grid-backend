@@ -6,5 +6,6 @@ import { FilterControllers } from "./filter.controller";
 const router = Router()
 
 router.post('/create', checkPermission(EAppFeatures.productFilter, 'create'), FilterControllers.createFilter)
+router.patch('/update/:id', checkPermission(EAppFeatures.productFilter, 'update'), FilterControllers.updateFilter)
 
 export const FilterRoutes = router

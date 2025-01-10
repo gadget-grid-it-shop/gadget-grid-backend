@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { TProductFilter } from "./filter.interface";
+import { TFilterModel, TProductFilter } from "./filter.interface";
 
 const FilterSchema = new Schema<TProductFilter>({
     title: {
@@ -11,8 +11,17 @@ const FilterSchema = new Schema<TProductFilter>({
         type: [String],
         required: [true, 'Add at least one attribute']
     }
-})
+},
+    {
+        timestamps: true
+    })
 
-const ProductFilter = model<TProductFilter>('ProductFilter', FilterSchema)
+FilterSchema.statics.findFilterById = async function (id: string) {
+    const result = await ProductFilter.findById(id)
+
+    return result
+}
+
+const ProductFilter = model<TProductFilter, TFilterModel>('ProductFilter', FilterSchema)
 
 export default ProductFilter
