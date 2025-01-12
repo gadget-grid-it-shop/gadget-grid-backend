@@ -3,7 +3,6 @@ import upload from "../../lib/image/image.multer";
 import { ImageUploadController } from "./image.controller";
 import checkPermission from "../../middleware/checkPermission";
 import { EAppFeatures } from "../roles/roles.interface";
-import catchAsync from "../../utils/catchAsync";
 
 const router = Router()
 

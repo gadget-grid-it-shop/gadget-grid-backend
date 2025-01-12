@@ -90,9 +90,6 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
     const result = await productQuery.modelQuery
         .populate([
             {
-                path: 'createdBy',
-            },
-            {
                 path: 'brand',
                 match: { _id: { $type: "objectId" } },
                 select: 'name image'
