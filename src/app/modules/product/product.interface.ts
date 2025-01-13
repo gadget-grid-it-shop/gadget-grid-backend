@@ -62,6 +62,13 @@ export interface TProduct {
     shipping: TShipping
 }
 
+export type TPagination = {
+    limit: number;
+    currentPage: number;
+    total: number;
+    totalPage?: number;
+};
+
 export const defaultFields: string[] = [
     'name',
     'price',

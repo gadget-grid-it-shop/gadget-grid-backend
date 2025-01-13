@@ -23,11 +23,12 @@ const getAllProduct = catchAsync(async (req, res) => {
         success: true,
         statusCode: httpStatus.OK,
         message: "Successfully retrived all products",
-        data: result
+        data: result.products,
+        pagination: result.pagination
     })
 })
 
-const getSingleProduct = catchAsync(async (req, res)=>{
+const getSingleProduct = catchAsync(async (req, res) => {
     const result = await ProductServices.getSingleProductFromDB(req.params.id)
 
     sendResponse(res, {
@@ -52,7 +53,7 @@ const bulkUpload = catchAsync(async (req, res) => {
     })
 })
 
-const updateProduct = catchAsync(async(req,res)=>{
+const updateProduct = catchAsync(async (req, res) => {
     const id = req.params.id
 
     const result = await ProductServices.updateProductIntoDB(id, req.body)
