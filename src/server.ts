@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import app from "./app";
 import config from "./app/config";
 import { Server } from "http";
+import { Server as SocketServer } from "socket.io";
 
 let server: Server
 
@@ -12,6 +13,21 @@ const main = async () => {
     server = app.listen(config.port, () => {
       console.log(`IT shop server running on port ${config.port}`);
     });
+
+    const io = new SocketServer(server, {
+      cors: {
+        origin: ['http://localhost:3000'], credentials: true
+      }
+    })
+
+    io.on('connection', (socket) => {
+      console.log('socket connected')
+
+      socket.on('product', (payload) => {
+        io.emit('product', payload)
+      })
+    })
+
   } catch (err) {
     console.log("Something went wrong", err);
   }

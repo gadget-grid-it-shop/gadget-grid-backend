@@ -1,7 +1,7 @@
 import { Model, Types } from "mongoose";
 
 export interface TUser {
-  _id?: Types.ObjectId;
+  _id: Types.ObjectId;
   email: string;
   password: string;
   isActive?: boolean;

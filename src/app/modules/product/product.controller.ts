@@ -55,8 +55,9 @@ const bulkUpload = catchAsync(async (req, res) => {
 
 const updateProduct = catchAsync(async (req, res) => {
     const id = req.params.id
+    const user = req.user
 
-    const result = await ProductServices.updateProductIntoDB(id, req.body)
+    const result = await ProductServices.updateProductIntoDB(id, req.body, user.email)
 
     sendResponse(res, {
         success: true,

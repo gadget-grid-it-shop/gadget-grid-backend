@@ -22,6 +22,9 @@ import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
 import dayjs from 'dayjs'
+import { NotificationService } from "../notification/notification.service";
+import { TNotification } from "../notification/notification.interface";
+import { Admin } from "../admin/admin.model";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -402,18 +405,46 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
 }
 
 
-const updateProductIntoDB = async (id: string, payload: Partial<TProduct>) => {
+const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, userEmail: string) => {
     if (!id) {
         throw new AppError(httpStatus.FORBIDDEN, 'Please provide product id')
     }
 
     const exist = await Product.findById(id)
 
+    const user = await Admin.findOne({ email: userEmail });
+
+    const admins = await User.find({ isDeleted: false, isVerified: true, role: { $ne: 'customer' } })
+
     if (!exist) {
         throw new AppError(httpStatus.CONFLICT, 'Product does not exist')
     }
 
     const result = await Product.findByIdAndUpdate(id, payload, { new: true })
+
+    if (result) {
+        if (!user) {
+            return
+        }
+
+        const createNotification = admins.map(async (admin) => {
+            try {
+                const notification: TNotification = {
+                    notificationType: 'product',
+                    opened: false,
+                    userFrom: user?.user?._id,
+                    userTo: admin?._id,
+                    source: String(result._id),
+                    text: `${result.name} is updated by ${user?.name?.firstName + " " + user.name?.middleName + " " + user.name.lastName}`
+                }
+                return await NotificationService.addNotificationToDB(notification)
+            }
+            catch (err) {
+                console.log(err)
+            }
+        })
+        await Promise.all(createNotification)
+    }
 
     return result
 }
