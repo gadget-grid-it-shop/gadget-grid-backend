@@ -3,6 +3,7 @@ import app from "./app";
 import config from "./app/config";
 import { Server } from "http";
 import { Server as SocketServer } from "socket.io";
+import { initializeSocketIO } from "./socket";
 
 let server: Server
 
@@ -14,11 +15,7 @@ const main = async () => {
       console.log(`IT shop server running on port ${config.port}`);
     });
 
-    const io = new SocketServer(server, {
-      cors: {
-        origin: ['http://localhost:3000'], credentials: true
-      }
-    })
+    const io = initializeSocketIO(server)
 
     io.on('connection', (socket) => {
       console.log('socket connected')
