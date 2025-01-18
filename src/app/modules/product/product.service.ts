@@ -25,6 +25,8 @@ import dayjs from 'dayjs'
 import { NotificationService } from "../notification/notification.service";
 import { TNotification } from "../notification/notification.interface";
 import { Admin } from "../admin/admin.model";
+import { io } from "../../../server";
+import config from "../../config";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -443,7 +445,9 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, userE
                 console.log(err)
             }
         })
-        await Promise.all(createNotification)
+        const notifications = await Promise.all(createNotification)
+
+        io.to(config.admin_join_id as string).emit('newNotification', notifications)
     }
 
     return result
