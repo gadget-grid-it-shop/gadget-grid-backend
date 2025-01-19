@@ -416,8 +416,6 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, thisA
 
     const exist = await Product.findById(id)
 
-    console.log(thisAdmin)
-
     const admins = await Admin.findAllVerifiedAdmins()
 
     if (!exist) {
@@ -430,8 +428,6 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, thisA
         if (!thisAdmin) {
             return
         }
-
-        console.log(admins)
 
         const createNotification = admins.map(async (admin) => {
             try {
@@ -450,8 +446,6 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, thisA
             }
         })
         const notifications = await Promise.all(createNotification)
-
-        console.log(notifications)
 
         if (notifications) {
             const io = getIO()

@@ -4,6 +4,7 @@ import AppError from "../errors/AppError";
 import config from "../config";
 import { User } from "../modules/user/user.model";
 import varifyToken from "../utils/verifyToken";
+import { Admin } from "../modules/admin/admin.model";
 
 const validateAuth = () => {
   return catchAsync(async (req, res, next) => {
@@ -21,8 +22,13 @@ const validateAuth = () => {
 
     const userExist = await User.isUserExistsByEmail(decoded.email);
 
+    const admin = await Admin.findOne({ email: decoded.email })
+
     req.user = {
-      email: decoded.email,
+      userRole: userExist.role,
+      email: userExist.email,
+      userData: userExist,
+      admin: admin
     };
 
     next();

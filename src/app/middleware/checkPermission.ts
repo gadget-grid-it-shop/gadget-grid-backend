@@ -18,8 +18,6 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
             throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
         }
 
-        const admin = await Admin.findOne({ email: user.email })
-
         if (userExist.isMasterAdmin) {
             return next()
         }
@@ -40,13 +38,6 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
         const permission = role.permissions.find((p) => p.feature === feature);
 
         const hasPermission = permission?.access[accessType] === true;
-
-        req.user = {
-            userRole: userExist.role,
-            email: userExist.email,
-            userData: userExist,
-            admin: admin
-        };
 
         if (!hasPermission) {
             throw new AppError(httpStatus.UNAUTHORIZED, `You do not have permission to ${accessType} ${feature}`);
