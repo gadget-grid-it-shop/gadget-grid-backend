@@ -1,5 +1,5 @@
 import { model, Schema, Types } from "mongoose";
-import { TAddress, TAdmin, TAdminName } from "./admin.interface";
+import { TAddress, TAdmin, TAdminModel, TAdminName } from "./admin.interface";
 
 const AdminNameSchema = new Schema<TAdminName>({
   firstName: { type: String, required: [true, "First name is required"] },
@@ -65,8 +65,19 @@ AdminSchema.virtual('fullName').get(function () {
   return [firstName, middleName, lastName].filter(Boolean).join(' ');
 })
 
+AdminSchema.statics.findAllVerifiedAdmins = async () => {
+  const result = await Admin.find({ isDeleted: false, role: { $ne: 'customer' } }).populate([
+    {
+      path: 'user',
+      match: { isVerified: true }
+    }
+  ])
+
+  return result
+}
+
 AdminSchema.set('toJSON', {
   virtuals: true
 })
 
-export const Admin = model<TAdmin>("Admin", AdminSchema);
+export const Admin = model<TAdmin, TAdminModel>("Admin", AdminSchema);

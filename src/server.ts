@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import app from "./app";
 import config from "./app/config";
 import { Server } from "http";
-import { Server as SocketServer } from "socket.io";
 import { initializeSocketIO } from "./socket";
 
 let server: Server
@@ -20,8 +19,12 @@ const main = async () => {
     io.on('connection', (socket) => {
       console.log('socket connected')
 
-      socket.on('product', (payload) => {
-        io.emit('product', payload)
+
+      socket.on('adminJoin', (data) => {
+        console.log(data.user)
+        socket.join(`${data.user}`)
+        socket.join('admins')
+        console.log('admin joined')
       })
     })
 

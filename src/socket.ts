@@ -10,27 +10,19 @@ import {
 let io: Server
 
 export const initializeSocketIO = (server: htttpServer) => {
-    // io = socketIo(server, {
-    //   pingTimeout: 60000,
-    // });
-    io = new Server(server, {
-        pingTimeout: 60000,
-        cors: {
-            origin: ['http://localhost:3000'], credentials: true
-        }
-    });
+
     try {
-        // const subClient = redisClient.duplicate();
-        // io.adapter(createAdapter(redisClient, subClient));
+        io = new Server(server, {
+            pingTimeout: 60000,
+            cors: {
+                origin: ['http://localhost:3000'], credentials: true
+            },
+            // connectionStateRecovery: {}
+        });
+        console.log('Socket initialized')
     } catch (e) {
         console.log(e);
     }
-
-    // You can add your Socket.IO event listeners here.
-    // For example:
-    // io.on("connection", (socket) => {
-    //   console.log("A user connected");
-    // });
 
     return io;
 };

@@ -6,13 +6,12 @@ import { Admin } from "../admin/admin.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { Roles } from "../roles/roles.model";
-import { ObjectId } from 'mongodb'
 
 const createAdminIntoDB = async (admin: TAdmin) => {
 
   delete admin.isDeleted
 
-  const user: TUser = {
+  const user: Partial<TUser> = {
     email: admin.email,
     password: admin.password,
     role: admin.role

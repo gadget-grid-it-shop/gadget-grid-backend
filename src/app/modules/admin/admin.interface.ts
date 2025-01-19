@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Model, Types } from "mongoose";
 
 export interface TAddress {
   street?: string;
@@ -24,4 +24,8 @@ export interface TAdmin {
   role: string;
   profilePicture: string,
   isDeleted?: boolean
+}
+
+export interface TAdminModel extends Model<TAdmin> {
+  findAllVerifiedAdmins: () => Promise<TAdmin[]>
 }

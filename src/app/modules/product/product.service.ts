@@ -25,6 +25,10 @@ import dayjs from 'dayjs'
 import { NotificationService } from "../notification/notification.service";
 import { TNotification } from "../notification/notification.interface";
 import { Admin } from "../admin/admin.model";
+import config from "../../config";
+import { getIO } from "../../../socket";
+import { TAdmin } from "../admin/admin.interface";
+import { makeFullName } from "../../utils/makeFullName";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
 
@@ -405,16 +409,16 @@ const bulkUploadToDB = async (file: Express.Multer.File | undefined, mapedFields
 }
 
 
-const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, userEmail: string) => {
+const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, thisAdmin: TAdmin) => {
     if (!id) {
         throw new AppError(httpStatus.FORBIDDEN, 'Please provide product id')
     }
 
     const exist = await Product.findById(id)
 
-    const user = await Admin.findOne({ email: userEmail });
+    console.log(thisAdmin)
 
-    const admins = await User.find({ isDeleted: false, isVerified: true, role: { $ne: 'customer' } })
+    const admins = await Admin.findAllVerifiedAdmins()
 
     if (!exist) {
         throw new AppError(httpStatus.CONFLICT, 'Product does not exist')
@@ -423,19 +427,21 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, userE
     const result = await Product.findByIdAndUpdate(id, payload, { new: true })
 
     if (result) {
-        if (!user) {
+        if (!thisAdmin) {
             return
         }
+
+        console.log(admins)
 
         const createNotification = admins.map(async (admin) => {
             try {
                 const notification: TNotification = {
                     notificationType: 'product',
                     opened: false,
-                    userFrom: user?.user?._id,
-                    userTo: admin?._id,
+                    userFrom: thisAdmin?.user?._id,
+                    userTo: admin?.user?._id,
                     source: String(result._id),
-                    text: `${result.name} is updated by ${user?.name?.firstName + " " + user.name?.middleName + " " + user.name.lastName}`
+                    text: `${String(admin.user._id) === String(thisAdmin.user?._id) ? 'You' : makeFullName(thisAdmin.name)} updated a product`
                 }
                 return await NotificationService.addNotificationToDB(notification)
             }
@@ -443,7 +449,17 @@ const updateProductIntoDB = async (id: string, payload: Partial<TProduct>, userE
                 console.log(err)
             }
         })
-        await Promise.all(createNotification)
+        const notifications = await Promise.all(createNotification)
+
+        console.log(notifications)
+
+        if (notifications) {
+            const io = getIO()
+            for (const noti of notifications) {
+                console.log(noti?.userTo)
+                io.to(`${String(noti?.userTo)}`).emit('newNotification', noti)
+            }
+        }
     }
 
     return result

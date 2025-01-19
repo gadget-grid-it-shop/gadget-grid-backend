@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../utils/catchAsync";
 import AppError from "../errors/AppError";
 import config from "../config";
-import {User} from "../modules/user/user.model";
+import { User } from "../modules/user/user.model";
 import varifyToken from "../utils/verifyToken";
 
 const validateAuth = () => {
@@ -22,7 +22,6 @@ const validateAuth = () => {
     const userExist = await User.isUserExistsByEmail(decoded.email);
 
     req.user = {
-      userRole: userExist.role,
       email: decoded.email,
     };
 
