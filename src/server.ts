@@ -3,8 +3,9 @@ import app from "./app";
 import config from "./app/config";
 import { Server } from "http";
 import { initializeSocketIO } from "./socket";
+import Notification from "./app/modules/notification/notification.model";
 
-let server: Server
+let server: Server;
 
 const main = async () => {
   try {
@@ -14,20 +15,27 @@ const main = async () => {
       console.log(`IT shop server running on port ${config.port}`);
     });
 
-    const io = initializeSocketIO(server)
+    const io = initializeSocketIO(server);
 
-    io.on('connection', (socket) => {
-      console.log('socket connected')
+    io.on("connection", (socket) => {
+      socket.on("adminJoin", (data) => {
+        console.log(data.user);
+        socket.join(`${data.user}`);
+        socket.join("admins");
+        console.log("admin joined");
+      });
 
-
-      socket.on('adminJoin', (data) => {
-        console.log(data.user)
-        socket.join(`${data.user}`)
-        socket.join('admins')
-        console.log('admin joined')
-      })
-    })
-
+      socket.on("notificationClicked", async (id) => {
+        console.log(id);
+        try {
+          const res = await Notification.findByIdAndUpdate(id, {
+            opened: true,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      });
+    });
   } catch (err) {
     console.log("Something went wrong", err);
   }
@@ -35,21 +43,20 @@ const main = async () => {
 
 main();
 
-
-process.on('uncaughtException', () => {
-  console.log('UncaughtException error, shutting the server...')
+process.on("uncaughtException", () => {
+  console.log("UncaughtException error, shutting the server...");
   if (server) {
     server.close(() => {
-      process.exit(1)
-    })
+      process.exit(1);
+    });
   }
-})
+});
 
-process.on('unhandledRejection', () => {
-  console.log(' unhandledRejection error, shutting the server...')
+process.on("unhandledRejection", () => {
+  console.log(" unhandledRejection error, shutting the server...");
   if (server) {
     server.close(() => {
-      process.exit(1)
-    })
+      process.exit(1);
+    });
   }
-})
+});
