@@ -4,6 +4,7 @@ import config from "./app/config";
 import { Server } from "http";
 import { initializeSocketIO } from "./socket";
 import Notification from "./app/modules/notification/notification.model";
+import { ValidateIOAuth } from "./app/middleware/socketAuth";
 
 let server: Server;
 
@@ -17,6 +18,8 @@ const main = async () => {
 
     const io = initializeSocketIO(server);
 
+    io?.use(ValidateIOAuth);
+
     io.on("connection", (socket) => {
       socket.on("adminJoin", (data) => {
         console.log(data.user);
@@ -26,11 +29,11 @@ const main = async () => {
       });
 
       socket.on("notificationClicked", async (id) => {
-        console.log(id);
         try {
           const res = await Notification.findByIdAndUpdate(id, {
             opened: true,
           });
+          socket.emit("notificationRead", res);
         } catch (err) {
           console.log(err);
         }

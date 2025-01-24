@@ -1,4 +1,5 @@
 import QueryBuilder from "../../builder/queryBuilder";
+import { TPagination } from "../product/product.interface";
 import { TNotification } from "./notification.interface";
 import Notification from "./notification.model";
 import { ObjectId } from "mongodb";
@@ -8,20 +9,27 @@ const addNotificationToDB = async (payload: TNotification) => {
   return result;
 };
 
-const getMyNotificationsFromDB = async (user: string) => {
+const getMyNotificationsFromDB = async (
+  user: string,
+  query: Record<string, unknown>
+) => {
   const unreadCount = await Notification.countDocuments({
     userTo: new ObjectId(user),
     opened: false,
   });
 
-  const query = {
-    page: 1,
-    limit: 20,
+  const total = await Notification.countDocuments({
+    userTo: new ObjectId(user),
+  });
+
+  const newQuery = {
+    page: Number(query.page) || 1,
+    limit: Number(query.limit) || 20,
   };
 
   const notificationQuery = new QueryBuilder(
     Notification.find({ userTo: new ObjectId(user) }),
-    query
+    newQuery
   ).sort();
 
   await notificationQuery.paginate();
@@ -35,9 +43,19 @@ const getMyNotificationsFromDB = async (user: string) => {
     },
   ]);
 
+  const pagination: TPagination = {
+    currentPage: newQuery.page,
+    limit: newQuery.limit,
+    hasMore: result.length === newQuery.limit,
+    total,
+  };
+
   return {
-    notifications: result,
-    unreadCount,
+    data: {
+      notifications: result,
+      unreadCount,
+    },
+    pagination,
   };
 };
 export const NotificationService = {
