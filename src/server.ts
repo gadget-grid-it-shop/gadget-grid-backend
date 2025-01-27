@@ -5,6 +5,7 @@ import { Server } from "http";
 import { initializeSocketIO } from "./socket";
 import Notification from "./app/modules/notification/notification.model";
 import { ValidateIOAuth } from "./app/middleware/socketAuth";
+import { ObjectId } from "mongodb";
 
 let server: Server;
 
@@ -20,22 +21,34 @@ const main = async () => {
 
     io?.use(ValidateIOAuth);
 
-    io.on("connection", (socket) => {
+    io?.on("connection", (socket) => {
       socket.on("adminJoin", (data) => {
         console.log(data.user);
         socket.join(`${data.user}`);
         socket.join("admins");
-        console.log("admin joined");
       });
 
       socket.on("notificationClicked", async (id) => {
+        const user = socket.user?.userData?._id;
+        console.log(user);
         try {
           const res = await Notification.findByIdAndUpdate(id, {
             opened: true,
           });
-          socket.emit("notificationRead", res);
+          io.to(`${String(user)}`).emit("notificationRead", res);
         } catch (err) {
           console.log(err);
+        }
+      });
+
+      socket.on("markAllRead", async () => {
+        const user = socket.user?.userData?._id;
+        const updateAll = await Notification.updateMany(
+          { userTo: user },
+          { opened: true }
+        );
+        if (updateAll) {
+          io.to(`${String(user)}`).emit("markedAllasRead");
         }
       });
     });

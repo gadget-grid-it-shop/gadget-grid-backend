@@ -10,25 +10,33 @@ const validateAuth = () => {
   return catchAsync(async (req, res, next) => {
     const token = req.headers.authorization;
     if (!token) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "You are not authorized",
+        "unauthorized access request"
+      );
     }
 
     // check if varified user
     const decoded = varifyToken(token, config.access_secret as string);
 
     if (!decoded) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "You are not authorized",
+        "unauthorized access request"
+      );
     }
 
-    const userExist = await User.isUserExistsByEmail(decoded.email);
+    const userExist = await User.isUserExistsByEmail(decoded.email, true);
 
-    const admin = await Admin.findOne({ email: decoded.email })
+    const admin = await Admin.findOne({ email: decoded.email }).lean();
 
     req.user = {
       userRole: userExist.role,
       email: userExist.email,
       userData: userExist,
-      admin: admin
+      admin: { ...admin, user: userExist },
     };
 
     next();

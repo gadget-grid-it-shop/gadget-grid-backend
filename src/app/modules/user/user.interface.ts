@@ -13,8 +13,11 @@ export interface TUser {
 }
 
 export interface TUserModel extends Model<TUser> {
-  isUserExistsByEmail(email: string): Promise<TUser>;
+  isUserExistsByEmail(email: string, lean?: boolean): Promise<TUser>;
   isUserVarified(email: string): Promise<boolean>;
   findUserRoleByEmail(email: string): Promise<string>;
-  matchUserPassword(userPassword: string, databasePassword: string): Promise<boolean>;
+  matchUserPassword(
+    userPassword: string,
+    databasePassword: string
+  ): Promise<boolean>;
 }

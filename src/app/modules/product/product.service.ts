@@ -39,6 +39,8 @@ import config from "../../config";
 import { getIO } from "../../../socket";
 import { TAdmin } from "../admin/admin.interface";
 import { makeFullName } from "../../utils/makeFullName";
+import { addNotifications } from "../notification/notificaiton.utils";
+import { TAdminAndUser } from "../../interface/customRequest";
 
 const createProductIntoDB = async (payload: TProduct, email: string) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
@@ -444,7 +446,7 @@ const bulkUploadToDB = async (
 const updateProductIntoDB = async (
   id: string,
   payload: Partial<TProduct>,
-  thisAdmin: TAdmin
+  thisAdmin: TAdminAndUser
 ) => {
   if (!id) {
     throw new AppError(httpStatus.FORBIDDEN, "Please provide product id");
@@ -461,38 +463,29 @@ const updateProductIntoDB = async (
   const result = await Product.findByIdAndUpdate(id, payload, { new: true });
 
   if (result) {
-    if (!thisAdmin) {
+    if (!thisAdmin || !thisAdmin.user) {
       return;
     }
 
-    const createNotification = admins.map(async (admin) => {
-      try {
-        const notification: TNotification = {
-          notificationType: "product",
-          opened: false,
-          userFrom: thisAdmin?.user?._id,
-          userTo: admin?.user?._id,
-          source: String(result._id),
-          text: `${
-            String(admin.user._id) === String(thisAdmin.user?._id)
-              ? "You"
-              : makeFullName(thisAdmin.name)
-          } updated a product`,
-        };
-        return await NotificationService.addNotificationToDB(notification);
-      } catch (err) {
-        console.log(err);
-      }
-    });
-    const notifications = await Promise.all(createNotification);
+    const notifications: TNotification[] = admins.map((admin) => {
+      const notification: TNotification = {
+        notificationType: "product",
+        actionType: "update",
+        opened: false,
+        userFrom: thisAdmin?.user?._id,
+        userTo: admin?.user?._id,
+        source: String(result._id),
+        text: `${
+          String(admin.user._id) === String(thisAdmin.user?._id)
+            ? "You"
+            : makeFullName(thisAdmin.name)
+        } updated a product`,
+      };
 
-    if (notifications) {
-      const io = getIO();
-      for (const noti of notifications) {
-        console.log(noti?.userTo);
-        io.to(`${String(noti?.userTo)}`).emit("newNotification", noti);
-      }
-    }
+      return notification;
+    });
+
+    addNotifications({ notifications, userFrom: thisAdmin });
   }
 
   return result;
