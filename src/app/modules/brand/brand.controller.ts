@@ -4,61 +4,61 @@ import sendResponse from "../../utils/sendResponse";
 import { BrandService } from "./brand.service";
 
 const createBrand = catchAsync(async (req, res) => {
-    const payload = req.body
-    const email = req.user.email
+  const payload = req.body;
+  const { email, admin } = req.user;
 
-    const result = await BrandService.createBrandIntoDB(payload, email)
+  const result = await BrandService.createBrandIntoDB(payload, email, admin);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Brand create successfully",
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Brand create successfully",
+    data: result,
+  });
+});
 
 const updateBrand = catchAsync(async (req, res) => {
-    const payload = req.body
-    const id = req.params.id
+  const payload = req.body;
+  const id = req.params.id;
+  const { admin } = req.user;
+  const result = await BrandService.updateBrandIntoDB(id, payload, admin);
 
-    const result = await BrandService.updateBrandIntoDB(id, payload)
-
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Brand updated successfully",
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Brand updated successfully",
+    data: result,
+  });
+});
 
 const getAllBrands = catchAsync(async (req, res) => {
-    const result = await BrandService.getAllBrandsFromDB()
+  const result = await BrandService.getAllBrandsFromDB();
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Successfully retrived all brands",
-        data: result
-    })
-})
-
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived all brands",
+    data: result,
+  });
+});
 
 const deleteBrand = catchAsync(async (req, res) => {
-    const id = req.params.id
+  const id = req.params.id;
+  const { admin } = req.user;
 
-    const result = await BrandService.deleteBrandFromDB(id)
+  const result = await BrandService.deleteBrandFromDB(id, admin);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Successfully deleted all brand",
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully deleted all brand",
+    data: result,
+  });
+});
 
 export const BrandController = {
-    createBrand,
-    updateBrand,
-    getAllBrands,
-    deleteBrand
-}
+  createBrand,
+  updateBrand,
+  getAllBrands,
+  deleteBrand,
+};

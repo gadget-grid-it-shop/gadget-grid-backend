@@ -4,65 +4,113 @@ import { TBrand } from "./brand.interface";
 import { Brand } from "./brand.model";
 import { User } from "../user/user.model";
 import { TUser } from "../user/user.interface";
+import {
+  addNotifications,
+  buildNotifications,
+} from "../notification/notificaiton.utils";
+import { TAdminAndUser } from "../../interface/customRequest";
 
-const createBrandIntoDB = async (payload: TBrand, email: string) => {
-    const exists = await Brand.findBrandByName(payload.name)
-    const user: TUser | null = await User.findOne({ email })
+const createBrandIntoDB = async (
+  payload: TBrand,
+  email: string,
+  admin: TAdminAndUser
+) => {
+  const exists = await Brand.findBrandByName(payload.name);
+  const user: TUser | null = await User.findOne({ email });
 
-    if (exists) {
-        throw new AppError(httpStatus.CONFLICT, 'Brand already exists')
-    }
+  if (exists) {
+    throw new AppError(httpStatus.CONFLICT, "Brand already exists");
+  }
 
-    const result = await Brand.create({ ...payload, createdBy: user?._id })
+  const result = await Brand.create({ ...payload, createdBy: user?._id });
 
-    return result
-}
+  if (result) {
+    const notifications = await buildNotifications({
+      source: result._id,
+      actionType: "create",
+      notificationType: "brand",
+      text: "added a brand",
+      thisAdmin: admin,
+    });
 
+    await addNotifications({ notifications, userFrom: admin });
+  }
 
-const updateBrandIntoDB = async (id: string, payload: Partial<TBrand>) => {
-    const exists = await Brand.findBrandById(id)
+  return result;
+};
 
-    if (!exists) {
-        throw new AppError(httpStatus.CONFLICT, 'Brand does not exists')
-    }
+const updateBrandIntoDB = async (
+  id: string,
+  payload: Partial<TBrand>,
+  admin: TAdminAndUser
+) => {
+  const exists = await Brand.findBrandById(id);
 
-    delete payload.isDeleted
+  if (!exists) {
+    throw new AppError(httpStatus.CONFLICT, "Brand does not exists");
+  }
 
-    const result = await Brand.findByIdAndUpdate(id, payload, { new: true })
+  delete payload.isDeleted;
 
-    return result
-}
+  const result = await Brand.findByIdAndUpdate(id, payload, { new: true });
 
+  if (result) {
+    const notifications = await buildNotifications({
+      source: result._id,
+      actionType: "update",
+      notificationType: "brand",
+      text: "updated a brand",
+      thisAdmin: admin,
+    });
+
+    await addNotifications({ notifications, userFrom: admin });
+  }
+
+  return result;
+};
 
 const getAllBrandsFromDB = async () => {
-    const result = await Brand.find({ isDeleted: false }).populate([
-        {
-            path: 'createdBy',
-            select: 'email name'
-        }
-    ])
+  const result = await Brand.find({ isDeleted: false }).populate([
+    {
+      path: "createdBy",
+      select: "email name",
+    },
+  ]);
 
-    return result
-}
+  return result;
+};
 
+const deleteBrandFromDB = async (id: string, admin: TAdminAndUser) => {
+  const exists = await Brand.findBrandById(id);
 
-const deleteBrandFromDB = async (id: string) => {
-    const exists = await Brand.findBrandById(id)
+  if (!exists) {
+    throw new AppError(httpStatus.CONFLICT, "Brand does not exists");
+  }
 
-    if (!exists) {
-        throw new AppError(httpStatus.CONFLICT, 'Brand does not exists')
-    }
+  const result = await Brand.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    { new: true }
+  );
 
-    const result = await Brand.findByIdAndUpdate(id, { isDeleted: true }, { new: true })
+  if (result) {
+    const notifications = await buildNotifications({
+      source: result._id,
+      actionType: "delete",
+      notificationType: "brand",
+      text: "deleted a brand",
+      thisAdmin: admin,
+    });
 
-    return result
-}
+    await addNotifications({ notifications, userFrom: admin });
+  }
 
-
+  return result;
+};
 
 export const BrandService = {
-    createBrandIntoDB,
-    updateBrandIntoDB,
-    getAllBrandsFromDB,
-    deleteBrandFromDB
-}
+  createBrandIntoDB,
+  updateBrandIntoDB,
+  getAllBrandsFromDB,
+  deleteBrandFromDB,
+};

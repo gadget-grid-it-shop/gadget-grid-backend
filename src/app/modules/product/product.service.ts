@@ -15,15 +15,12 @@ import Papa from "papaparse";
 import fs, { appendFile } from "fs";
 import path from "path";
 import { Category } from "../category/category.model";
-import { TCategory } from "../category/category.interface";
 import {
   claculateSpecialPrice,
   createCategoryArray,
   transformSvgProductData,
 } from "./product.utils";
 import { Brand } from "../brand/brand.model";
-import { TBrand } from "../brand/brand.interface";
-import { ProductValidations } from "./product.validations";
 import handleDuplicateError from "../../errors/handleDuplicateError";
 import { TErrorSourse } from "../../interface/error.interface";
 import { ObjectId } from "mongodb";
@@ -35,14 +32,18 @@ import dayjs from "dayjs";
 import { NotificationService } from "../notification/notification.service";
 import { TNotification } from "../notification/notification.interface";
 import { Admin } from "../admin/admin.model";
-import config from "../../config";
-import { getIO } from "../../../socket";
-import { TAdmin } from "../admin/admin.interface";
 import { makeFullName } from "../../utils/makeFullName";
-import { addNotifications } from "../notification/notificaiton.utils";
+import {
+  addNotifications,
+  buildNotifications,
+} from "../notification/notificaiton.utils";
 import { TAdminAndUser } from "../../interface/customRequest";
 
-const createProductIntoDB = async (payload: TProduct, email: string) => {
+const createProductIntoDB = async (
+  payload: TProduct,
+  email: string,
+  thisAdmin: TAdminAndUser
+) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
   if (!user._id) {
@@ -66,6 +67,22 @@ const createProductIntoDB = async (payload: TProduct, email: string) => {
   }
 
   const result = await Product.create(productData);
+
+  if (result) {
+    if (!thisAdmin || !thisAdmin.user) {
+      return;
+    }
+
+    const notifications = await buildNotifications({
+      source: result._id,
+      text: "added a product",
+      thisAdmin,
+      notificationType: "product",
+      actionType: "create",
+    });
+
+    await addNotifications({ notifications, userFrom: thisAdmin });
+  }
 
   return result;
 };
@@ -467,25 +484,15 @@ const updateProductIntoDB = async (
       return;
     }
 
-    const notifications: TNotification[] = admins.map((admin) => {
-      const notification: TNotification = {
-        notificationType: "product",
-        actionType: "update",
-        opened: false,
-        userFrom: thisAdmin?.user?._id,
-        userTo: admin?.user?._id,
-        source: String(result._id),
-        text: `${
-          String(admin.user._id) === String(thisAdmin.user?._id)
-            ? "You"
-            : makeFullName(thisAdmin.name)
-        } updated a product`,
-      };
-
-      return notification;
+    const notifications = await buildNotifications({
+      source: result._id,
+      text: "updated a product",
+      thisAdmin,
+      notificationType: "product",
+      actionType: "update",
     });
 
-    addNotifications({ notifications, userFrom: thisAdmin });
+    await addNotifications({ notifications, userFrom: thisAdmin });
   }
 
   return result;

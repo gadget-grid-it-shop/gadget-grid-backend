@@ -18,5 +18,5 @@ export type TNotification = {
     | "productFilter";
   text: string;
   source?: string;
-  actionType: "update" | "create" | "delete" | string;
+  actionType: "update" | "create" | "delete";
 };
