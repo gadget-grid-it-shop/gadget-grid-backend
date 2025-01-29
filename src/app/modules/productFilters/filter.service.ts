@@ -4,38 +4,50 @@ import ProductFilter from "./filter.model";
 import AppError from "../../errors/AppError";
 
 const createFilterIntoDB = async (payload: TProductFilter) => {
-    const result = await ProductFilter.create(payload)
+  const result = await ProductFilter.create(payload);
 
-    return result
-}
+  return result;
+};
 
 const getAllFiltersFromDB = async () => {
-    const result = await ProductFilter.find()
-    return result
-}
+  const result = await ProductFilter.find();
+  return result;
+};
 
 const deleteFilterFromDB = async (id: string) => {
-    const exist = ProductFilter.findFilterById(id)
+  const exist = await ProductFilter.findFilterById(id);
 
-    if (!exist) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Product filter does not exists')
-    }
+  console.log(exist);
 
-    const result = await ProductFilter.findByIdAndDelete(id)
+  if (!exist) {
+    throw new AppError(httpStatus.FORBIDDEN, "Product filter does not exists");
+  }
 
-    return result
-}
+  const result = await ProductFilter.findByIdAndDelete(id);
 
-const updateFilterIntoDB = async (payload: Partial<TProductFilter>, id: string) => {
-    const exist = ProductFilter.findFilterById(id)
+  return result;
+};
 
-    if (!exist) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Product filter does not exists')
-    }
+const updateFilterIntoDB = async (
+  payload: Partial<TProductFilter>,
+  id: string
+) => {
+  const exist = await ProductFilter.findFilterById(id);
 
-    const result = await ProductFilter.findByIdAndUpdate(id, payload, { new: true })
+  if (!exist) {
+    throw new AppError(httpStatus.FORBIDDEN, "Product filter does not exists");
+  }
 
-    return result
-}
+  const result = await ProductFilter.findByIdAndUpdate(id, payload, {
+    new: true,
+  });
 
-export const FilterServices = { createFilterIntoDB, updateFilterIntoDB, getAllFiltersFromDB, deleteFilterFromDB }
+  return result;
+};
+
+export const FilterServices = {
+  createFilterIntoDB,
+  updateFilterIntoDB,
+  getAllFiltersFromDB,
+  deleteFilterFromDB,
+};

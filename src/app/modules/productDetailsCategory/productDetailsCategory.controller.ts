@@ -1,13 +1,17 @@
-import {ProductDetailsCategoryServices} from "./productDetailsCategory.service";
+import { ProductDetailsCategoryServices } from "./productDetailsCategory.service";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
-import {Types} from "mongoose";
+import { Types } from "mongoose";
 
 const createProductDetailsCategory = catchAsync(async (req, res) => {
   const payload = req.body;
-
-  const result = await ProductDetailsCategoryServices.createProductDetailsCategoryIntoDB(payload);
+  const { admin } = req.user;
+  const result =
+    await ProductDetailsCategoryServices.createProductDetailsCategoryIntoDB(
+      payload,
+      admin
+    );
 
   sendResponse(res, {
     data: result,
@@ -20,7 +24,13 @@ const createProductDetailsCategory = catchAsync(async (req, res) => {
 const updateProductDetailsCategory = catchAsync(async (req, res) => {
   const id = req.params.id;
   const payload = req.body;
-  const result = await ProductDetailsCategoryServices.updateProductDetailsCategoryIntoDB(id, payload);
+  const { admin } = req.user;
+  const result =
+    await ProductDetailsCategoryServices.updateProductDetailsCategoryIntoDB(
+      id,
+      payload,
+      admin
+    );
 
   sendResponse(res, {
     data: result,
@@ -33,7 +43,10 @@ const updateProductDetailsCategory = catchAsync(async (req, res) => {
 const getSingleProductDetailsCategory = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  const result = await ProductDetailsCategoryServices.getSingleProductDetailsCategoryFromDB(id);
+  const result =
+    await ProductDetailsCategoryServices.getSingleProductDetailsCategoryFromDB(
+      id
+    );
 
   sendResponse(res, {
     data: result,
@@ -46,7 +59,8 @@ const getSingleProductDetailsCategory = catchAsync(async (req, res) => {
 const getAllProductDetailsCategory = catchAsync(async (req, res) => {
   const id = req.params.id;
 
-  const result = await ProductDetailsCategoryServices.getAllProductDetailsCategoryFromDB();
+  const result =
+    await ProductDetailsCategoryServices.getAllProductDetailsCategoryFromDB();
 
   sendResponse(res, {
     data: result,
@@ -57,8 +71,14 @@ const getAllProductDetailsCategory = catchAsync(async (req, res) => {
 });
 
 const deleteProductDetailsCategory = catchAsync(async (req, res) => {
-  const id = req.params.id
-  const result = await ProductDetailsCategoryServices.deleteProductDetailsCategoryFromDB(id)
+  const id = req.params.id;
+  const { admin } = req.user;
+
+  const result =
+    await ProductDetailsCategoryServices.deleteProductDetailsCategoryFromDB(
+      id,
+      admin
+    );
 
   sendResponse(res, {
     data: result,
@@ -66,12 +86,12 @@ const deleteProductDetailsCategory = catchAsync(async (req, res) => {
     success: true,
     message: "succesfull deleted product details category",
   });
-})
+});
 
 export const ProductDetailsCategoryControllers = {
   createProductDetailsCategory,
   updateProductDetailsCategory,
   getSingleProductDetailsCategory,
   getAllProductDetailsCategory,
-  deleteProductDetailsCategory
+  deleteProductDetailsCategory,
 };
