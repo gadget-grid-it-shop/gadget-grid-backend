@@ -4,7 +4,8 @@ import sendResponse from "../../utils/sendResponse";
 import { CategoryServices } from "./category.service";
 
 const createCategory = catchAsync(async (req, res) => {
-  const result = await CategoryServices.createCategoryIntoDB(req.body);
+  const { admin } = req.user;
+  const result = await CategoryServices.createCategoryIntoDB(req.body, admin);
 
   sendResponse(res, {
     success: true,
@@ -15,9 +16,7 @@ const createCategory = catchAsync(async (req, res) => {
 });
 
 const getAllCategories = catchAsync(async (req, res) => {
-
-
-  const isTree = req.query.isTree as string
+  const isTree = req.query.isTree as string;
 
   const result = await CategoryServices.getAllCategoriesFromDB(isTree);
 
@@ -41,38 +40,40 @@ const getSingleCategories = catchAsync(async (req, res) => {
 });
 
 const deleteCategory = catchAsync(async (req, res) => {
-
-  const result = await CategoryServices.deleteCategoryFromDB(req.params.id)
+  const { admin } = req.user;
+  const result = await CategoryServices.deleteCategoryFromDB(
+    req.params.id,
+    admin
+  );
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Category deleted successfully',
-    data: result
-
-  })
-})
-
+    message: "Category deleted successfully",
+    data: result,
+  });
+});
 
 const updateCategory = catchAsync(async (req, res) => {
-
-  const result = await CategoryServices.updateCategoryIntoDB(req.params.id, req.body)
+  const { admin } = req.user;
+  const result = await CategoryServices.updateCategoryIntoDB(
+    req.params.id,
+    req.body,
+    admin
+  );
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Category updated successfully',
-    data: result
-
-  })
-})
-
-
+    message: "Category updated successfully",
+    data: result,
+  });
+});
 
 export const CategoryControllers = {
   createCategory,
   getAllCategories,
   getSingleCategories,
   deleteCategory,
-  updateCategory
+  updateCategory,
 };
