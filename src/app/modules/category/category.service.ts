@@ -23,6 +23,18 @@ const createCategoryIntoDB = async (
   const result = await Category.create({ ...payload, parent_id });
 
   if (result) {
+    const eventPayload: TSendSourceSocket<typeof result> = {
+      payload: {
+        data: result,
+        actionType: "create",
+        sourceType: "category",
+      },
+      event: "category",
+      ignore: [`${admin.user?._id}`],
+    };
+
+    await sendSourceSocket(eventPayload);
+
     const notifications = await buildNotifications({
       actionType: "create",
       notificationType: "category",
@@ -37,7 +49,7 @@ const createCategoryIntoDB = async (
   return result;
 };
 
-const getAllCategoriesFromDB = async (isTree: string) => {
+const getAllCategoriesFromDB = async () => {
   const categories = await Category.find({ isDeleted: false }).populate([
     {
       path: "product_details_categories",
@@ -45,11 +57,7 @@ const getAllCategoriesFromDB = async (isTree: string) => {
     },
   ]);
 
-  if (isTree === "false") {
-    return categories;
-  }
-
-  const categoryTree = generateCategoryTree(categories);
+  const categoryTree = categories;
 
   return categoryTree;
 };
@@ -59,6 +67,18 @@ const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {
 
   if (exist) {
     const result = await Category.findByIdAndUpdate(id, { isDeleted: true });
+
+    const eventPayload: TSendSourceSocket<typeof result> = {
+      payload: {
+        data: result,
+        actionType: "delete",
+        sourceType: "category",
+      },
+      event: "category",
+      ignore: [`${admin.user?._id}`],
+    };
+
+    await sendSourceSocket(eventPayload);
 
     if (result) {
       const notifications = await buildNotifications({
@@ -84,7 +104,18 @@ const updateCategoryIntoDB = async (
 ) => {
   const exist = await Category.findById(id);
   if (exist) {
-    const result = await Category.findByIdAndUpdate(id, payload, { new: true });
+    const update = await Category.findByIdAndUpdate(id, payload, { new: true });
+
+    if (!update) {
+      throw new AppError(httpStatus.CONFLICT, "Failed to update category");
+    }
+
+    const result = await Category.findById(id).populate([
+      {
+        path: "product_details_categories",
+        select: "-__v",
+      },
+    ]);
 
     const eventPayload: TSendSourceSocket<typeof result> = {
       payload: {
