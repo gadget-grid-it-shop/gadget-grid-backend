@@ -9,6 +9,10 @@ import {
   addNotifications,
   buildNotifications,
 } from "../notification/notificaiton.utils";
+import {
+  sendSourceSocket,
+  TSendSourceSocket,
+} from "../../utils/sendSourceSocket";
 
 const createCategoryIntoDB = async (
   payload: TCategory,
@@ -81,6 +85,19 @@ const updateCategoryIntoDB = async (
   const exist = await Category.findById(id);
   if (exist) {
     const result = await Category.findByIdAndUpdate(id, payload, { new: true });
+
+    const eventPayload: TSendSourceSocket<typeof result> = {
+      payload: {
+        data: result,
+        actionType: "update",
+        sourceType: "category",
+      },
+      event: "category",
+      ignore: [`${admin.user?._id}`],
+    };
+
+    await sendSourceSocket(eventPayload);
+
     if (result) {
       const notifications = await buildNotifications({
         actionType: "update",
@@ -92,6 +109,7 @@ const updateCategoryIntoDB = async (
 
       await addNotifications({ notifications, userFrom: admin });
     }
+
     return result;
   } else {
     throw new AppError(httpStatus.CONFLICT, "Categoy does not exist");

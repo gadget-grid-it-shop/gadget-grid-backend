@@ -8,7 +8,10 @@ import { User } from "../modules/user/user.model";
 import { Admin } from "../modules/admin/admin.model";
 import { NextFunction } from "express";
 
-export const ValidateIOAuth = async (socket: Socket, next: NextFunction) => {
+export const ValidateIOAuth = async (
+  socket: Socket,
+  next: (err?: ExtendedError | undefined) => void
+) => {
   try {
     const token = socket.handshake.auth["authorization"];
 
@@ -45,6 +48,6 @@ export const ValidateIOAuth = async (socket: Socket, next: NextFunction) => {
     next();
   } catch (err) {
     console.log(err);
-    next(err);
+    next(err as any);
   }
 };
