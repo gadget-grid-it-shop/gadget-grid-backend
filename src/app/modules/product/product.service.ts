@@ -29,10 +29,7 @@ import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
 import dayjs from "dayjs";
-import { NotificationService } from "../notification/notification.service";
-import { TNotification } from "../notification/notification.interface";
 import { Admin } from "../admin/admin.model";
-import { makeFullName } from "../../utils/makeFullName";
 import {
   addNotifications,
   buildNotifications,

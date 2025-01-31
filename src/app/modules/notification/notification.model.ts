@@ -40,6 +40,10 @@ const notificationSchema = new Schema<TNotification>(
         "productFilter",
       ],
     },
+    actionType: {
+      type: String,
+      enum: ["create", "update", "delete"],
+    },
   },
   { timestamps: true }
 );

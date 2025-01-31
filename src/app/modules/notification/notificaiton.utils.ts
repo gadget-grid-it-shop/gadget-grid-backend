@@ -23,8 +23,8 @@ export const buildNotifications = async ({
   const admins = await Admin.findAllVerifiedAdmins();
   const notifications: TNotification[] = admins.map((admin) => {
     const notification: TNotification = {
-      notificationType: "product",
-      actionType: "create",
+      notificationType: notificationType,
+      actionType: actionType,
       opened: false,
       userFrom: thisAdmin?.user?._id,
       userTo: admin?.user?._id,
