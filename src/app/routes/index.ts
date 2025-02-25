@@ -12,6 +12,7 @@ import { BrandRoutes } from "../modules/brand/brand.route";
 import { bulkUploadRoutes } from "../modules/bulkUpload/bulkUpload.route";
 import { FilterRoutes } from "../modules/productFilters/filter.routes";
 import { notificationRoutes } from "../modules/notification/notification.route";
+import { chatRoutes } from "../modules/chat/chat.route";
 
 const router = Router();
 
@@ -19,25 +20,26 @@ const moduleRoutes = [
   { path: "/product-details-category", route: ProductDetailsCategoryRoutes },
   { path: "/category", route: CategoryRoutes },
   {
-    path: '/product', route: productRoutes
+    path: "/product",
+    route: productRoutes,
   },
-  { path: '/upload', route: ImageRoutes },
-  { path: '/gallery', route: galleryRoutes },
-  { path: '/user', route: UserRoutes },
-  { path: '/roles', route: RolesRoutes },
-  { path: '/auth', route: AuthRoutes },
-  { path: '/brand', route: BrandRoutes },
-  { path: '/upload-history', route: bulkUploadRoutes },
-  { path: '/product-filters', route: FilterRoutes },
-  { path: '/notification', route: notificationRoutes },
+  { path: "/upload", route: ImageRoutes },
+  { path: "/gallery", route: galleryRoutes },
+  { path: "/user", route: UserRoutes },
+  { path: "/roles", route: RolesRoutes },
+  { path: "/auth", route: AuthRoutes },
+  { path: "/chat", route: chatRoutes },
+  { path: "/brand", route: BrandRoutes },
+  { path: "/upload-history", route: bulkUploadRoutes },
+  { path: "/product-filters", route: FilterRoutes },
+  { path: "/notification", route: notificationRoutes },
 ];
 
 moduleRoutes.forEach((route) => {
-  if (route.path === '/auth') {
-    router.use(route.path, route.route)
-  }
-  else {
-    router.use(route.path, validateAuth(), route.route)
+  if (route.path === "/auth") {
+    router.use(route.path, route.route);
+  } else {
+    router.use(route.path, validateAuth(), route.route);
   }
 });
 

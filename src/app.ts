@@ -9,7 +9,7 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://gadget-grid-admin.vercel.app"],
     credentials: true,
   })
 );
