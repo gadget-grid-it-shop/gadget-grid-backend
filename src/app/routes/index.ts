@@ -39,7 +39,11 @@ moduleRoutes.forEach((route) => {
   if (route.path === "/auth") {
     router.use(route.path, route.route);
   } else {
-    router.use(route.path, validateAuth(), route.route);
+    router.use(
+      route.path,
+      validateAuth({ skipForGetRequests: true }),
+      route.route
+    );
   }
 });
 

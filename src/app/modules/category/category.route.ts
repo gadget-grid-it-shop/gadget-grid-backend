@@ -7,14 +7,32 @@ import { EAppFeatures } from "../roles/roles.interface";
 
 const router = Router();
 
-router.post("/create", checkPermission(EAppFeatures.category, 'create'), validateRequest(CategoryValidations.createCategoryValidationSchema), CategoryControllers.createCategory);
+router.post(
+  "/create",
+  checkPermission(EAppFeatures.category, "create"),
+  validateRequest(CategoryValidations.createCategoryValidationSchema),
+  CategoryControllers.createCategory
+);
 
-router.get("/get-all", checkPermission(EAppFeatures.category, 'read'), CategoryControllers.getAllCategories);
+router.get("/get-all", CategoryControllers.getAllCategories);
 
-router.get('/single/:id', checkPermission(EAppFeatures.category, 'read'), CategoryControllers.getSingleCategories)
+router.get(
+  "/single/:id",
+  checkPermission(EAppFeatures.category, "read"),
+  CategoryControllers.getSingleCategories
+);
 
-router.delete('/:id', checkPermission(EAppFeatures.category, 'delete'), CategoryControllers.deleteCategory);
+router.delete(
+  "/:id",
+  checkPermission(EAppFeatures.category, "delete"),
+  CategoryControllers.deleteCategory
+);
 
-router.patch('/:id', checkPermission(EAppFeatures.category, 'update'), validateRequest(CategoryValidations.updateCategoryValidationSchema), CategoryControllers.updateCategory)
+router.patch(
+  "/:id",
+  checkPermission(EAppFeatures.category, "update"),
+  validateRequest(CategoryValidations.updateCategoryValidationSchema),
+  CategoryControllers.updateCategory
+);
 
 export const CategoryRoutes = router;
