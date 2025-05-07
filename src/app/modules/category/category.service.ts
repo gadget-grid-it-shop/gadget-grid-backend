@@ -1,7 +1,6 @@
 import { Types } from "mongoose";
 import { TCategory, TUpdateCategory } from "./category.interface";
 import { Category } from "./category.model";
-import { generateCategoryTree } from "./category.utils";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { TAdminAndUser } from "../../interface/customRequest";
@@ -19,6 +18,17 @@ const createCategoryIntoDB = async (
   admin: TAdminAndUser
 ) => {
   const parent_id = payload.parent_id || null;
+
+  const exist = await Category.findOne({
+    name: payload.name,
+    isDeleted: false,
+  });
+
+  console.log(exist);
+
+  if (exist) {
+    throw new AppError(httpStatus.CONFLICT, "Category already exist");
+  }
 
   const result = await Category.create({ ...payload, parent_id });
 

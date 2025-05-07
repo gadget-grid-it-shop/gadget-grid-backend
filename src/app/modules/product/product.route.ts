@@ -6,16 +6,34 @@ import checkPermission from "../../middleware/checkPermission";
 import { EAppFeatures } from "../roles/roles.interface";
 import upload from "../../lib/image/image.multer";
 
-const router = Router()
+const router = Router();
 
-router.post('/create-product', validateRequest(ProductValidations.createProductValidationSchema), checkPermission(EAppFeatures.product, 'create'), ProductControllers.createProduct)
+router.post(
+  "/create-product",
+  validateRequest(ProductValidations.createProductValidationSchema),
+  checkPermission(EAppFeatures.product, "create"),
+  ProductControllers.createProduct
+);
 
-router.get('/get-all', checkPermission(EAppFeatures.product, 'read'), ProductControllers.getAllProduct)
+router.get("/get-all", ProductControllers.getAllProduct);
 
-router.post('/bulk-upload', checkPermission(EAppFeatures.product, 'create'), upload.single('bulkFile'), ProductControllers.bulkUpload)
+router.post(
+  "/bulk-upload",
+  checkPermission(EAppFeatures.product, "create"),
+  upload.single("bulkFile"),
+  ProductControllers.bulkUpload
+);
 
-router.get('/single/:id', checkPermission(EAppFeatures.product, 'read'), ProductControllers.getSingleProduct)
+router.get(
+  "/single/:id",
+  checkPermission(EAppFeatures.product, "read"),
+  ProductControllers.getSingleProduct
+);
 
-router.patch('/update-product/:id', checkPermission(EAppFeatures.product, 'update'), ProductControllers.updateProduct)
+router.patch(
+  "/update-product/:id",
+  checkPermission(EAppFeatures.product, "update"),
+  ProductControllers.updateProduct
+);
 
-export const productRoutes = router
+export const productRoutes = router;

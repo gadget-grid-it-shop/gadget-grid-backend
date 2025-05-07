@@ -13,8 +13,6 @@ export const sendSourceSocket = async <T>({
   ignore,
   event,
 }: TSendSourceSocket<T>) => {
-  console.log(payload);
-
   const exceptRooms = ignore ?? "";
 
   const admins = await Admin.findAllVerifiedAdmins();

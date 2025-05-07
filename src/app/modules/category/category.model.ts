@@ -5,13 +5,11 @@ const CategorySchema = new Schema<TCategory>({
   name: {
     type: String,
     required: [true, "Category name is required"],
-    lowercase: true,
-    unique: true
   },
   parent_id: {
     type: String,
     default: null,
-    ref: "Category"
+    ref: "Category",
   },
   product_details_categories: {
     type: [String],
@@ -25,10 +23,8 @@ const CategorySchema = new Schema<TCategory>({
   },
   isDeleted: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
-
-
 
 export const Category = model<TCategory>("Category", CategorySchema);

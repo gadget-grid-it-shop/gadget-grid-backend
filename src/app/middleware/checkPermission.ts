@@ -9,42 +9,53 @@ import { Admin } from "../modules/admin/admin.model";
 type TAccessType = keyof TCrud;
 
 const checkPermission = (feature: string, accessType: TAccessType) => {
-    return catchAsync(async (req, res, next) => {
-        const user = req.user;
+  return catchAsync(async (req, res, next) => {
+    const user = req.user;
 
-        const userExist = await User.isUserExistsByEmail(user.email);
+    const userExist = await User.isUserExistsByEmail(user?.email);
 
-        if (!userExist) {
-            throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
-        }
+    if (!userExist) {
+      throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
+    }
 
-        if (userExist.isMasterAdmin) {
-            return next()
-        }
-        if (userExist.isDeleted) {
-            throw new AppError(httpStatus.UNAUTHORIZED, "Your account was deleted", "unauthorized access request");
-        }
+    if (userExist.isMasterAdmin) {
+      return next();
+    }
+    if (userExist.isDeleted) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Your account was deleted",
+        "unauthorized access request"
+      );
+    }
 
-        if (!userExist.isActive) {
-            throw new AppError(httpStatus.UNAUTHORIZED, "Your account is blocked", "unauthorized access request");
-        }
+    if (!userExist.isActive) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Your account is blocked",
+        "unauthorized access request"
+      );
+    }
 
-        const role: TRole | null = await Roles.findById(userExist.role);
+    const role: TRole | null = await Roles.findById(userExist.role);
 
-        if (!role) {
-            throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
-        }
+    if (!role) {
+      throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
+    }
 
-        const permission = role.permissions.find((p) => p.feature === feature);
+    const permission = role.permissions.find((p) => p.feature === feature);
 
-        const hasPermission = permission?.access[accessType] === true;
+    const hasPermission = permission?.access[accessType] === true;
 
-        if (!hasPermission) {
-            throw new AppError(httpStatus.UNAUTHORIZED, `You do not have permission to ${accessType} ${feature}`);
-        } else {
-            next();
-        }
-    });
+    if (!hasPermission) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        `You do not have permission to ${accessType} ${feature}`
+      );
+    } else {
+      next();
+    }
+  });
 };
 
 export default checkPermission;
