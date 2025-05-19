@@ -13,6 +13,7 @@ import { bulkUploadRoutes } from "../modules/bulkUpload/bulkUpload.route";
 import { FilterRoutes } from "../modules/productFilters/filter.routes";
 import { notificationRoutes } from "../modules/notification/notification.route";
 import { chatRoutes } from "../modules/chat/chat.route";
+import { CustomerRoutes } from "../modules/customer/customerRoute";
 
 const router = Router();
 
@@ -33,15 +34,16 @@ const moduleRoutes = [
   { path: "/upload-history", route: bulkUploadRoutes },
   { path: "/product-filters", route: FilterRoutes },
   { path: "/notification", route: notificationRoutes },
+  { path: "/customer", route: CustomerRoutes },
 ];
 
 moduleRoutes.forEach((route) => {
-  if (route.path === "/auth") {
+  if (route.path === "/auth" || route.path === '/customer') {
     router.use(route.path, route.route);
   } else {
     router.use(
       route.path,
-      validateAuth({ skipForGetRequests: true }),
+      validateAuth(),
       route.route
     );
   }

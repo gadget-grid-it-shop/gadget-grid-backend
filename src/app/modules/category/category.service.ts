@@ -67,9 +67,9 @@ const getAllCategoriesFromDB = async () => {
     },
   ]);
 
-  const categoryTree = categories;
+  console.log(categories);
 
-  return categoryTree;
+  return categories;
 };
 
 const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {

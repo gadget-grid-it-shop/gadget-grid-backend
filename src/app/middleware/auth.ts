@@ -7,15 +7,8 @@ import varifyToken from "../utils/verifyToken";
 import { Admin } from "../modules/admin/admin.model";
 import { boolean } from "zod";
 
-const validateAuth = ({
-  skipForGetRequests = false,
-}: {
-  skipForGetRequests?: boolean;
-}) => {
+const validateAuth = () => {
   return catchAsync(async (req, res, next) => {
-    if (skipForGetRequests === true && req.method === "GET") {
-      return next();
-    }
     const token = req.headers.authorization;
     if (!token) {
       throw new AppError(
