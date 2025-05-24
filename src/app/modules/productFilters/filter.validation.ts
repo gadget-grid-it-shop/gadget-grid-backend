@@ -28,8 +28,9 @@ const updateFilterValidationSchema = z.object({
 
   options: z
     .array(
-      z.string({
-        invalid_type_error: "Options should be an array of objects",
+      z.object({
+        optionId: z.number().optional(),
+        value: z.string(),
       })
     )
     .min(1, { message: "At least one option is required" })

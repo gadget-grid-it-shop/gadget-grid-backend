@@ -18,6 +18,7 @@ import { Category } from "../category/category.model";
 import {
   claculateSpecialPrice,
   createCategoryArray,
+  extractCommonFilters,
   transformSvgProductData,
 } from "./product.utils";
 import { Brand } from "../brand/brand.model";
@@ -35,6 +36,7 @@ import {
   buildNotifications,
 } from "../notification/notificaiton.utils";
 import { TAdminAndUser } from "../../interface/customRequest";
+import ProductFilter from "../productFilters/filter.model";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -185,8 +187,8 @@ const bulkUploadToDB = async (
 
   const filePath = path.resolve(file.path);
 
-  const categories = await Category.find();
-  const brands = await Brand.find();
+  const categories = await Category.find({ isDeleted: false }).lean();
+  const brands = await Brand.find({ isDeleted: false }).lean();
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
   const payload: TProduct[] = await new Promise((resolve, reject) => {
@@ -237,6 +239,7 @@ const bulkUploadToDB = async (
             },
             tags: [],
             isFeatured: true,
+            mainCategory: "",
             shipping: {
               free: true,
               cost: 0,
@@ -253,12 +256,19 @@ const bulkUploadToDB = async (
 
               if (value !== undefined) {
                 if (field.value === "category") {
-                  const cat = categories.find(
-                    (c) => c.name === (data as Record<string, any>)[field.key]
+                  // const cat = categories.find(
+                  //   (c) =>
+                  //     c.name === (data as Record<string, any>)[field.key] ||
+                  //     c._id === (data as Record<string, any>)[field.key]
+                  // );
+                  const cat = await Category.findById(
+                    (data as Record<string, any>)[field.key]
                   );
+                  console.log(cat);
                   if (cat) {
                     const productCat = createCategoryArray(categories, cat);
                     newData.category = productCat;
+                    newData.mainCategory = cat._id;
                   }
                 } else if (field.value === "shipping.cost") {
                   newData.shipping = newData.shipping || {
@@ -503,6 +513,64 @@ const getFeaturedProductFromDB = async () => {
   return products;
 };
 
+const getProductByCategory = async (
+  slug: string,
+  query: Record<string, unknown>
+) => {
+  const catExist = await Category.findOne({ slug, isDeleted: false });
+
+  const pagination = {
+    total: 0,
+    currentPage: query.page ? Number(query.page) : 1,
+    limit: query.limit ? Number(query.limit) : 10,
+  };
+
+  if (!catExist) {
+    throw new AppError(httpStatus.CONFLICT, "Category does not exist");
+  }
+
+  console.log(catExist._id);
+
+  const categoryQuery = {
+    "category.id": catExist._id.toString(),
+  };
+
+  // Get paginated products
+  const products = await Product.find(categoryQuery)
+    .skip((pagination.currentPage - 1) * pagination.limit)
+    .limit(pagination.limit)
+    .lean();
+
+  const total = await Product.countDocuments(categoryQuery);
+
+  const allCategoryProducts = await Product.find(categoryQuery)
+    .select("filters")
+    .lean();
+
+  const commonFilters = extractCommonFilters(allCategoryProducts);
+
+  let filters = [];
+
+  for (let filter of commonFilters) {
+    const data = await ProductFilter.findById(filter.filter);
+    if (data) {
+      filters.push(data);
+    }
+  }
+
+  pagination.total = total;
+
+  const data = {
+    products,
+    filters,
+  };
+
+  return {
+    result: data,
+    pagination,
+  };
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -510,4 +578,5 @@ export const ProductServices = {
   getSingleProductFromDB,
   updateProductIntoDB,
   getFeaturedProductFromDB,
+  getProductByCategory,
 };

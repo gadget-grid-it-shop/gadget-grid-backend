@@ -5,6 +5,8 @@ export interface TCategory {
   product_details_categories: string[];
   subCategories?: TCategory[];
   isDeleted: Boolean;
+  isFeatured: Boolean;
+  image: string;
   slug: string;
 }
 

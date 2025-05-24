@@ -1,10 +1,14 @@
-import { Model } from "mongoose"
+import { Model } from "mongoose";
 
-export type TProductFilter = {
-    title: string,
-    options: string[]
+export interface TProductFilter {
+  filterId: number;
+  title: string;
+  options: {
+    optionId: number;
+    value: string;
+  }[];
 }
 
 export interface TFilterModel extends Model<TProductFilter> {
-    findFilterById: (id: string) => Promise<TProductFilter>
+  findFilterById: (id: string) => Promise<TProductFilter>;
 }

@@ -31,6 +31,11 @@ const CategorySchema = new Schema<TCategory>({
     type: Boolean,
     default: false,
   },
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
+  image: { type: String, default: "" },
 });
 
 export const Category = model<TCategory>("Category", CategorySchema);

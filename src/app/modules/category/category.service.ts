@@ -70,7 +70,17 @@ const getAllCategoriesFromDB = async () => {
     },
   ]);
 
-  console.log(categories);
+  return categories;
+};
+const getFeaturedCategoriesFromDB = async () => {
+  const categories = await Category.find({ isDeleted: false, isFeatured: true })
+    .limit(20)
+    .populate([
+      {
+        path: "product_details_categories",
+        select: "-__v",
+      },
+    ]);
 
   return categories;
 };
@@ -181,4 +191,5 @@ export const CategoryServices = {
   deleteCategoryFromDB,
   updateCategoryIntoDB,
   getSingleCategoryFromDB,
+  getFeaturedCategoriesFromDB,
 };
