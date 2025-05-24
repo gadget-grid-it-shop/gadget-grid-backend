@@ -70,6 +70,16 @@ const updateProduct = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const getFeaturedProducts = catchAsync(async (req, res) => {
+  const result = await ProductServices.getFeaturedProductFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Fetched featured products successfully",
+    data: result,
+  });
+});
 
 export const ProductControllers = {
   createProduct,
@@ -77,4 +87,5 @@ export const ProductControllers = {
   bulkUpload,
   getSingleProduct,
   updateProduct,
+  getFeaturedProducts,
 };

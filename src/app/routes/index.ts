@@ -38,14 +38,10 @@ const moduleRoutes = [
 ];
 
 moduleRoutes.forEach((route) => {
-  if (route.path === "/auth" || route.path === '/customer') {
+  if (route.path === "/auth" || route.path === "/customer") {
     router.use(route.path, route.route);
   } else {
-    router.use(
-      route.path,
-      validateAuth(),
-      route.route
-    );
+    router.use(route.path, validateAuth(), route.route);
   }
 });
 

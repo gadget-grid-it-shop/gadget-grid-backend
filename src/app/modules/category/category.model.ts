@@ -6,6 +6,11 @@ const CategorySchema = new Schema<TCategory>({
     type: String,
     required: [true, "Category name is required"],
   },
+  slug: {
+    type: String,
+    required: [true, "Category slug is required"],
+    // unique: true,
+  },
   parent_id: {
     type: String,
     default: null,
@@ -13,13 +18,14 @@ const CategorySchema = new Schema<TCategory>({
   },
   product_details_categories: {
     type: [String],
-    validate: {
-      validator: (value: string[]) => {
-        return value.length > 0;
-      },
-      message: "At least one product detail category is required",
-    },
+    // validate: {
+    //   validator: (value: string[]) => {
+    //     return value.length > 0;
+    //   },
+    //   message: "At least one product detail category is required",
+    // },
     ref: "ProductDetailsCategory",
+    default: [],
   },
   isDeleted: {
     type: Boolean,

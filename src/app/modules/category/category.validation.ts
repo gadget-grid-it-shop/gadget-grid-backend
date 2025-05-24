@@ -10,16 +10,17 @@ const createCategoryValidationSchema = z.object({
   parent_id: z
     .string({
       invalid_type_error: "Parent categroy id should be a string",
-    }).nullable()
-    .optional(),
-  product_details_categories: z
-    .array(z.string(), {
-      required_error: "Product details category is required",
-      invalid_type_error: "Product details category should be an array of strings",
     })
-    .min(1, "A category should have at least one product details category"),
+    .nullable()
+    .optional(),
+  product_details_categories: z.array(z.string(), {
+    required_error: "Product details category is required",
+    invalid_type_error:
+      "Product details category should be an array of strings",
+  }),
+  slug: z.string({ invalid_type_error: "Slug has to be a string" }).optional(),
+  // .min(1, "A category should have at least one product details category"),
 });
-
 
 const updateCategoryValidationSchema = z.object({
   name: z
@@ -31,12 +32,13 @@ const updateCategoryValidationSchema = z.object({
   product_details_categories: z
     .array(z.string(), {
       required_error: "Product details category is required",
-      invalid_type_error: "Product details category should be an array of strings",
+      invalid_type_error:
+        "Product details category should be an array of strings",
     })
     .min(1, "A category should have at least one product details category"),
-})
+});
 
 export const CategoryValidations = {
   createCategoryValidationSchema,
-  updateCategoryValidationSchema
-}
+  updateCategoryValidationSchema,
+};

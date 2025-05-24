@@ -4,11 +4,11 @@ export interface TCategory {
   parent_id: string;
   product_details_categories: string[];
   subCategories?: TCategory[];
-  isDeleted: Boolean
+  isDeleted: Boolean;
+  slug: string;
 }
 
-
 export interface TUpdateCategory {
-  name: string,
-  product_details_categories: string[]
+  name: string;
+  product_details_categories: string[];
 }

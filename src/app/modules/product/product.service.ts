@@ -495,10 +495,19 @@ const updateProductIntoDB = async (
   return result;
 };
 
+const getFeaturedProductFromDB = async () => {
+  const products = await Product.find({ isFeatured: true })
+    .sort("-updatedAt")
+    .limit(18);
+
+  return products;
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
   bulkUploadToDB,
   getSingleProductFromDB,
   updateProductIntoDB,
+  getFeaturedProductFromDB,
 };

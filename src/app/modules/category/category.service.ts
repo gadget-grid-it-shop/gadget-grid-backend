@@ -12,6 +12,7 @@ import {
   sendSourceSocket,
   TSendSourceSocket,
 } from "../../utils/sendSourceSocket";
+import slugify from "slugify";
 
 const createCategoryIntoDB = async (
   payload: TCategory,
@@ -19,18 +20,20 @@ const createCategoryIntoDB = async (
 ) => {
   const parent_id = payload.parent_id || null;
 
+  console.log(payload);
+
+  const slug = payload.slug || slugify(payload.name);
+
   const exist = await Category.findOne({
-    name: payload.name,
+    slug,
     isDeleted: false,
   });
-
-  console.log(exist);
 
   if (exist) {
     throw new AppError(httpStatus.CONFLICT, "Category already exist");
   }
 
-  const result = await Category.create({ ...payload, parent_id });
+  const result = await Category.create({ ...payload, parent_id, slug });
 
   if (result) {
     const eventPayload: TSendSourceSocket<typeof result> = {
