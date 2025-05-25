@@ -16,16 +16,19 @@ import fs, { appendFile } from "fs";
 import path from "path";
 import { Category } from "../category/category.model";
 import {
+  buildProductQuery,
   claculateSpecialPrice,
   createCategoryArray,
   extractCommonFilters,
+  ParsedFilters,
+  parseFilters,
   transformSvgProductData,
 } from "./product.utils";
 import { Brand } from "../brand/brand.model";
 import handleDuplicateError from "../../errors/handleDuplicateError";
 import { TErrorSourse } from "../../interface/error.interface";
 import { ObjectId } from "mongodb";
-import { Error, startSession } from "mongoose";
+import { Error } from "mongoose";
 import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
@@ -175,6 +178,18 @@ const getSingleProductFromDB = async (id: string) => {
 
   return result;
 };
+const getSingleProductBySlugFromDB = async (slug: string) => {
+  if (!slug) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "Please provide product id to get details"
+    );
+  }
+
+  const result = await Product.findOne({ slug });
+
+  return result;
+};
 
 const bulkUploadToDB = async (
   file: Express.Multer.File | undefined,
@@ -187,8 +202,18 @@ const bulkUploadToDB = async (
 
   const filePath = path.resolve(file.path);
 
-  const categories = await Category.find({ isDeleted: false }).lean();
-  const brands = await Brand.find({ isDeleted: false }).lean();
+  const categories = (await Category.find({ isDeleted: false }).lean()).map(
+    (cat) => ({
+      ...cat,
+      _id: cat._id.toString(),
+    })
+  );
+  const brands = (await Brand.find({ isDeleted: false }).lean()).map(
+    (brand) => ({
+      ...brand,
+      _id: brand._id.toString(),
+    })
+  );
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
   const payload: TProduct[] = await new Promise((resolve, reject) => {
@@ -256,15 +281,11 @@ const bulkUploadToDB = async (
 
               if (value !== undefined) {
                 if (field.value === "category") {
-                  // const cat = categories.find(
-                  //   (c) =>
-                  //     c.name === (data as Record<string, any>)[field.key] ||
-                  //     c._id === (data as Record<string, any>)[field.key]
-                  // );
-                  const cat = await Category.findById(
-                    (data as Record<string, any>)[field.key]
+                  const cat = categories.find(
+                    (c) =>
+                      c.name === (data as Record<string, any>)[field.key] ||
+                      c._id === (data as Record<string, any>)[field.key]
                   );
-                  console.log(cat);
                   if (cat) {
                     const productCat = createCategoryArray(categories, cat);
                     newData.category = productCat;
@@ -336,7 +357,9 @@ const bulkUploadToDB = async (
                 }
 
                 if (field.value === "brand") {
-                  const exist = brands.find((b) => b.name === value);
+                  const exist = brands.find(
+                    (b) => b.name === value || b._id === value
+                  );
 
                   if (exist) {
                     newData.brand = exist._id || "add brand";
@@ -519,6 +542,10 @@ const getProductByCategory = async (
 ) => {
   const catExist = await Category.findOne({ slug, isDeleted: false });
 
+  const parsedFilters: ParsedFilters = parseFilters(query.filter as any);
+
+  console.log(parsedFilters);
+
   const pagination = {
     total: 0,
     currentPage: query.page ? Number(query.page) : 1,
@@ -529,11 +556,16 @@ const getProductByCategory = async (
     throw new AppError(httpStatus.CONFLICT, "Category does not exist");
   }
 
-  console.log(catExist._id);
+  // const categoryQuery = {
+  //   "category.id": catExist._id.toString(),
+  // };
 
-  const categoryQuery = {
-    "category.id": catExist._id.toString(),
-  };
+  const categoryQuery = buildProductQuery(
+    catExist._id.toString(),
+    parsedFilters
+  );
+
+  console.log(categoryQuery);
 
   // Get paginated products
   const products = await Product.find(categoryQuery)
@@ -543,7 +575,9 @@ const getProductByCategory = async (
 
   const total = await Product.countDocuments(categoryQuery);
 
-  const allCategoryProducts = await Product.find(categoryQuery)
+  const allCategoryProducts = await Product.find({
+    "category.id": catExist._id,
+  })
     .select("filters")
     .lean();
 
@@ -579,4 +613,5 @@ export const ProductServices = {
   updateProductIntoDB,
   getFeaturedProductFromDB,
   getProductByCategory,
+  getSingleProductBySlugFromDB,
 };

@@ -13,5 +13,9 @@ router.get(
   "/product/by-category/:slug",
   ProductControllers.getProductsByCategory
 );
+router.get(
+  "/product/get-single/:slug",
+  ProductControllers.getSingleProductBySlug
+);
 
 export const CustomerRoutes = router;

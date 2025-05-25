@@ -81,7 +81,8 @@ const ProductSchema = new Schema<TProduct>(
     gallery: [{ type: String, default: "" }],
     thumbnail: {
       type: String,
-      required: [true, "Product thumbnail is required"],
+      // required: [true, "Product thumbnail is required"],
+      default: "",
     },
     slug: { type: String, required: [true, "Product slug is required"] },
     attributes: [
@@ -102,7 +103,7 @@ const ProductSchema = new Schema<TProduct>(
     filters: {
       type: [
         {
-          key: String,
+          filterId: Number,
           value: String,
           filter: String,
         },

@@ -96,7 +96,21 @@ const getProductsByCategory = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleProductBySlug = catchAsync(async (req, res) => {
+  const result = await ProductServices.getSingleProductBySlugFromDB(
+    req.params.slug
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived product",
+    data: result,
+  });
+});
+
 export const ProductControllers = {
+  getSingleProductBySlug,
   createProduct,
   getAllProduct,
   bulkUpload,

@@ -99,7 +99,7 @@ export const extractCommonFilters = (
     string,
     {
       filter: string;
-      key: string;
+      filterId: string;
       values: Set<string>;
       count: number;
     }
@@ -109,7 +109,7 @@ export const extractCommonFilters = (
   products.forEach((product) => {
     if (product.filters && Array.isArray(product.filters)) {
       product.filters.forEach((filter) => {
-        const filterKey = `${filter.filter}_${filter.key}`;
+        const filterKey = `${filter.filter}_${filter.fitlerId}`;
 
         if (filterMap.has(filterKey)) {
           const existing = filterMap.get(filterKey)!;
@@ -118,7 +118,7 @@ export const extractCommonFilters = (
         } else {
           filterMap.set(filterKey, {
             filter: filter.filter,
-            key: filter.key,
+            filterId: filter.fitlerId,
             values: new Set([filter.value]),
             count: 1,
           });
@@ -135,9 +135,81 @@ export const extractCommonFilters = (
     .filter((filter) => filter.count >= threshold)
     .map((filter) => ({
       filter: filter.filter,
-      key: filter.key,
+      fitlerId: filter.filterId,
       values: Array.from(filter.values).sort(),
       productCount: filter.count,
     }))
     .sort((a, b) => b.productCount - a.productCount); // Sort by popularity
+};
+
+// Backend TypeScript code to parse the filter array into the desired format
+
+export interface ParsedFilters {
+  [filterId: string]: number[];
+}
+
+export const parseFilters = (
+  filterArray: string | string[] | undefined
+): ParsedFilters => {
+  if (!filterArray) {
+    return {};
+  }
+
+  // Ensure we have an array
+  const filters = Array.isArray(filterArray) ? filterArray : [filterArray];
+  const parsedFilters: ParsedFilters = {};
+
+  filters.forEach((filterString: string) => {
+    // Split by ':' to separate filterId and optionIds
+    const [filterId, optionIdsString] = filterString.split(":");
+
+    if (filterId && optionIdsString) {
+      // Parse option IDs from comma-separated string
+      const optionIds = optionIdsString
+        .split(",")
+        .map((id) => parseInt(id.trim(), 10))
+        .filter((id) => !isNaN(id));
+
+      if (optionIds.length > 0) {
+        parsedFilters[filterId] = optionIds;
+      }
+    }
+  });
+
+  return parsedFilters;
+};
+
+export const buildProductQuery = (
+  categoryId: string,
+  parsedFilters: ParsedFilters
+) => {
+  const baseQuery: any = {
+    "category.id": categoryId,
+  };
+
+  // Add filter conditions if filters exist
+  if (Object.keys(parsedFilters).length > 0) {
+    const filterConditions: any[] = [];
+
+    Object.entries(parsedFilters).forEach(([filterId, optionIds]) => {
+      // Convert optionIds to strings since they're stored as strings in the database
+      const optionIdsAsStrings = optionIds.map((id) => id.toString());
+
+      filterConditions.push({
+        filters: {
+          $elemMatch: {
+            filterId: Number(filterId),
+            value: { $in: optionIdsAsStrings },
+          },
+        },
+      });
+    });
+
+    // Use $and to ensure all filter conditions are met
+    if (filterConditions.length > 0) {
+      baseQuery.$and = filterConditions;
+    }
+  }
+
+  return baseQuery;
 };

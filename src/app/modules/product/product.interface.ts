@@ -51,7 +51,7 @@ export interface TProduct {
   thumbnail: string;
   slug: string;
   attributes?: { name: string; fields: Record<string, string> }[];
-  filters: { filter: string; key: string; value: string }[];
+  filters: { filter: string; fitlerId: string; value: string }[];
   meta?: TMeta;
   tags?: string[];
   isFeatured?: boolean;
