@@ -172,11 +172,9 @@ const getSingleProductFromDB = async (id: string) => {
     );
   }
 
-  console.log(id);
+  const product = await Product.findById(id).lean();
 
-  const result = await Product.findById(id);
-
-  return result;
+  return product;
 };
 const getSingleProductBySlugFromDB = async (slug: string) => {
   if (!slug) {
@@ -186,9 +184,20 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
     );
   }
 
-  const result = await Product.findOne({ slug });
+  const product = await Product.findOne({ slug }).lean();
 
-  return result;
+  const category = product?.mainCategory;
+
+  const relatedProducts = await Product.find({
+    "category.id": category,
+  })
+    .limit(8)
+    .lean();
+
+  return {
+    product,
+    relatedProducts: relatedProducts?.filter((p) => p._id !== product?._id),
+  };
 };
 
 const bulkUploadToDB = async (
@@ -555,10 +564,6 @@ const getProductByCategory = async (
   if (!catExist) {
     throw new AppError(httpStatus.CONFLICT, "Category does not exist");
   }
-
-  // const categoryQuery = {
-  //   "category.id": catExist._id.toString(),
-  // };
 
   const categoryQuery = buildProductQuery(
     catExist._id.toString(),
