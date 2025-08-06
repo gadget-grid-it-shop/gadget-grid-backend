@@ -12,14 +12,44 @@ const adminLogin = catchAsync(async (req, res) => {
 
   const { refreshToken, accessToken, isVerified } = result;
 
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("gadget_grid_refresh_token", refreshToken, {
     secure: config.node_environment !== "development",
   });
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: isVerified ? "Login successfull, welcome back" : "Please varify your email and try again",
+    message: isVerified
+      ? "Login successfull, welcome back"
+      : "Please varify your email and try again",
+    data: {
+      accessToken: isVerified ? accessToken : null,
+      isVerified,
+    },
+  });
+});
+
+const userLogin = catchAsync(async (req, res) => {
+  const payload: TLoginCredentials = req.body;
+
+  const result = await AuthServices.userLoginFromDB(payload);
+
+  const { refreshToken, accessToken, isVerified } = result;
+
+  res.cookie("gadget_grid_refresh_token", refreshToken, {
+    secure: config.node_environment !== "development",
+  });
+
+  res.cookie("gadget_grid_access_token", accessToken, {
+    secure: config.node_environment !== "development",
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: isVerified
+      ? "Login successfull, welcome back"
+      : "Please varify your email and try again",
     data: {
       accessToken: isVerified ? accessToken : null,
       isVerified,
@@ -28,9 +58,9 @@ const adminLogin = catchAsync(async (req, res) => {
 });
 
 const refreshToken = catchAsync(async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const { gadget_grid_refresh_token } = req.cookies;
 
-  const result = await AuthServices.refreshToken(refreshToken);
+  const result = await AuthServices.refreshToken(gadget_grid_refresh_token);
 
   sendResponse(res, {
     success: true,
@@ -57,7 +87,11 @@ const resetPassword = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const token = req.headers.authorization;
 
-  const result = await AuthServices.resetPasswordService(email, password, token);
+  const result = await AuthServices.resetPasswordService(
+    email,
+    password,
+    token
+  );
 
   sendResponse(res, {
     success: true,
@@ -75,7 +109,8 @@ const SendVerificationEmail = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "A varificatin mail was sent to your email address. The link will expire in 10 minutes",
+    message:
+      "A varificatin mail was sent to your email address. The link will expire in 10 minutes",
     data: result,
   });
 });
@@ -94,12 +129,15 @@ const verifyEmail = catchAsync(async (req, res) => {
   });
 });
 
-
 const updatePassword = catchAsync(async (req, res) => {
   const user = req.user;
   const { newPassword, currentPassword } = req.body;
 
-  const result = await AuthServices.updatePasswordService(newPassword, currentPassword, user.email);
+  const result = await AuthServices.updatePasswordService(
+    newPassword,
+    currentPassword,
+    user.email
+  );
 
   sendResponse(res, {
     success: true,
@@ -129,5 +167,6 @@ export const AuthController = {
   resetPassword,
   SendVerificationEmail,
   verifyEmail,
-  updatePassword
+  updatePassword,
+  userLogin,
 };

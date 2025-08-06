@@ -40,6 +40,7 @@ import {
 } from "../notification/notificaiton.utils";
 import { TAdminAndUser } from "../../interface/customRequest";
 import ProductFilter from "../productFilters/filter.model";
+import { query } from "express";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -164,7 +165,10 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
-const getSingleProductFromDB = async (id: string) => {
+const getSingleProductFromDB = async (
+  id: string,
+  query: Record<string, any>
+) => {
   if (!id) {
     throw new AppError(
       httpStatus.CONFLICT,
@@ -172,7 +176,15 @@ const getSingleProductFromDB = async (id: string) => {
     );
   }
 
-  const product = await Product.findById(id).lean();
+  let select = "";
+
+  if (query?.select) {
+    select = query.select.split(",").join(" ");
+  }
+
+  console.log({ select });
+
+  const product = await Product.findById(id).select(select).lean();
 
   return product;
 };

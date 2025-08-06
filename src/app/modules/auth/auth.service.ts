@@ -4,16 +4,17 @@ import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
 import { TLoginCredentials } from "./auth.interface";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { createToken, generateResetPassHtml, generateVerifyEmailHtml } from "./auth.utils";
+import {
+  createToken,
+  generateResetPassHtml,
+  generateVerifyEmailHtml,
+} from "./auth.utils";
 import { Admin } from "../admin/admin.model";
 import { sendEmail } from "../../utils/sendEmail";
 import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
-
-  console.log(payload)
-
   const userExist = await User.isUserExistsByEmail(payload.email);
 
   if (!userExist) {
@@ -24,7 +25,10 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     throw new AppError(httpStatus.CONFLICT, "Sorry, your account was deleted");
   }
 
-  const matchPassword = await User.matchUserPassword(payload.password, userExist.password);
+  const matchPassword = await User.matchUserPassword(
+    payload.password,
+    userExist.password
+  );
 
   if (!matchPassword) {
     throw new AppError(httpStatus.CONFLICT, "Wrong password");
@@ -35,8 +39,53 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
     email: userExist.email,
   };
 
+  const accessToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_secret as string,
+    expiresIn: config.access_token_expires_in as string,
+  });
+  const refreshToken = createToken({
+    payload: jwtPayload,
+    secret: config.refresh_secret as string,
+    expiresIn: config.refresh_token_expires_in as string,
+  });
 
-  const accessToken = createToken({ payload: jwtPayload, secret: config.access_secret as string, expiresIn: config.access_token_expires_in as string });
+  return {
+    accessToken,
+    refreshToken,
+    isVerified: userExist.isVerified,
+  };
+};
+
+const userLoginFromDB = async (payload: TLoginCredentials) => {
+  const userExist = await User.isUserExistsByEmail(payload.email);
+
+  if (!userExist) {
+    throw new AppError(httpStatus.CONFLICT, "User does not exist");
+  }
+
+  if (userExist.isDeleted) {
+    throw new AppError(httpStatus.CONFLICT, "Sorry, your account was deleted");
+  }
+
+  const matchPassword = await User.matchUserPassword(
+    payload.password,
+    userExist.password
+  );
+
+  if (!matchPassword) {
+    throw new AppError(httpStatus.CONFLICT, "Wrong password");
+  }
+
+  const jwtPayload = {
+    email: userExist.email,
+  };
+
+  const accessToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_secret as string,
+    expiresIn: config.access_token_expires_in as string,
+  });
   const refreshToken = createToken({
     payload: jwtPayload,
     secret: config.refresh_secret as string,
@@ -52,23 +101,39 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
 
 const refreshToken = async (token: string) => {
   if (!token) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized",
+      "unauthorized access request"
+    );
   }
 
   const decoded = varifyToken(token, config.refresh_secret as string);
 
   if (!decoded) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized",
+      "unauthorized access request"
+    );
   }
 
   const user = await User.isUserExistsByEmail(decoded.email);
 
   if (user.isDeleted) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Your account was deleted", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Your account was deleted",
+      "unauthorized access request"
+    );
   }
 
   if (!user.isActive) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Your account is blocked", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Your account is blocked",
+      "unauthorized access request"
+    );
   }
 
   const payload = {
@@ -76,7 +141,11 @@ const refreshToken = async (token: string) => {
     email: user.email,
   };
 
-  const accessToken = createToken({ payload, secret: config.access_secret as string, expiresIn: config.access_token_expires_in as string });
+  const accessToken = createToken({
+    payload,
+    secret: config.access_secret as string,
+    expiresIn: config.access_token_expires_in as string,
+  });
 
   return {
     accessToken,
@@ -94,7 +163,11 @@ const forgotPasswordService = async (email: string) => {
     email: user.email,
   };
 
-  const resetToken = createToken({ payload: jwtPayload, secret: config.access_secret as string, expiresIn: "60m" });
+  const resetToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_secret as string,
+    expiresIn: "60m",
+  });
 
   const admin = await Admin.findOne({ user: user._id });
 
@@ -104,11 +177,17 @@ const forgotPasswordService = async (email: string) => {
   await sendEmail(user.email, mailBody, "Reset your password");
 };
 
-
-
-const resetPasswordService = async (email: string, password: string, token: string | undefined) => {
+const resetPasswordService = async (
+  email: string,
+  password: string,
+  token: string | undefined
+) => {
   if (!token) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized",
+      "unauthorized access request"
+    );
   }
   const user = await User.isUserExistsByEmail(email);
 
@@ -118,20 +197,22 @@ const resetPasswordService = async (email: string, password: string, token: stri
 
   const decoded = varifyToken(token, config.access_secret as string);
 
-
   if (email !== decoded.email) {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
   }
 
-  const hashPassword = await bcrypt.hash(password, Number(config.bcrypt_hash_rounds));
+  const hashPassword = await bcrypt.hash(
+    password,
+    Number(config.bcrypt_hash_rounds)
+  );
 
-  const updatePasswordRes = await User.findOneAndUpdate({ email }, { password: hashPassword }).select("-password");
+  const updatePasswordRes = await User.findOneAndUpdate(
+    { email },
+    { password: hashPassword }
+  ).select("-password");
 
   return updatePasswordRes;
 };
-
-
-
 
 const SendVerificationEmailService = async (email: string) => {
   const user = await User.isUserExistsByEmail(email);
@@ -141,14 +222,21 @@ const SendVerificationEmailService = async (email: string) => {
   }
 
   if (user.isVerified) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "User already verified. Please try signing in.");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "User already verified. Please try signing in."
+    );
   }
 
   const jwtPayload = {
     email: user.email,
   };
 
-  const verificationToken = createToken({ payload: jwtPayload, secret: config.verify_secret as string, expiresIn: "10m" });
+  const verificationToken = createToken({
+    payload: jwtPayload,
+    secret: config.verify_secret as string,
+    expiresIn: "10m",
+  });
 
   const admin = await Admin.findOne({ user: user._id });
 
@@ -158,11 +246,13 @@ const SendVerificationEmailService = async (email: string) => {
   await sendEmail(user.email, mailBody, "Verify your email");
 };
 
-
-
 const verifyEmailService = async (email: string, token: string | undefined) => {
   if (!token) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized",
+      "unauthorized access request"
+    );
   }
   const user = await User.isUserExistsByEmail(email);
 
@@ -171,7 +261,10 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
   }
 
   if (user.isVerified) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "You are already verified. Please try signing in.");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "You are already verified. Please try signing in."
+    );
   }
 
   const decoded = varifyToken(token, config.verify_secret as string);
@@ -180,36 +273,46 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
   }
 
-  const verifiedUser = await User.findOneAndUpdate({ email }, { isVerified: true }).select("-password");
+  const verifiedUser = await User.findOneAndUpdate(
+    { email },
+    { isVerified: true }
+  ).select("-password");
 
   return verifiedUser;
 };
 
-
-
-const updatePasswordService = async (newPassword: string, currentPassword: string, email: string) => {
-
-
-  const user = await User.isUserExistsByEmail(email)
+const updatePasswordService = async (
+  newPassword: string,
+  currentPassword: string,
+  email: string
+) => {
+  const user = await User.isUserExistsByEmail(email);
 
   if (!user) {
     throw new AppError(httpStatus.UNAUTHORIZED, "User does not exist");
   }
 
-  const matchPassword = await User.matchUserPassword(currentPassword, user.password)
+  const matchPassword = await User.matchUserPassword(
+    currentPassword,
+    user.password
+  );
 
   if (!matchPassword) {
-    throw new AppError(httpStatus.CONFLICT, 'Password does not match')
+    throw new AppError(httpStatus.CONFLICT, "Password does not match");
   }
 
-  const password = await bcrypt.hash(newPassword, Number(config.bcrypt_hash_rounds))
+  const password = await bcrypt.hash(
+    newPassword,
+    Number(config.bcrypt_hash_rounds)
+  );
 
-  const updated = await User.updateOne({ email: user.email }, { password }).select('-password')
+  const updated = await User.updateOne(
+    { email: user.email },
+    { password }
+  ).select("-password");
 
-  return updated
-
-}
-
+  return updated;
+};
 
 const getMyDataFromDB = async (email: string) => {
   const result = await Admin.findOne({ email }).populate([
@@ -237,5 +340,6 @@ export const AuthServices = {
   resetPasswordService,
   SendVerificationEmailService,
   verifyEmailService,
-  updatePasswordService
+  updatePasswordService,
+  userLoginFromDB,
 };

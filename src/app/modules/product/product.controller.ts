@@ -33,7 +33,10 @@ const getAllProduct = catchAsync(async (req, res) => {
 });
 
 const getSingleProduct = catchAsync(async (req, res) => {
-  const result = await ProductServices.getSingleProductFromDB(req.params.id);
+  const result = await ProductServices.getSingleProductFromDB(
+    req.params.id,
+    req.query
+  );
 
   sendResponse(res, {
     success: true,
