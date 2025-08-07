@@ -34,15 +34,11 @@ router.post(
   AuthController.verifyEmail
 );
 
-router.get(
-  "/getMyData",
-  validateAuth({ skipForGetRequests: false }),
-  AuthController.getMyData
-);
+router.get("/getMyData", validateAuth(), AuthController.getMyData);
 
 router.post(
   "/update-password",
-  validateAuth({ skipForGetRequests: false }),
+  validateAuth(),
   validateRequest(authValidations.updatePassValidationSchema),
   AuthController.updatePassword
 );

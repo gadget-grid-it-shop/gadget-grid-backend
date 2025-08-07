@@ -38,7 +38,7 @@ export interface IPaymentDetails {
 }
 
 // Main Order Interface
-export interface IOrder extends Document {
+export interface IOrder {
   userId: Types.ObjectId;
   orderNumber: string;
   items: IOrderItem[];
@@ -61,8 +61,6 @@ export interface IOrder extends Document {
     | "returned";
   shippingMethod: "standard" | "express" | "overnight";
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export type AddOrderPayload = {
@@ -74,4 +72,6 @@ export type AddOrderPayload = {
   shippingAddress: IAddress;
   paymentMethod: "card" | "paypal" | "bank_transfer" | "cod";
   shippingMethod: "standard" | "express" | "overnight";
+  notes?: string;
+  saveAddress?: boolean;
 };

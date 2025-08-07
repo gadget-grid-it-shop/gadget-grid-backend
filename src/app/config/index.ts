@@ -19,5 +19,7 @@ export default {
   smtp_app_password: process.env.SMTP_APP_PASSWORD,
   smtp_user: process.env.SMTP_USER,
   client_url: process.env.CLIENT_URL,
-  admin_join_id: process.env.admin_join_id
+  admin_join_id: process.env.admin_join_id,
+  stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+  stripe_publishe_key: process.env.STRIPE_PUBLISH_KEY,
 };

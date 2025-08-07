@@ -186,21 +186,6 @@ orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to generate unique order number
-orderSchema.pre("save", async function (next) {
-  if (this.isNew) {
-    try {
-      const count = await this.constructor().countDocuments();
-      this.orderNumber = `ORD-${new Date().getFullYear()}-${(count + 1)
-        .toString()
-        .padStart(6, "0")}`;
-      next();
-    } catch (error) {
-      throw new AppError(httpStatus.CONFLICT, "Failed to save order");
-    }
-  } else {
-    next();
-  }
-});
 
 const Order = model<IOrder>("Order", orderSchema);
 
