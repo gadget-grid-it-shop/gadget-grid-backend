@@ -29,6 +29,7 @@ export interface IAddress {
   address: string;
   city: string;
   district: string;
+  user?: Types.ObjectId;
 }
 
 // Interface for Payment Details

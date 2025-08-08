@@ -36,6 +36,7 @@ const CategorySchema = new Schema<TCategory>({
     default: false,
   },
   image: { type: String, default: "" },
+  description: { type: String, default: "" },
 });
 
 export const Category = model<TCategory>("Category", CategorySchema);

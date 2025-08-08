@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { ProductServices } from "./product.service";
+import { Product } from "./product.model";
 
 const createProduct = catchAsync(async (req, res) => {
   const { admin, email } = req.user;
@@ -112,6 +113,23 @@ const getSingleProductBySlug = catchAsync(async (req, res) => {
   });
 });
 
+const getCompareProducts = catchAsync(async (req, res) => {
+  const ids = req.query.ids;
+
+  const productIds = ids ? JSON.parse(ids as string) : [];
+
+  console.log({ productIds });
+
+  const result = await Product.find({ _id: { $in: productIds } });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived product",
+    data: result,
+  });
+});
+
 export const ProductControllers = {
   getSingleProductBySlug,
   createProduct,
@@ -121,4 +139,5 @@ export const ProductControllers = {
   updateProduct,
   getFeaturedProducts,
   getProductsByCategory,
+  getCompareProducts,
 };

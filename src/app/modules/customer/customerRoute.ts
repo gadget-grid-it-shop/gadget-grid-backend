@@ -19,6 +19,8 @@ router.get(
   ProductControllers.getSingleProductBySlug
 );
 
+router.get("/product/compare", ProductControllers.getCompareProducts);
+
 router.get("/product/single/:id", ProductControllers.getSingleProduct);
 
 // =============== auth ================

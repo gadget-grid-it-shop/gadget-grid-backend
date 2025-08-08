@@ -18,8 +18,6 @@ const validateAuth = () => {
       );
     }
 
-    console.log(token);
-
     // check if varified user
     const decoded = varifyToken(token, config.access_secret as string);
 

@@ -145,17 +145,19 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
   await productQuery.paginate();
 
-  const result = await productQuery.modelQuery.populate([
-    {
-      path: "brand",
-      match: { _id: { $type: "objectId" } },
-      select: "name image",
-    },
-    {
-      path: "mainCategory",
-      model: "Category",
-    },
-  ]);
+  const result = await productQuery.modelQuery
+    .select("price discount name quantity thumbnail slug")
+    .populate([
+      {
+        path: "brand",
+        match: { _id: { $type: "objectId" } },
+        select: "name image",
+      },
+      {
+        path: "mainCategory",
+        model: "Category",
+      },
+    ]);
 
   pagination.total = productQuery.total;
 
@@ -200,6 +202,39 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
 
   const category = product?.mainCategory;
 
+  const allCategories = await Category.find()
+    .select("_id name slug parent_id image")
+    .lean()
+    .exec();
+  const categoryMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
+
+  // Function to build category tree using pre-fetched categories
+  const buildCategoryTree = (categoryId: string) => {
+    const tree = [];
+
+    let currentId = categoryId?.toString();
+    while (currentId && categoryMap.has(currentId)) {
+      const category = categoryMap.get(currentId);
+      if (category) {
+        tree.unshift({
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+        });
+        currentId = category.parent_id?.toString();
+      }
+    }
+
+    // Log warning if a category or parent was not found
+    if (currentId && !categoryMap.has(currentId)) {
+      console.warn(`Parent category not found for ID: ${currentId}`);
+    }
+
+    return tree;
+  };
+
+  const breadcrum = buildCategoryTree(category?.toString() as string);
+
   const relatedProducts = await Product.find({
     "category.id": category,
   })
@@ -209,6 +244,7 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
   return {
     product,
     relatedProducts: relatedProducts?.filter((p) => p._id !== product?._id),
+    breadcrum,
   };
 };
 
@@ -561,11 +597,11 @@ const getProductByCategory = async (
   slug: string,
   query: Record<string, unknown>
 ) => {
-  const catExist = await Category.findOne({ slug, isDeleted: false });
+  const catExist = await Category.findOne({ slug, isDeleted: false }).select(
+    "_id slug name description"
+  );
 
   const parsedFilters: ParsedFilters = parseFilters(query.filter as any);
-
-  console.log(parsedFilters);
 
   const pagination = {
     total: 0,
@@ -582,10 +618,9 @@ const getProductByCategory = async (
     parsedFilters
   );
 
-  console.log(categoryQuery);
-
   // Get paginated products
   const products = await Product.find(categoryQuery)
+    .select("price discount name quantity thumbnail slug")
     .skip((pagination.currentPage - 1) * pagination.limit)
     .limit(pagination.limit)
     .lean();
@@ -611,9 +646,82 @@ const getProductByCategory = async (
 
   pagination.total = total;
 
+  const allCategories = await Category.find()
+    .select("_id name slug parent_id image")
+    .lean()
+    .exec();
+  const categoryMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
+
+  // Function to build category tree using pre-fetched categories
+  const buildCategoryTree = (categoryId: string) => {
+    const tree = [];
+
+    let currentId = categoryId?.toString();
+    while (currentId && categoryMap.has(currentId)) {
+      const category = categoryMap.get(currentId);
+      if (category) {
+        tree.unshift({
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+        });
+        currentId = category.parent_id?.toString();
+      }
+    }
+
+    // Log warning if a category or parent was not found
+    if (currentId && !categoryMap.has(currentId)) {
+      console.warn(`Parent category not found for ID: ${currentId}`);
+    }
+
+    return tree;
+  };
+
+  const buildChildTree = (categoryId: string) => {
+    const tree = [];
+    const queue = [categoryId?.toString()];
+    const visited = new Set();
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId || visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const category = categoryMap.get(currentId);
+      if (!category) {
+        console.warn(`Child category not found for ID: ${currentId}`);
+        continue;
+      }
+
+      if (category._id.toString() !== catExist._id.toString()) {
+        tree.push({
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+          image: category.image,
+          description: category?.description,
+        });
+      }
+
+      // Find all children of the current category
+      const children = allCategories.filter(
+        (c) => c.parent_id?.toString() === currentId
+      );
+      queue.push(...children.map((c) => c._id.toString()));
+    }
+
+    return tree;
+  };
+
+  const categoryTree = buildCategoryTree(catExist._id.toString());
+  const childTree = buildChildTree(catExist._id.toString());
+
   const data = {
     products,
     filters,
+    categoryTree,
+    childTree,
+    category: catExist,
   };
 
   return {

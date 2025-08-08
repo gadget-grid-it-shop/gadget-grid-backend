@@ -1,13 +1,14 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { Product } from "../product/product.model";
-import { AddOrderPayload, IOrder } from "./order.interface";
+import { AddOrderPayload, IAddress, IOrder } from "./order.interface";
 import { calculateDiscountPrice, generateOrderNumber } from "./order.utils";
 import { Types } from "mongoose";
 import Order from "./order.model";
 import config from "../../config";
 import Stripe from "stripe";
 import { User } from "../user/user.model";
+import Address from "../address/address.model";
 
 let stripe: Stripe | null = null;
 
@@ -87,6 +88,27 @@ const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
   }, 0);
 
   const order = await Order.create(payload);
+
+  if (data.saveAddress) {
+    try {
+      const addressPayload: IAddress = {
+        user: thisUser._id,
+        address: data.shippingAddress?.address,
+        city: data.shippingAddress?.city,
+        district: data.shippingAddress?.district,
+      };
+
+      await Address.create(addressPayload);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  for (const pdt of order.items) {
+    await Product.findByIdAndUpdate(pdt.productId, {
+      $inc: { quantity: -pdt.quantity },
+    });
+  }
 
   if (data.paymentMethod === "card") {
     if (!stripe) {

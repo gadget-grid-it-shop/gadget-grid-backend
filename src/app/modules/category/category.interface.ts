@@ -7,6 +7,7 @@ export interface TCategory {
   isDeleted: Boolean;
   isFeatured: Boolean;
   image: string;
+  description?: string;
   slug: string;
 }
 

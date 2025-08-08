@@ -19,6 +19,9 @@ const createCategoryValidationSchema = z.object({
       "Product details category should be an array of strings",
   }),
   slug: z.string({ invalid_type_error: "Slug has to be a string" }).optional(),
+  description: z
+    .string({ invalid_type_error: "Description has to be a string" })
+    .optional(),
   // .min(1, "A category should have at least one product details category"),
 });
 
@@ -34,6 +37,9 @@ const updateCategoryValidationSchema = z.object({
     invalid_type_error:
       "Product details category should be an array of strings",
   }),
+  description: z
+    .string({ invalid_type_error: "Description has to be a string" })
+    .optional(),
 });
 
 export const CategoryValidations = {
