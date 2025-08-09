@@ -9,6 +9,9 @@ import config from "../../config";
 import Stripe from "stripe";
 import { User } from "../user/user.model";
 import Address from "../address/address.model";
+import { Response, Request } from "express";
+import sendOrderConfirmationEmail from "../../templates/sendOrderConfirmationMail";
+import sendPaymentConfirmationEmail from "../../templates/sendPaymentCofimationMail";
 
 let stripe: Stripe | null = null;
 
@@ -17,6 +20,83 @@ try {
 } catch (err) {
   console.log(err);
 }
+
+export const paymentWebhook = async (req: Request, res: Response) => {
+  const sig = req.headers["stripe-signature"] as string;
+
+  let event;
+  const endpint_secret = config.stripe_enpoint_secret;
+
+  if (!stripe || !endpint_secret) {
+    return;
+  }
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpint_secret);
+  } catch (err: any) {
+    console.log(err);
+    res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case "checkout.session.completed":
+      const paymentData = event.data?.object as Stripe.Checkout.Session;
+
+      if (paymentData.payment_status === "paid") {
+        try {
+          const options: Partial<IOrder> = {
+            paymentStatus: "paid",
+            paymentDetails: {
+              transactionId: paymentData.payment_intent as string,
+              paymentDate: new Date(),
+            },
+            totalAmount: (paymentData?.amount_total || 0) / 100,
+            currentStatus: "confirmed",
+          };
+
+          const res = await Order.findByIdAndUpdate(
+            paymentData.client_reference_id,
+            {
+              $set: options,
+              $push: {
+                statusHistory: [
+                  {
+                    notes: "Order has been confirmed",
+                    status: "confirmed",
+                    timestamp: new Date(),
+                  },
+                ],
+              },
+            },
+            { new: true }
+          );
+
+          if (res) {
+            try {
+              const thisUser = await User.findOne({
+                email: paymentData?.metadata?.userEmail,
+              });
+              if (!thisUser) {
+                return;
+              }
+              await sendPaymentConfirmationEmail(thisUser, res);
+            } catch (err) {
+              console.log(err);
+            }
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      // Then define and call a function to handle the event payment_intent.succeeded
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+};
 
 const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
   const thisUser = await User.findById(user);
@@ -112,6 +192,14 @@ const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
     await Product.findByIdAndUpdate(pdt.productId, {
       $inc: { quantity: -pdt.quantity },
     });
+  }
+
+  if (order) {
+    try {
+      await sendOrderConfirmationEmail(thisUser, order);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   if (data.paymentMethod === "card") {

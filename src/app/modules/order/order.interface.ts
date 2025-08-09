@@ -56,6 +56,7 @@ export interface IOrder {
   statusHistory: IStatusHistory[];
   currentStatus:
     | "pending"
+    | "confirmed"
     | "processing"
     | "shipped"
     | "delivered"
@@ -63,6 +64,8 @@ export interface IOrder {
     | "returned";
   shippingMethod: "standard" | "express" | "overnight";
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type AddOrderPayload = {

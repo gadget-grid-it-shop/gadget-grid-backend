@@ -22,4 +22,5 @@ export default {
   admin_join_id: process.env.admin_join_id,
   stripe_secret_key: process.env.STRIPE_SECRET_KEY,
   stripe_publishe_key: process.env.STRIPE_PUBLISH_KEY,
+  stripe_enpoint_secret: process.env.STRIPE_ENDPOINT_SECRET,
 };

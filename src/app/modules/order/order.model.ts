@@ -49,28 +49,32 @@ const orderItemSchema = new Schema<IOrderItem>({
 });
 
 // Status History Schema
-const statusHistorySchema = new Schema<IStatusHistory>({
-  status: {
-    type: String,
-    enum: [
-      "pending",
-      "processing",
-      "shipped",
-      "delivered",
-      "cancelled",
-      "returned",
-    ],
-    required: true,
+const statusHistorySchema = new Schema<IStatusHistory>(
+  {
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "returned",
+      ],
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
   },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-  notes: {
-    type: String,
-    trim: true,
-  },
-});
+  { timestamps: true }
+);
 
 // Main Order Schema
 const orderSchema = new Schema<IOrder>(
@@ -162,6 +166,7 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       enum: [
         "pending",
+        "confirmed",
         "processing",
         "shipped",
         "delivered",

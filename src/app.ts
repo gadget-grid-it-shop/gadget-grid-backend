@@ -4,6 +4,7 @@ import router from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
 import cookieParser from "cookie-parser";
+import { paymentWebhook } from "./app/modules/order/order.service";
 
 const app: Application = express();
 
@@ -18,6 +19,13 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(
+  "/payment/webhook",
+  express.raw({ type: "application/json" }),
+  paymentWebhook
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
