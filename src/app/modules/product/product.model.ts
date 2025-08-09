@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 import {
   TMeta,
   TProduct,
@@ -111,8 +111,9 @@ const ProductSchema = new Schema<TProduct>(
       default: [],
     },
     mainCategory: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: [true, "Main category is required"],
+      ref: "Category",
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -128,6 +129,19 @@ const ProductSchema = new Schema<TProduct>(
     },
   },
   { timestamps: true }
+);
+
+ProductSchema.index({ name: 1 });
+ProductSchema.index({ sku: 1 });
+ProductSchema.index({ model: 1 });
+ProductSchema.index({ slug: 1 });
+
+ProductSchema.index(
+  {
+    name: "text",
+    model: "text",
+  },
+  { weights: { name: 10, model: 2 } }
 );
 
 export const Product = model<TProduct>("Product", ProductSchema);

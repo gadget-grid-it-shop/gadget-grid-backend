@@ -6,6 +6,7 @@ export interface IOrderItem {
   name: string;
   quantity: number;
   price: number;
+  discount: number;
   image?: string;
   tax: number;
   shipping: number;
@@ -50,7 +51,7 @@ export interface IOrder {
   taxAmount: number;
   discountAmount: number;
   paymentMethod: "card" | "paypal" | "bank_transfer" | "cod";
-  paymentStatus: "pending" | "completed" | "failed" | "refunded";
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
   paymentDetails: IPaymentDetails;
   statusHistory: IStatusHistory[];
   currentStatus:

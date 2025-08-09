@@ -108,6 +108,8 @@ const refreshToken = async (token: string) => {
     );
   }
 
+  console.log({ refreshtoken: token });
+
   const decoded = varifyToken(token, config.refresh_secret as string);
 
   if (!decoded) {
@@ -314,20 +316,30 @@ const updatePasswordService = async (
   return updated;
 };
 
-const getMyDataFromDB = async (email: string) => {
-  const result = await Admin.findOne({ email }).populate([
-    {
-      path: "user",
-      select: "-password",
-    },
-    {
-      path: "role",
-    },
-  ]);
+const getMyDataFromDB = async (
+  email: string,
+  query: Record<string, unknown>
+) => {
+  let select = "";
+  let populate: any = [];
 
-  // if (result?.isDeleted) {
-  //   throw new AppError(httpStatus.UNAUTHORIZED, 'Your account was deleted')
-  // }
+  if (query.select) {
+    select = query.select as string;
+  } else {
+    populate = [
+      {
+        path: "user",
+        select: "-password",
+      },
+      {
+        path: "role",
+      },
+    ];
+  }
+
+  const result = await Admin.findOne({ email })
+    .populate(populate)
+    .select(select);
 
   return result;
 };

@@ -41,6 +41,8 @@ import {
 import { TAdminAndUser } from "../../interface/customRequest";
 import ProductFilter from "../productFilters/filter.model";
 import { query } from "express";
+import { TBrand } from "../brand/brand.interface";
+import { TCategory } from "../category/category.interface";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -620,7 +622,7 @@ const getProductByCategory = async (
 
   // Get paginated products
   const products = await Product.find(categoryQuery)
-    .select("price discount name quantity thumbnail slug")
+    .select("price discount name quantity thumbnail slug shipping")
     .skip((pagination.currentPage - 1) * pagination.limit)
     .limit(pagination.limit)
     .lean();
@@ -730,6 +732,56 @@ const getProductByCategory = async (
   };
 };
 
+const getSearchProductsFromDB = async (query: Record<string, unknown>) => {
+  const filters: any = {};
+  const catFilters: any = {};
+  const brandFilters: any = {};
+  let sort: any = { createdAt: -1 };
+
+  const getFrom = query.getFrom ? (query.getFrom as string)?.split(",") : [];
+
+  if (query?.search) {
+    filters["$or"] = [
+      { name: { $regex: query.search, $options: "i" } },
+      { model: { $regex: query.search, $options: "i" } },
+    ];
+
+    catFilters["$or"] = [{ name: { $regex: query.search, $options: "i" } }];
+    brandFilters["$and"] = [{ isDeleted: false }];
+    brandFilters["$or"] = [{ name: { $regex: query.search, $options: "i" } }];
+    brandFilters["$and"] = [{ isDeleted: false }, { isActive: true }];
+  }
+
+  const products = await Product.find(filters)
+    .select("slug _id name thumbnail")
+    .sort(sort)
+    .limit(15);
+
+  let categories: TCategory[] = [];
+
+  if (getFrom?.includes("category")) {
+    categories = await Category.find(catFilters)
+      .select("slug _id name description image")
+      .sort(sort)
+      .limit(10);
+  }
+
+  let brands: TBrand[] = [];
+
+  if (getFrom?.includes("brand")) {
+    brands = await Brand.find(brandFilters)
+      .select("_id name image")
+      .sort(sort)
+      .limit(10);
+  }
+
+  return {
+    products,
+    categories,
+    brands,
+  };
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -739,4 +791,5 @@ export const ProductServices = {
   getFeaturedProductFromDB,
   getProductByCategory,
   getSingleProductBySlugFromDB,
+  getSearchProductsFromDB,
 };

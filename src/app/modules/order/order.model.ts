@@ -25,6 +25,11 @@ const orderItemSchema = new Schema<IOrderItem>({
     required: true,
     min: [0, "Price cannot be negative"],
   },
+  discount: {
+    type: Number,
+    required: true,
+    min: [0, "Discount cannot be negative"],
+  },
   image: {
     type: String,
     required: false,
@@ -32,7 +37,7 @@ const orderItemSchema = new Schema<IOrderItem>({
   tax: {
     type: Number,
     required: true,
-    min: [0, "Subtotal cannot be negative"],
+    min: [0, "Tax cannot be negative"],
     default: 0,
   },
   shipping: {
@@ -140,7 +145,7 @@ const orderSchema = new Schema<IOrder>(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "completed", "failed", "refunded"],
+      enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
     paymentDetails: {

@@ -36,6 +36,12 @@ router.post(
 
 router.get("/getMyData", validateAuth(), AuthController.getMyData);
 
+// router.get(
+//   "/getMyData/customer",
+//   validateAuth(),
+//   AuthController.getCustomerData
+// );
+
 router.post(
   "/update-password",
   validateAuth(),

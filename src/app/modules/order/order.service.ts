@@ -67,17 +67,21 @@ const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
     }
   }
 
-  payload.items = products.map((p) => ({
-    name: p.name,
-    productId: p._id,
-    price: calculateDiscountPrice(p.price, p.discount),
-    quantity:
-      data.products.find((pd) => pd.id.toString() === p._id.toString())
-        ?.quantity || 1,
-    shipping: p.shipping.free ? 0 : p.shipping.cost,
-    tax: 0,
-    image: p.thumbnail || p.gallery?.[0] || "",
-  }));
+  payload.items = products.map((p) => {
+    const discountCal = calculateDiscountPrice(p.price, p.discount);
+    return {
+      name: p.name,
+      productId: p._id,
+      price: discountCal.discountPrice,
+      quantity:
+        data.products.find((pd) => pd.id.toString() === p._id.toString())
+          ?.quantity || 1,
+      shipping: p.shipping.free ? 0 : p.shipping.cost,
+      tax: 0,
+      image: p.thumbnail || p.gallery?.[0] || "",
+      discount: discountCal.discountAmount,
+    };
+  });
 
   payload.totalAmount = payload.items.reduce((acc, item) => {
     return acc + item.price;

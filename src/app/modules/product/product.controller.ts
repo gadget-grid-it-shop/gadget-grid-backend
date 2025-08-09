@@ -130,6 +130,21 @@ const getCompareProducts = catchAsync(async (req, res) => {
   });
 });
 
+const getSearchProducts = catchAsync(async (req, res) => {
+  const query = req.query;
+  console.log(req.headers["testId"]);
+  console.log(req.headers.authorization);
+
+  const result = await ProductServices.getSearchProductsFromDB(query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived product",
+    data: result,
+  });
+});
+
 export const ProductControllers = {
   getSingleProductBySlug,
   createProduct,
@@ -140,4 +155,5 @@ export const ProductControllers = {
   getFeaturedProducts,
   getProductsByCategory,
   getCompareProducts,
+  getSearchProducts,
 };

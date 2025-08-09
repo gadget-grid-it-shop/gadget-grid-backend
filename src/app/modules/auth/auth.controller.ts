@@ -52,6 +52,7 @@ const userLogin = catchAsync(async (req, res) => {
       : "Please varify your email and try again",
     data: {
       accessToken: isVerified ? accessToken : null,
+      refreshToken: isVerified ? refreshToken : null,
       isVerified,
     },
   });
@@ -149,7 +150,7 @@ const updatePassword = catchAsync(async (req, res) => {
 
 const getMyData = catchAsync(async (req, res) => {
   const user = req.user;
-  const result = await AuthServices.getMyDataFromDB(user.email);
+  const result = await AuthServices.getMyDataFromDB(user.email, req.query);
 
   sendResponse(res, {
     success: true,

@@ -39,4 +39,6 @@ const CategorySchema = new Schema<TCategory>({
   description: { type: String, default: "" },
 });
 
+CategorySchema.index({ name: 1 });
+
 export const Category = model<TCategory>("Category", CategorySchema);
