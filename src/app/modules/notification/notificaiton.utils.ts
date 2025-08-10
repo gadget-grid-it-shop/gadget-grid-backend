@@ -58,7 +58,8 @@ export const addNotifications = async ({
     for (const noti of notifications) {
       try {
         const res = (await Notification.create(noti)).toObject();
-        io.to(`${String(noti?.userTo)}`).emit("newNotification", {
+        console.log(noti.userTo);
+        io.to(`${noti?.userTo.toString()}`).emit("newNotification", {
           ...res,
           userFrom: userFrom,
         });

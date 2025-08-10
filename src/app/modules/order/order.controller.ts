@@ -7,8 +7,9 @@ const addOrder = catchAsync(async (req, res) => {
   const data = req.body;
 
   const user = req.user.userData?._id;
+  const admin = req.user?.admin;
 
-  const result = await OrderServices.addOrderToDB(data, user);
+  const result = await OrderServices.addOrderToDB(data, user, admin);
 
   sendResponse(res, {
     success: true,

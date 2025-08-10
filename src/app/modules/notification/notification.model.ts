@@ -28,6 +28,8 @@ const notificationSchema = new Schema<TNotification>(
     notificationType: {
       type: String,
       enum: [
+        "order",
+        "address",
         "gallery",
         "role",
         "product",

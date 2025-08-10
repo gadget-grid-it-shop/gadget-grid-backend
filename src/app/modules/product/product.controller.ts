@@ -118,8 +118,6 @@ const getCompareProducts = catchAsync(async (req, res) => {
 
   const productIds = ids ? JSON.parse(ids as string) : [];
 
-  console.log({ productIds });
-
   const result = await Product.find({ _id: { $in: productIds } });
 
   sendResponse(res, {
@@ -132,8 +130,6 @@ const getCompareProducts = catchAsync(async (req, res) => {
 
 const getSearchProducts = catchAsync(async (req, res) => {
   const query = req.query;
-  console.log(req.headers["testId"]);
-  console.log(req.headers.authorization);
 
   const result = await ProductServices.getSearchProductsFromDB(query);
 

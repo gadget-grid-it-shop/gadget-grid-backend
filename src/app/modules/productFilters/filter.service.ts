@@ -28,8 +28,6 @@ const getAllFiltersFromDB = async () => {
 const deleteFilterFromDB = async (id: string) => {
   const exist = await ProductFilter.findFilterById(id);
 
-  console.log(exist);
-
   if (!exist) {
     throw new AppError(httpStatus.FORBIDDEN, "Product filter does not exists");
   }

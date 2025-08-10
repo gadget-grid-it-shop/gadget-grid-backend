@@ -11,7 +11,7 @@ let server: Server;
 
 const main = async () => {
   try {
-    console.log(config.database_url)
+    console.log(config.database_url);
     await mongoose.connect(config.database_url as string);
 
     server = app.listen(config.port, () => {
@@ -24,7 +24,7 @@ const main = async () => {
 
     io?.on("connection", (socket) => {
       socket.on("adminJoin", (data) => {
-        console.log(data.user);
+        console.log(`admin joined ${data.user}`);
         socket.join(`${data.user}`);
         socket.join("admins");
       });

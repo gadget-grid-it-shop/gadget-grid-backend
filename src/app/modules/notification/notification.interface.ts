@@ -6,6 +6,8 @@ export type TNotification = {
   userFrom: Types.ObjectId;
   opened: boolean;
   notificationType:
+    | "order"
+    | "address"
     | "gallery"
     | "role"
     | "product"

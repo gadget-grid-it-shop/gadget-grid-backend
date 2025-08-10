@@ -5,7 +5,6 @@ import config from "../config";
 import { User } from "../modules/user/user.model";
 import varifyToken from "../utils/verifyToken";
 import { Admin } from "../modules/admin/admin.model";
-import { boolean } from "zod";
 
 const validateAuth = () => {
   return catchAsync(async (req, res, next) => {
@@ -36,6 +35,7 @@ const validateAuth = () => {
     req.user = {
       userRole: userExist.role,
       email: userExist.email,
+      id: userExist._id,
       userData: userExist,
       admin: { ...admin, user: userExist },
     };

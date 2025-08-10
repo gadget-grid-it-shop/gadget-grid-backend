@@ -108,8 +108,6 @@ const refreshToken = async (token: string) => {
     );
   }
 
-  console.log({ refreshtoken: token });
-
   const decoded = varifyToken(token, config.refresh_secret as string);
 
   if (!decoded) {

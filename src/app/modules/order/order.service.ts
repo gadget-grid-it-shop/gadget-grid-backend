@@ -12,6 +12,16 @@ import Address from "../address/address.model";
 import { Response, Request } from "express";
 import sendOrderConfirmationEmail from "../../templates/sendOrderConfirmationMail";
 import sendPaymentConfirmationEmail from "../../templates/sendPaymentCofimationMail";
+import {
+  sendSourceSocket,
+  TSendSourceSocket,
+} from "../../utils/sendSourceSocket";
+import {
+  addNotifications,
+  buildNotifications,
+} from "../notification/notificaiton.utils";
+import { Admin } from "../admin/admin.model";
+import { TAdminAndUser } from "../../interface/customRequest";
 
 let stripe: Stripe | null = null;
 
@@ -98,7 +108,11 @@ export const paymentWebhook = async (req: Request, res: Response) => {
   }
 };
 
-const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
+const addOrderToDB = async (
+  data: AddOrderPayload,
+  user: Types.ObjectId,
+  admin: TAdminAndUser
+) => {
   const thisUser = await User.findById(user);
 
   if (!thisUser) {
@@ -196,6 +210,15 @@ const addOrderToDB = async (data: AddOrderPayload, user: Types.ObjectId) => {
 
   if (order) {
     try {
+      const notifications = await buildNotifications({
+        actionType: "create",
+        notificationType: "order",
+        source: order._id,
+        text: "added an order",
+        thisAdmin: admin,
+      });
+
+      await addNotifications({ notifications, userFrom: admin });
       await sendOrderConfirmationEmail(thisUser, order);
     } catch (err) {
       console.log(err);

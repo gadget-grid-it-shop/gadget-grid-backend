@@ -3,7 +3,6 @@ import AppError from "../errors/AppError";
 import httpStatus from "http-status";
 
 const varifyToken = (token: string, secret: string) => {
-  console.log(token, secret);
   try {
     const decoded = jwt.verify(token, secret as string) as JwtPayload;
     return decoded;
