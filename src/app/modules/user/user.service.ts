@@ -6,15 +6,16 @@ import { Admin } from "../admin/admin.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { Roles } from "../roles/roles.model";
+import { TCustomer } from "../customer/customer.interface";
+import { Customer } from "../customer/customer.model";
 
 const createAdminIntoDB = async (admin: TAdmin) => {
-
-  delete admin.isDeleted
+  delete admin.isDeleted;
 
   const user: Partial<TUser> = {
     email: admin.email,
     password: admin.password,
-    role: admin.role
+    role: admin.role,
   };
 
   const roleExist = await Roles.findById(admin.role);
@@ -23,23 +24,21 @@ const createAdminIntoDB = async (admin: TAdmin) => {
     throw new AppError(httpStatus.NOT_FOUND, "Role does not exist");
   }
 
-
-
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
 
-    const adminExist = await User.isUserExistsByEmail(admin.email)
+    const adminExist = await User.isUserExistsByEmail(admin.email);
 
     if (adminExist) {
-      const deletedAdmin = await Admin.findOneAndDelete({ email: admin.email })
+      const deletedAdmin = await Admin.findOneAndDelete({ email: admin.email });
 
       if (!deletedAdmin) {
         throw new AppError(httpStatus.CONFLICT, "failed to create user");
       }
 
-      const deleteUser = await User.findOneAndDelete({ email: admin.email })
+      const deleteUser = await User.findOneAndDelete({ email: admin.email });
 
       if (!deleteUser) {
         throw new AppError(httpStatus.CONFLICT, "failed to create user");
@@ -66,109 +65,185 @@ const createAdminIntoDB = async (admin: TAdmin) => {
   } catch (err) {
     await session.abortTransaction();
     await session.endSession();
-    throw new AppError(httpStatus.CONFLICT, err instanceof AppError ? err?.message : "Failed to create user");
+    throw new AppError(
+      httpStatus.CONFLICT,
+      err instanceof AppError ? err?.message : "Failed to create user"
+    );
+  }
+};
+
+const createCustomerIntoDB = async (customer: TCustomer) => {
+  delete customer.isDeleted;
+
+  const user: Partial<TUser> = {
+    email: customer.email,
+    password: customer.password,
+    role: "customer",
+  };
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const customerExist = await User.isUserExistsByEmail(customer.email);
+
+    if (customerExist) {
+      const deletedAdmin = await Customer.findOneAndDelete({
+        email: customer.email,
+      });
+
+      if (!deletedAdmin) {
+        throw new AppError(httpStatus.CONFLICT, "failed to create user");
+      }
+
+      const deleteUser = await User.findOneAndDelete({
+        email: customer.email,
+        role: "customer",
+      });
+
+      if (!deleteUser) {
+        throw new AppError(httpStatus.CONFLICT, "failed to create user");
+      }
+    }
+
+    const userRes = await User.create(user);
+
+    if (!userRes) {
+      throw new AppError(httpStatus.CONFLICT, "failed to create user");
+    }
+
+    customer.user = userRes._id;
+
+    const customerRes = await Customer.create(customer);
+
+    if (!customerRes) {
+      throw new AppError(httpStatus.CONFLICT, "Failed to register");
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+    return customerRes;
+  } catch (err) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(
+      httpStatus.CONFLICT,
+      err instanceof AppError ? err?.message : "Failed to create user"
+    );
   }
 };
 
 const getAllAdminsFromDB = async () => {
   const result = await Admin.find({ isDeleted: false }).populate([
     {
-      path: 'user',
-      select: '-password'
+      path: "user",
+      select: "-password",
     },
     {
-      path: 'role',
-      select: 'role isDeleted -_id'
-    }
-  ])
+      path: "role",
+      select: "role isDeleted -_id",
+    },
+  ]);
 
-  return result
-}
+  return result;
+};
 
-
-const getSingleUserFromDB = async (id: string, query: Record<string, unknown>) => {
-
-  const userType: 'admin' | 'customer' | unknown = query?.userType
+const getSingleUserFromDB = async (
+  id: string,
+  query: Record<string, unknown>
+) => {
+  const userType: "admin" | "customer" | unknown = query?.userType;
 
   if (!userType) {
-    throw new AppError(httpStatus.CONFLICT, 'User type is required')
+    throw new AppError(httpStatus.CONFLICT, "User type is required");
   }
 
-  if (userType !== 'admin' && userType !== 'customer') {
-    throw new AppError(httpStatus.CONFLICT, 'Wrong user type')
+  if (userType !== "admin" && userType !== "customer") {
+    throw new AppError(httpStatus.CONFLICT, "Wrong user type");
   }
 
-  const model = userType === 'admin' ? Admin : userType === 'customer' ? Admin : undefined
-
+  const model =
+    userType === "admin" ? Admin : userType === "customer" ? Admin : undefined;
 
   const userData = await model?.findById(id).populate([
     {
-      path: 'user',
-      select: '-password'
+      path: "user",
+      select: "-password",
     },
     {
-      path: 'role',
-      select: 'role isDeleted -_id'
-    }
-  ])
-
+      path: "role",
+      select: "role isDeleted -_id",
+    },
+  ]);
 
   if (!userData) {
-    throw new AppError(httpStatus.CONFLICT, 'Failed to get user data')
+    throw new AppError(httpStatus.CONFLICT, "Failed to get user data");
   }
 
   if (userData.isDeleted) {
-    throw new AppError(httpStatus.CONFLICT, 'User was deleted')
+    throw new AppError(httpStatus.CONFLICT, "User was deleted");
   }
 
-  return userData
-}
+  return userData;
+};
 
-
-const deleteUserFromDB = async (userId: string, role: 'admin' | 'customer', authUserEmail: string) => {
+const deleteUserFromDB = async (
+  userId: string,
+  role: "admin" | "customer",
+  authUserEmail: string
+) => {
   if (!userId) {
-    throw new AppError(httpStatus.CONFLICT, 'User not found')
+    throw new AppError(httpStatus.CONFLICT, "User not found");
   }
 
-  const user: TUser | null = await User.findById(userId)
+  const user: TUser | null = await User.findById(userId);
 
   if (user?.email === authUserEmail) {
-    throw new AppError(httpStatus.CONFLICT, "You can't delete your own account")
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "You can't delete your own account"
+    );
   }
 
-  const session = await startSession()
+  const session = await startSession();
 
   try {
-
-    session.startTransaction()
-    const deletedUser = await User.findByIdAndUpdate(userId, { isDeleted: true }, { new: true })
+    session.startTransaction();
+    const deletedUser = await User.findByIdAndUpdate(
+      userId,
+      { isDeleted: true },
+      { new: true }
+    );
     if (!deletedUser) {
-      throw new AppError(httpStatus.CONFLICT, 'Failed to delete user')
+      throw new AppError(httpStatus.CONFLICT, "Failed to delete user");
     }
 
     if (role === "admin") {
-      const deletedAdmin = await Admin.findOneAndUpdate({ user: deletedUser._id }, { isDeleted: true }, { new: true })
-      session.commitTransaction()
-      session.endSession()
-      return deletedAdmin
+      const deletedAdmin = await Admin.findOneAndUpdate(
+        { user: deletedUser._id },
+        { isDeleted: true },
+        { new: true }
+      );
+      session.commitTransaction();
+      session.endSession();
+      return deletedAdmin;
     }
-
-
   } catch (err) {
-    await session.abortTransaction()
-    await session.endSession()
+    await session.abortTransaction();
+    await session.endSession();
     if (err instanceof AppError) {
-      throw new AppError(err.statusCode, err.message)
-    }
-    else {
-      throw new AppError(httpStatus.CONFLICT, "Failed to delete user")
+      throw new AppError(err.statusCode, err.message);
+    } else {
+      throw new AppError(httpStatus.CONFLICT, "Failed to delete user");
     }
   }
-}
+};
 
 export const UserServices = {
   createAdminIntoDB,
+  createCustomerIntoDB,
   getAllAdminsFromDB,
   deleteUserFromDB,
-  getSingleUserFromDB
+  getSingleUserFromDB,
 };

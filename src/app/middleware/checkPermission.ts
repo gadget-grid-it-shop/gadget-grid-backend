@@ -4,7 +4,6 @@ import { User } from "../modules/user/user.model";
 import catchAsync from "../utils/catchAsync";
 import { TCrud, TRole } from "../modules/roles/roles.interface";
 import { Roles } from "../modules/roles/roles.model";
-import { Admin } from "../modules/admin/admin.model";
 
 type TAccessType = keyof TCrud;
 

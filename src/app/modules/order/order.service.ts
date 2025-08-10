@@ -22,6 +22,8 @@ import {
 } from "../notification/notificaiton.utils";
 import { Admin } from "../admin/admin.model";
 import { TAdminAndUser } from "../../interface/customRequest";
+import { TCustomer } from "../customer/customer.interface";
+import { TNotification } from "../notification/notification.interface";
 
 let stripe: Stripe | null = null;
 
@@ -111,7 +113,7 @@ export const paymentWebhook = async (req: Request, res: Response) => {
 const addOrderToDB = async (
   data: AddOrderPayload,
   user: Types.ObjectId,
-  admin: TAdminAndUser
+  customer: TAdminAndUser
 ) => {
   const thisUser = await User.findById(user);
 
@@ -123,7 +125,6 @@ const addOrderToDB = async (
     billingAddress: data.billingAddress,
     shippingAddress: data.shippingAddress,
     paymentDetails: {
-      paymentDate: new Date(),
       transactionId: "",
     },
     paymentMethod: data.paymentMethod,
@@ -134,10 +135,10 @@ const addOrderToDB = async (
       {
         status: "pending",
         timestamp: new Date(),
-        notes: "",
+        notes: "Order placed successfully",
       },
     ],
-    userId: thisUser._id,
+    user: thisUser._id,
     orderNumber: await generateOrderNumber(Order.find()),
   };
 
@@ -177,13 +178,19 @@ const addOrderToDB = async (
     };
   });
 
-  payload.totalAmount = payload.items.reduce((acc, item) => {
+  const totalItemsCost = payload.items.reduce((acc, item) => {
     return acc + item.price;
   }, 0);
 
   payload.shippingCost = payload.items.reduce((acc, item) => {
     return acc + item.shipping;
   }, 0);
+
+  payload.taxAmount = payload.items.reduce((acc, item) => {
+    return acc + item.tax;
+  }, 0);
+  payload.totalAmount =
+    totalItemsCost + payload.shippingCost + payload.taxAmount;
 
   const order = await Order.create(payload);
 
@@ -213,12 +220,25 @@ const addOrderToDB = async (
       const notifications = await buildNotifications({
         actionType: "create",
         notificationType: "order",
-        source: order._id,
+        source: order.orderNumber,
         text: "added an order",
-        thisAdmin: admin,
+        thisAdmin: customer,
       });
 
-      await addNotifications({ notifications, userFrom: admin });
+      const notification: TNotification = {
+        notificationType: "order",
+        actionType: "create",
+        opened: false,
+        userFrom: customer.user._id,
+        userTo: customer?.user?._id,
+        source: String(order.orderNumber),
+        text: `Order placed successfully`,
+      };
+
+      await addNotifications({
+        notifications: [...notifications, notification],
+        userFrom: customer,
+      });
       await sendOrderConfirmationEmail(thisUser, order);
     } catch (err) {
       console.log(err);
@@ -271,8 +291,8 @@ const addOrderToDB = async (
       payment_intent_data: {
         description: `Order from Gadget Grid`, // Add company name to payment description
       },
-      success_url: `${process.env.CLIENT_URL}/my-profile?tab=orders&invoice=${order.orderNumber}`,
-      cancel_url: `${process.env.CLIENT_URL}/my-profile?tab=orders&invoice=${order.orderNumber}`,
+      success_url: `${process.env.CLIENT_URL}/orders/${order.orderNumber}`,
+      cancel_url: `${process.env.CLIENT_URL}/orders/${order.orderNumber}`,
       client_reference_id: order._id.toString(),
       metadata: {
         orderId: order._id.toString(),
@@ -289,4 +309,31 @@ const addOrderToDB = async (
   }
 };
 
-export const OrderServices = { addOrderToDB };
+const getMyOrdersFromDB = async (
+  query: Record<string, unknown>,
+  userId: string
+) => {
+  const page = query.page ? Number(query.page) : 1;
+  const limit = query.limit ? Number(query.limit) : 10;
+
+  const skip = (page - 1) * 10;
+
+  const orders = await Order.find({ user: userId }).skip(skip).limit(limit);
+
+  return orders;
+};
+
+const getOrderByOrderNumberFormDB = async (
+  user: string,
+  orderNumber: string
+) => {
+  const result = Order.findOne({ user, orderNumber });
+
+  return result;
+};
+
+export const OrderServices = {
+  addOrderToDB,
+  getMyOrdersFromDB,
+  getOrderByOrderNumberFormDB,
+};

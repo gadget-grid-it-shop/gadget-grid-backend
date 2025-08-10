@@ -7,7 +7,7 @@ const addOrder = catchAsync(async (req, res) => {
   const data = req.body;
 
   const user = req.user.userData?._id;
-  const admin = req.user?.admin;
+  const admin = req.user?.customer;
 
   const result = await OrderServices.addOrderToDB(data, user, admin);
 
@@ -19,4 +19,32 @@ const addOrder = catchAsync(async (req, res) => {
   });
 });
 
-export const OrderController = { addOrder };
+const getMyOrders = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const result = await OrderServices.getMyOrdersFromDB(req.query, userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Orders retrived successfully",
+    data: result,
+  });
+});
+
+const getOrderByOrderNumber = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const orderNumber = req.params.orderNumber;
+  const result = await OrderServices.getOrderByOrderNumberFormDB(
+    userId,
+    orderNumber
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Order retrived successfully",
+    data: result,
+  });
+});
+
+export const OrderController = { addOrder, getMyOrders, getOrderByOrderNumber };

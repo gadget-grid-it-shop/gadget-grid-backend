@@ -64,6 +64,10 @@ const userLoginFromDB = async (payload: TLoginCredentials) => {
     throw new AppError(httpStatus.CONFLICT, "User does not exist");
   }
 
+  if (userExist.role !== "customer") {
+    throw new AppError(httpStatus.CONFLICT, "User does not exist");
+  }
+
   if (userExist.isDeleted) {
     throw new AppError(httpStatus.CONFLICT, "Sorry, your account was deleted");
   }

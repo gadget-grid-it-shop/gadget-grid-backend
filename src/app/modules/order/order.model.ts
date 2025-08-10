@@ -79,7 +79,7 @@ const statusHistorySchema = new Schema<IStatusHistory>(
 // Main Order Schema
 const orderSchema = new Schema<IOrder>(
   {
-    userId: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: [true, "User ID is required"],

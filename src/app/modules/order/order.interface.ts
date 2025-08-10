@@ -41,7 +41,7 @@ export interface IPaymentDetails {
 
 // Main Order Interface
 export interface IOrder {
-  userId: Types.ObjectId;
+  user: Types.ObjectId;
   orderNumber: string;
   items: IOrderItem[];
   shippingAddress: IAddress;
