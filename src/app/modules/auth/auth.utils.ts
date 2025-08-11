@@ -1,17 +1,20 @@
 import jwt from "jsonwebtoken";
-import {TAdminName} from "../admin/admin.interface";
+import { TName } from "../user/user.interface";
 
 type TCreateToken = {
-  payload: {email: string};
+  payload: { email: string };
   secret: string;
   expiresIn: string;
 };
 
-export const createToken = ({payload, secret, expiresIn}: TCreateToken) => {
-  return jwt.sign(payload, secret, {expiresIn});
+export const createToken = ({ payload, secret, expiresIn }: TCreateToken) => {
+  return jwt.sign(payload, secret, { expiresIn });
 };
 
-export const generateResetPassHtml = (link: string, name: TAdminName | undefined) => {
+export const generateResetPassHtml = (
+  link: string,
+  name: TName | undefined
+) => {
   return `<!DOCTYPE html>
             <html>
                 <head>
@@ -41,7 +44,13 @@ export const generateResetPassHtml = (link: string, name: TAdminName | undefined
                             alt=""
                         />
                         <p style="font-size: 16px; line-height: 24px">
-                            Hello ${name?.firstName + " " + name?.middleName + " " + name?.lastName},
+                            Hello ${
+                              name?.firstName +
+                              " " +
+                              name?.middleName +
+                              " " +
+                              name?.lastName
+                            },
                             <br />
                             We received a request to reset your password. Click the button below to reset it:
                         </p>
@@ -71,7 +80,10 @@ export const generateResetPassHtml = (link: string, name: TAdminName | undefined
             </html>`;
 };
 
-export const generateVerifyEmailHtml = (link: string, name: TAdminName | undefined) => {
+export const generateVerifyEmailHtml = (
+  link: string,
+  name: TName | undefined
+) => {
   return `
         <div
         style="
@@ -94,7 +106,9 @@ export const generateVerifyEmailHtml = (link: string, name: TAdminName | undefin
             alt=""
         />
         <p style="font-size: 16px; line-height: 24px">
-            Hello ${name?.firstName + " " + name?.middleName + " " + name?.lastName},
+            Hello ${
+              name?.firstName + " " + name?.middleName + " " + name?.lastName
+            },
             <br />
             To varify your email please click on the link below.
         </p>

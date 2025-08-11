@@ -1,18 +1,16 @@
-import { ObjectId } from "mongodb";
 import { TProductDetailsCategory } from "./productDetailsCategory.interface";
 import { ProductDetailsCategory } from "./productDetailsCategory.model";
-import { Types } from "mongoose";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import {
   addNotifications,
   buildNotifications,
 } from "../notification/notificaiton.utils";
-import { TAdminAndUser } from "../../interface/customRequest";
+import { TUser } from "../user/user.interface";
 
 const createProductDetailsCategoryIntoDB = async (
   payload: TProductDetailsCategory,
-  admin: TAdminAndUser
+  admin: TUser
 ) => {
   const result = await ProductDetailsCategory.create(payload);
 
@@ -22,7 +20,7 @@ const createProductDetailsCategoryIntoDB = async (
       notificationType: "productDetails",
       source: result._id,
       text: "added a details category",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });
@@ -34,7 +32,7 @@ const createProductDetailsCategoryIntoDB = async (
 const updateProductDetailsCategoryIntoDB = async (
   id: string,
   payload: Partial<TProductDetailsCategory>,
-  admin: TAdminAndUser
+  admin: TUser
 ) => {
   const exist = await ProductDetailsCategory.findOne({ _id: id });
 
@@ -55,7 +53,7 @@ const updateProductDetailsCategoryIntoDB = async (
       notificationType: "productDetails",
       source: result._id,
       text: "updated a details category",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });
@@ -74,10 +72,7 @@ const getAllProductDetailsCategoryFromDB = async () => {
   return result;
 };
 
-const deleteProductDetailsCategoryFromDB = async (
-  id: string,
-  admin: TAdminAndUser
-) => {
+const deleteProductDetailsCategoryFromDB = async (id: string, admin: TUser) => {
   const result = await ProductDetailsCategory.findByIdAndDelete(id);
   if (result) {
     const notifications = await buildNotifications({
@@ -85,7 +80,7 @@ const deleteProductDetailsCategoryFromDB = async (
       notificationType: "productDetails",
       source: result._id,
       text: "deleted a details category",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });

@@ -6,10 +6,9 @@ import { OrderServices } from "./order.service";
 const addOrder = catchAsync(async (req, res) => {
   const data = req.body;
 
-  const user = req.user.userData?._id;
-  const admin = req.user?.customer;
+  const user = req.user.userData;
 
-  const result = await OrderServices.addOrderToDB(data, user, admin);
+  const result = await OrderServices.addOrderToDB(data, user._id, user);
 
   sendResponse(res, {
     success: true,

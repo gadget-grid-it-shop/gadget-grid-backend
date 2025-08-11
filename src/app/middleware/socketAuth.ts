@@ -5,8 +5,6 @@ import httpStatus from "http-status";
 import varifyToken from "../utils/verifyToken";
 import config from "../config";
 import { User } from "../modules/user/user.model";
-import { Admin } from "../modules/admin/admin.model";
-import { NextFunction } from "express";
 
 export const ValidateIOAuth = async (
   socket: Socket,
@@ -36,13 +34,10 @@ export const ValidateIOAuth = async (
 
     const userExist = await User.isUserExistsByEmail(decoded.email, true);
 
-    const admin = await Admin.findOne({ email: decoded.email }).lean();
-
     socket.user = {
       userRole: userExist.role,
       email: userExist.email,
       userData: userExist,
-      admin: { ...admin, user: userExist },
     };
 
     next();

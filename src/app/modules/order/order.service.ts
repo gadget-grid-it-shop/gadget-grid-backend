@@ -13,17 +13,11 @@ import { Response, Request } from "express";
 import sendOrderConfirmationEmail from "../../templates/sendOrderConfirmationMail";
 import sendPaymentConfirmationEmail from "../../templates/sendPaymentCofimationMail";
 import {
-  sendSourceSocket,
-  TSendSourceSocket,
-} from "../../utils/sendSourceSocket";
-import {
   addNotifications,
   buildNotifications,
 } from "../notification/notificaiton.utils";
-import { Admin } from "../admin/admin.model";
-import { TAdminAndUser } from "../../interface/customRequest";
-import { TCustomer } from "../customer/customer.interface";
 import { TNotification } from "../notification/notification.interface";
+import { TUser } from "../user/user.interface";
 
 let stripe: Stripe | null = null;
 
@@ -113,7 +107,7 @@ export const paymentWebhook = async (req: Request, res: Response) => {
 const addOrderToDB = async (
   data: AddOrderPayload,
   user: Types.ObjectId,
-  customer: TAdminAndUser
+  customer: TUser
 ) => {
   const thisUser = await User.findById(user);
 
@@ -222,15 +216,15 @@ const addOrderToDB = async (
         notificationType: "order",
         source: order.orderNumber,
         text: "added an order",
-        thisAdmin: customer,
+        thisUser: customer,
       });
 
       const notification: TNotification = {
         notificationType: "order",
         actionType: "create",
         opened: false,
-        userFrom: customer.user._id,
-        userTo: customer?.user?._id,
+        userFrom: customer._id,
+        userTo: customer?._id,
         source: String(order.orderNumber),
         text: `Order placed successfully`,
       };

@@ -4,8 +4,11 @@ import sendResponse from "../../utils/sendResponse";
 import { CategoryServices } from "./category.service";
 
 const createCategory = catchAsync(async (req, res) => {
-  const { admin } = req.user;
-  const result = await CategoryServices.createCategoryIntoDB(req.body, admin);
+  const { thisUser } = req.user;
+  const result = await CategoryServices.createCategoryIntoDB(
+    req.body,
+    thisUser
+  );
 
   sendResponse(res, {
     success: true,
@@ -38,10 +41,10 @@ const getSingleCategories = catchAsync(async (req, res) => {
 });
 
 const deleteCategory = catchAsync(async (req, res) => {
-  const { admin } = req.user;
+  const { userData } = req.user;
   const result = await CategoryServices.deleteCategoryFromDB(
     req.params.id,
-    admin
+    userData
   );
 
   sendResponse(res, {
@@ -53,11 +56,11 @@ const deleteCategory = catchAsync(async (req, res) => {
 });
 
 const updateCategory = catchAsync(async (req, res) => {
-  const { admin } = req.user;
+  const { userData } = req.user;
   const result = await CategoryServices.updateCategoryIntoDB(
     req.params.id,
     req.body,
-    admin
+    userData
   );
 
   sendResponse(res, {

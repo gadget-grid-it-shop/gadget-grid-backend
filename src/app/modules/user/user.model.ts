@@ -1,8 +1,22 @@
 import { model, Schema } from "mongoose";
-import { TUser, TUserModel } from "./user.interface";
+import { TAddress, TName, TUser, TUserModel } from "./user.interface";
 import bcrypt from "bcrypt";
 import config from "../../config";
 import { boolean } from "zod";
+
+const NameSchema = new Schema<TName>({
+  firstName: { type: String, required: [true, "First name is required"] },
+  middleName: { type: String, default: "" },
+  lastName: { type: String, required: [true, "Last name is required"] },
+});
+
+const AddressSchema = new Schema<TAddress>({
+  street: { type: String, default: "" },
+  city: { type: String, default: "" },
+  state: { type: String, default: "" },
+  postalCode: { type: String, default: "" },
+  country: { type: String, default: "" },
+});
 
 const UserSchema = new Schema<TUser, TUserModel>({
   email: {
@@ -28,6 +42,11 @@ const UserSchema = new Schema<TUser, TUserModel>({
     default: "customer",
     ref: "Roles",
   },
+  phoneNumber: {
+    type: String,
+    require: [true, "Phone number is required"],
+    default: "",
+  },
   isVerified: {
     type: Boolean,
     default: false,
@@ -35,8 +54,35 @@ const UserSchema = new Schema<TUser, TUserModel>({
   isMasterAdmin: {
     type: Boolean,
   },
+  otp: {
+    type: String,
+    default: "",
+  },
   passwordChangedAt: {
     type: String,
+  },
+  address: {
+    type: AddressSchema,
+    default: {
+      street: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+    },
+  },
+  userType: {
+    type: String,
+    enum: ["customer", "admin"],
+    default: "customer",
+  },
+  name: {
+    type: NameSchema,
+    required: [true, "Name is required"],
+  },
+  profilePicture: {
+    type: String,
+    default: "",
   },
 });
 
@@ -56,10 +102,30 @@ UserSchema.post("save", async function (doc, next) {
   next();
 });
 
+UserSchema.virtual("fullName").get(function () {
+  if (!this.name) return;
+  const { firstName, middleName, lastName } = this.name;
+  return [firstName, middleName, lastName].filter(Boolean).join(" ");
+});
+
+UserSchema.statics.findAllVerifiedAdmins = async () => {
+  const result = await User.find({
+    isDeleted: false,
+    role: { $ne: "customer" },
+    userType: { $eq: "admin" },
+  }).select("name fullName email role _id profilePicture isActive isVerified");
+
+  return result;
+};
+
+UserSchema.set("toJSON", {
+  virtuals: true,
+});
+
 // ================== static methods ==================
 UserSchema.statics.isUserExistsByEmail = async function (email, lean) {
   if (lean) {
-    return await User.findOne({ email }).lean();
+    return await User.findOne({ email }).select("-otp -password").lean();
   } else {
     return await User.findOne({ email });
   }

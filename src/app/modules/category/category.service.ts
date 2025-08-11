@@ -3,7 +3,6 @@ import { TCategory, TUpdateCategory } from "./category.interface";
 import { Category } from "./category.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
-import { TAdminAndUser } from "../../interface/customRequest";
 import {
   addNotifications,
   buildNotifications,
@@ -13,11 +12,9 @@ import {
   TSendSourceSocket,
 } from "../../utils/sendSourceSocket";
 import slugify from "slugify";
+import { TUser } from "../user/user.interface";
 
-const createCategoryIntoDB = async (
-  payload: TCategory,
-  admin: TAdminAndUser
-) => {
+const createCategoryIntoDB = async (payload: TCategory, admin: TUser) => {
   const parent_id = payload.parent_id || null;
 
   console.log(payload);
@@ -43,7 +40,7 @@ const createCategoryIntoDB = async (
         sourceType: "category",
       },
       event: "category",
-      ignore: [`${admin.user?._id}`],
+      ignore: [`${admin?._id}`],
     };
 
     await sendSourceSocket(eventPayload);
@@ -53,7 +50,7 @@ const createCategoryIntoDB = async (
       notificationType: "category",
       source: result._id,
       text: "added a category",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });
@@ -85,7 +82,7 @@ const getFeaturedCategoriesFromDB = async () => {
   return categories;
 };
 
-const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {
+const deleteCategoryFromDB = async (id: string, admin: TUser) => {
   const exist = await Category.findById(id);
 
   if (exist) {
@@ -98,7 +95,7 @@ const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {
         sourceType: "category",
       },
       event: "category",
-      ignore: [`${admin.user?._id}`],
+      ignore: [`${admin?._id}`],
     };
 
     await sendSourceSocket(eventPayload);
@@ -109,7 +106,7 @@ const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {
         notificationType: "category",
         source: result._id,
         text: "deleted a category",
-        thisAdmin: admin,
+        thisUser: admin,
       });
 
       await addNotifications({ notifications, userFrom: admin });
@@ -123,7 +120,7 @@ const deleteCategoryFromDB = async (id: string, admin: TAdminAndUser) => {
 const updateCategoryIntoDB = async (
   id: string,
   payload: TUpdateCategory,
-  admin: TAdminAndUser
+  admin: TUser
 ) => {
   const exist = await Category.findById(id);
   if (exist) {
@@ -147,7 +144,7 @@ const updateCategoryIntoDB = async (
         sourceType: "category",
       },
       event: "category",
-      ignore: [`${admin.user?._id}`],
+      ignore: [`${admin?._id}`],
     };
 
     await sendSourceSocket(eventPayload);
@@ -158,7 +155,7 @@ const updateCategoryIntoDB = async (
         notificationType: "category",
         source: result._id,
         text: "updated a category",
-        thisAdmin: admin,
+        thisUser: admin,
       });
 
       await addNotifications({ notifications, userFrom: admin });

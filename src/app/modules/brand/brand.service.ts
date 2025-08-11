@@ -8,12 +8,11 @@ import {
   addNotifications,
   buildNotifications,
 } from "../notification/notificaiton.utils";
-import { TAdminAndUser } from "../../interface/customRequest";
 
 const createBrandIntoDB = async (
   payload: TBrand,
   email: string,
-  admin: TAdminAndUser
+  admin: TUser
 ) => {
   const exists = await Brand.findBrandByName(payload.name);
   const user: TUser | null = await User.findOne({ email });
@@ -30,7 +29,7 @@ const createBrandIntoDB = async (
       actionType: "create",
       notificationType: "brand",
       text: "added a brand",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });
@@ -42,7 +41,7 @@ const createBrandIntoDB = async (
 const updateBrandIntoDB = async (
   id: string,
   payload: Partial<TBrand>,
-  admin: TAdminAndUser
+  admin: TUser
 ) => {
   const exists = await Brand.findBrandById(id);
 
@@ -60,7 +59,7 @@ const updateBrandIntoDB = async (
       actionType: "update",
       notificationType: "brand",
       text: "updated a brand",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });
@@ -80,7 +79,7 @@ const getAllBrandsFromDB = async () => {
   return result;
 };
 
-const deleteBrandFromDB = async (id: string, admin: TAdminAndUser) => {
+const deleteBrandFromDB = async (id: string, admin: TUser) => {
   const exists = await Brand.findBrandById(id);
 
   if (!exists) {
@@ -99,7 +98,7 @@ const deleteBrandFromDB = async (id: string, admin: TAdminAndUser) => {
       actionType: "delete",
       notificationType: "brand",
       text: "deleted a brand",
-      thisAdmin: admin,
+      thisUser: admin,
     });
 
     await addNotifications({ notifications, userFrom: admin });

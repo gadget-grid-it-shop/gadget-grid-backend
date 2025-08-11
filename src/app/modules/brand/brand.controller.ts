@@ -5,9 +5,9 @@ import { BrandService } from "./brand.service";
 
 const createBrand = catchAsync(async (req, res) => {
   const payload = req.body;
-  const { email, admin } = req.user;
+  const { email, userData } = req.user;
 
-  const result = await BrandService.createBrandIntoDB(payload, email, admin);
+  const result = await BrandService.createBrandIntoDB(payload, email, userData);
 
   sendResponse(res, {
     success: true,
@@ -20,8 +20,8 @@ const createBrand = catchAsync(async (req, res) => {
 const updateBrand = catchAsync(async (req, res) => {
   const payload = req.body;
   const id = req.params.id;
-  const { admin } = req.user;
-  const result = await BrandService.updateBrandIntoDB(id, payload, admin);
+  const { userData } = req.user;
+  const result = await BrandService.updateBrandIntoDB(id, payload, userData);
 
   sendResponse(res, {
     success: true,
@@ -44,9 +44,9 @@ const getAllBrands = catchAsync(async (req, res) => {
 
 const deleteBrand = catchAsync(async (req, res) => {
   const id = req.params.id;
-  const { admin } = req.user;
+  const { userData } = req.user;
 
-  const result = await BrandService.deleteBrandFromDB(id, admin);
+  const result = await BrandService.deleteBrandFromDB(id, userData);
 
   sendResponse(res, {
     success: true,

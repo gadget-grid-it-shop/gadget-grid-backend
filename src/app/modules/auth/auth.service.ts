@@ -3,16 +3,28 @@ import config from "../../config";
 import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
 import { TLoginCredentials } from "./auth.interface";
-import jwt, { JwtPayload } from "jsonwebtoken";
 import {
   createToken,
   generateResetPassHtml,
   generateVerifyEmailHtml,
 } from "./auth.utils";
-import { Admin } from "../admin/admin.model";
 import { sendEmail } from "../../utils/sendEmail";
 import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
+import mongoose from "mongoose";
+import { TUser } from "../user/user.interface";
+import { RegisterFormValues } from "./auth.validation";
+
+const generateOTP = () => {
+  // Declare a digits variable
+  // which stores all digits
+  var digits = "0123456789";
+  let OTP = "";
+  for (let i = 0; i < 6; i++) {
+    OTP += digits[Math.floor(Math.random() * 10)];
+  }
+  return OTP;
+};
 
 const adminLoginFromDB = async (payload: TLoginCredentials) => {
   const userExist = await User.isUserExistsByEmail(payload.email);
@@ -173,10 +185,8 @@ const forgotPasswordService = async (email: string) => {
     expiresIn: "60m",
   });
 
-  const admin = await Admin.findOne({ user: user._id });
-
   const resetUILink = `${config.client_url}/reset-password?email=${user.email}&token=${resetToken}`;
-  const mailBody = generateResetPassHtml(resetUILink, admin?.name);
+  const mailBody = generateResetPassHtml(resetUILink, user?.name);
 
   await sendEmail(user.email, mailBody, "Reset your password");
 };
@@ -242,10 +252,8 @@ const SendVerificationEmailService = async (email: string) => {
     expiresIn: "10m",
   });
 
-  const admin = await Admin.findOne({ user: user._id });
-
   const verifyUILink = `${config.client_url}/verify-email?email=${user.email}&token=${verificationToken}`;
-  const mailBody = generateVerifyEmailHtml(verifyUILink, admin?.name);
+  const mailBody = generateVerifyEmailHtml(verifyUILink, user?.name);
 
   await sendEmail(user.email, mailBody, "Verify your email");
 };
@@ -330,20 +338,59 @@ const getMyDataFromDB = async (
   } else {
     populate = [
       {
-        path: "user",
-        select: "-password",
-      },
-      {
         path: "role",
       },
     ];
   }
 
-  const result = await Admin.findOne({ email })
+  const result = await User.findOne({ email })
     .populate(populate)
     .select(select);
 
   return result;
+};
+
+const createCustomerIntoDB = async (customer: TUser) => {
+  delete customer.isDeleted;
+
+  const user: Partial<TUser> = {
+    email: customer.email,
+    password: customer.password,
+    role: "customer",
+    phoneNumber: customer.phoneNumber,
+  };
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const customerExist = await User.isUserExistsByEmail(customer.email);
+
+    if (customerExist) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "You are already registered. Try singing in"
+      );
+    }
+
+    const userRes = await User.create(user);
+
+    if (!userRes) {
+      throw new AppError(httpStatus.CONFLICT, "failed to register account");
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+    return userRes;
+  } catch (err) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(
+      httpStatus.CONFLICT,
+      err instanceof AppError ? err?.message : "Failed to create user"
+    );
+  }
 };
 
 export const AuthServices = {
@@ -356,4 +403,5 @@ export const AuthServices = {
   verifyEmailService,
   updatePasswordService,
   userLoginFromDB,
+  createCustomerIntoDB,
 };

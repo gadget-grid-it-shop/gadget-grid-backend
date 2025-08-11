@@ -1,38 +1,37 @@
 import { getIO } from "../../../socket";
-import { TAdminAndUser } from "../../interface/customRequest";
 import { makeFullName } from "../../utils/makeFullName";
-import { TAdmin } from "../admin/admin.interface";
-import { Admin } from "../admin/admin.model";
+import { TUser } from "../user/user.interface";
+import { User } from "../user/user.model";
 import { TNotification } from "./notification.interface";
 import Notification from "./notification.model";
 import { ObjectId } from "mongodb";
 
 export const buildNotifications = async ({
-  thisAdmin,
+  thisUser,
   source,
   notificationType,
   actionType,
   text,
 }: {
-  thisAdmin: TAdminAndUser;
+  thisUser: TUser;
   source: ObjectId | string;
   text: string;
   notificationType: TNotification["notificationType"];
   actionType: TNotification["actionType"];
 }): Promise<TNotification[]> => {
-  const admins = await Admin.findAllVerifiedAdmins();
+  const admins = await User.findAllVerifiedAdmins();
   const notifications: TNotification[] = admins.map((admin) => {
     const notification: TNotification = {
       notificationType: notificationType,
       actionType: actionType,
       opened: false,
-      userFrom: thisAdmin?.user?._id,
-      userTo: admin?.user?._id,
+      userFrom: thisUser?._id,
+      userTo: admin?._id,
       source: String(source),
       text: `${
-        String(admin.user._id) === String(thisAdmin.user?._id)
+        String(admin._id) === String(thisUser?._id)
           ? "You"
-          : makeFullName(thisAdmin.name)
+          : makeFullName(thisUser.name)
       } ${text}`,
     };
 
@@ -51,7 +50,7 @@ export const addNotifications = async ({
   notifications: TNotification[];
   rooms?: string[];
   ignoreRooms?: string[];
-  userFrom?: TAdminAndUser;
+  userFrom?: TUser;
 }) => {
   const io = getIO();
   if (notifications && notifications.length > 0) {

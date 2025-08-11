@@ -6,6 +6,8 @@ import { authValidations } from "./auth.validation";
 
 const router = Router();
 
+router.post("/customer-register", AuthController.registerCustomer);
+
 router.post("/admin-login", AuthController.adminLogin);
 
 router.post("/refresh-token", AuthController.refreshToken);

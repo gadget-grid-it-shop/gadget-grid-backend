@@ -5,11 +5,11 @@ import { ProductServices } from "./product.service";
 import { Product } from "./product.model";
 
 const createProduct = catchAsync(async (req, res) => {
-  const { admin, email } = req.user;
+  const { userData, email } = req.user;
   const result = await ProductServices.createProductIntoDB(
     req.body,
     email,
-    admin
+    userData
   );
 
   sendResponse(res, {
@@ -63,9 +63,13 @@ const bulkUpload = catchAsync(async (req, res) => {
 
 const updateProduct = catchAsync(async (req, res) => {
   const id = req.params.id;
-  const { admin } = req.user;
+  const { userData } = req.user;
 
-  const result = await ProductServices.updateProductIntoDB(id, req.body, admin);
+  const result = await ProductServices.updateProductIntoDB(
+    id,
+    req.body,
+    userData
+  );
 
   sendResponse(res, {
     success: true,

@@ -5,11 +5,11 @@ import httpStatus from "http-status";
 
 const createProductDetailsCategory = catchAsync(async (req, res) => {
   const payload = req.body;
-  const { admin } = req.user;
+  const { userData } = req.user;
   const result =
     await ProductDetailsCategoryServices.createProductDetailsCategoryIntoDB(
       payload,
-      admin
+      userData
     );
 
   sendResponse(res, {
@@ -23,12 +23,12 @@ const createProductDetailsCategory = catchAsync(async (req, res) => {
 const updateProductDetailsCategory = catchAsync(async (req, res) => {
   const id = req.params.id;
   const payload = req.body;
-  const { admin } = req.user;
+  const { userData } = req.user;
   const result =
     await ProductDetailsCategoryServices.updateProductDetailsCategoryIntoDB(
       id,
       payload,
-      admin
+      userData
     );
 
   sendResponse(res, {
@@ -56,8 +56,6 @@ const getSingleProductDetailsCategory = catchAsync(async (req, res) => {
 });
 
 const getAllProductDetailsCategory = catchAsync(async (req, res) => {
-  const id = req.params.id;
-
   const result =
     await ProductDetailsCategoryServices.getAllProductDetailsCategoryFromDB();
 
@@ -71,12 +69,12 @@ const getAllProductDetailsCategory = catchAsync(async (req, res) => {
 
 const deleteProductDetailsCategory = catchAsync(async (req, res) => {
   const id = req.params.id;
-  const { admin } = req.user;
+  const { userData } = req.user;
 
   const result =
     await ProductDetailsCategoryServices.deleteProductDetailsCategoryFromDB(
       id,
-      admin
+      userData
     );
 
   sendResponse(res, {

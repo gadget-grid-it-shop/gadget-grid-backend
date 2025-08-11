@@ -4,65 +4,63 @@ import sendResponse from "../../utils/sendResponse";
 import { TUser } from "./user.interface";
 import { UserServices } from "./user.service";
 import { UserValidations } from "./user.validation";
-import { TAdmin } from "../admin/admin.interface";
 
 const createUser = catchAsync(async (req, res, next) => {
-    const admin: TAdmin = req.body
+  const admin: TUser = req.body;
 
-    const result = await UserServices.createAdminIntoDB(admin)
+  const result = await UserServices.createAdminIntoDB(admin);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'User created successfully',
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User created successfully",
+    data: result,
+  });
+});
 
 const getAllUsers = catchAsync(async (req, res) => {
-    const result = await UserServices.getAllAdminsFromDB()
+  const result = await UserServices.getAllAdminsFromDB();
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Successfully retrived all users',
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived all users",
+    data: result,
+  });
+});
 
 const getSingleUser = catchAsync(async (req, res) => {
-    const id = req.params.id;
-    const query = req.query
-    const result = await UserServices.getSingleUserFromDB(id, query)
+  const id = req.params.id;
+  const query = req.query;
+  const result = await UserServices.getSingleUserFromDB(id, query);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Successfully retrived user data',
-        data: result
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived user data",
+    data: result,
+  });
+});
 
 const deleteUser = catchAsync(async (req, res) => {
-    const userId = req.params.userId
-    const role: 'admin' | 'customer' = req.body.role
+  const userId = req.params.userId;
+  const role: "admin" | "customer" = req.body.role;
 
-    const authUser = req.user.email
+  const authUser = req.user.email;
 
-    const result = await UserServices.deleteUserFromDB(userId, role, authUser)
+  const result = await UserServices.deleteUserFromDB(userId, role, authUser);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Successfully deleted user',
-        data: result
-    })
-})
-
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully deleted user",
+    data: result,
+  });
+});
 
 export const UserController = {
-    createUser,
-    getAllUsers,
-    deleteUser,
-    getSingleUser
-}
+  createUser,
+  getAllUsers,
+  deleteUser,
+  getSingleUser,
+};

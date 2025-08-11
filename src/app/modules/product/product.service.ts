@@ -33,21 +33,18 @@ import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
 import dayjs from "dayjs";
-import { Admin } from "../admin/admin.model";
 import {
   addNotifications,
   buildNotifications,
 } from "../notification/notificaiton.utils";
-import { TAdminAndUser } from "../../interface/customRequest";
 import ProductFilter from "../productFilters/filter.model";
-import { query } from "express";
 import { TBrand } from "../brand/brand.interface";
 import { TCategory } from "../category/category.interface";
 
 const createProductIntoDB = async (
   payload: TProduct,
   email: string,
-  thisAdmin: TAdminAndUser
+  thisUser: TUser
 ) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
@@ -74,19 +71,19 @@ const createProductIntoDB = async (
   const result = await Product.create(productData);
 
   if (result) {
-    if (!thisAdmin || !thisAdmin.user) {
+    if (!thisUser || !thisUser._id) {
       return;
     }
 
     const notifications = await buildNotifications({
       source: result._id,
       text: "added a product",
-      thisAdmin,
+      thisUser,
       notificationType: "product",
       actionType: "create",
     });
 
-    await addNotifications({ notifications, userFrom: thisAdmin });
+    await addNotifications({ notifications, userFrom: thisUser });
   }
 
   return result;
@@ -552,15 +549,13 @@ const bulkUploadToDB = async (
 const updateProductIntoDB = async (
   id: string,
   payload: Partial<TProduct>,
-  thisAdmin: TAdminAndUser
+  thisUser: TUser
 ) => {
   if (!id) {
     throw new AppError(httpStatus.FORBIDDEN, "Please provide product id");
   }
 
   const exist = await Product.findById(id);
-
-  const admins = await Admin.findAllVerifiedAdmins();
 
   if (!exist) {
     throw new AppError(httpStatus.CONFLICT, "Product does not exist");
@@ -569,19 +564,19 @@ const updateProductIntoDB = async (
   const result = await Product.findByIdAndUpdate(id, payload, { new: true });
 
   if (result) {
-    if (!thisAdmin || !thisAdmin.user) {
+    if (!thisUser || !thisUser._id) {
       return;
     }
 
     const notifications = await buildNotifications({
       source: result._id,
       text: "updated a product",
-      thisAdmin,
+      thisUser,
       notificationType: "product",
       actionType: "update",
     });
 
-    await addNotifications({ notifications, userFrom: thisAdmin });
+    await addNotifications({ notifications, userFrom: thisUser });
   }
 
   return result;

@@ -160,6 +160,17 @@ const getMyData = catchAsync(async (req, res) => {
   });
 });
 
+const registerCustomer = catchAsync(async (req, res) => {
+  const result = await AuthServices.createCustomerIntoDB(req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Registration successfull. please validate your email.",
+    data: result,
+  });
+});
+
 export const AuthController = {
   adminLogin,
   refreshToken,
@@ -170,4 +181,5 @@ export const AuthController = {
   verifyEmail,
   updatePassword,
   userLogin,
+  registerCustomer,
 };
