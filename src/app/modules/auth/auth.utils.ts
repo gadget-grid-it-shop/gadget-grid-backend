@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import { TName } from "../user/user.interface";
+import config from "../../config";
 
 type TCreateToken = {
-  payload: { email: string };
+  payload: { email: string; otpCode?: string };
   secret: string;
   expiresIn: string;
 };
@@ -81,7 +82,7 @@ export const generateResetPassHtml = (
 };
 
 export const generateVerifyEmailHtml = (
-  link: string,
+  otpCode: string,
   name: TName | undefined
 ) => {
   return `
@@ -99,7 +100,7 @@ export const generateVerifyEmailHtml = (
             -moz-box-shadow: 0px 0px 41px -9px rgba(0, 0, 0, 0.73);
         "
         >
-        <h2 style="text-align: center; color: #4a2cf2">Varify you email</h2>
+        <h2 style="text-align: center; color: #4a2cf2">Verify your email</h2>
         <img
             style="height: 100px; width: 100%; object-fit: contain"
             src="https://res.cloudinary.com/dsgqdey2a/image/upload/v1728097863/email_verify_guog7a.png"
@@ -110,16 +111,12 @@ export const generateVerifyEmailHtml = (
               name?.firstName + " " + name?.middleName + " " + name?.lastName
             },
             <br />
-            To varify your email please click on the link below.
+            To verify your email, please use the following verification code. It will expire in ${
+              config.otp_expires_in?.split("")?.[0] || 5
+            } minutes
+            <br />
+             <strong style="font-size: 24px;">${otpCode}</strong>
         </p>
-        <div style="text-align: center; margin: 30px 0">
-            <a
-            href="${link}"
-            style="background-color: #4a2cf2; color: white; text-decoration: none; padding: 10px 20px; border-radius: 2px; font-size: 16px"
-            >
-            Varify Email
-            </a>
-        </div>
         <p style="font-size: 16px; line-height: 24px">
             If you did not request to verify your email, please ignore this email or contact support if you have any concerns.
         </p>
@@ -129,11 +126,8 @@ export const generateVerifyEmailHtml = (
             The GadgetGrid Team
         </p>
         <hr style="border: none; border-top: 1px solid #eeeeee; margin: 20px 0" />
-
         <p style="font-size: 12px; text-align: center">
-            If you're having trouble clicking the "Varify Email" button, copy and paste the following link into your web browser:
-            <br />
-            <a href="${link}">${link}</a>
+            If you have trouble using the verification code, please contact our support team.
         </p>
         </div>
     `;

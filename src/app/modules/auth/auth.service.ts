@@ -13,7 +13,7 @@ import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
 import mongoose from "mongoose";
 import { TUser } from "../user/user.interface";
-import { RegisterFormValues } from "./auth.validation";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 const generateOTP = () => {
   // Declare a digits variable
@@ -242,27 +242,27 @@ const SendVerificationEmailService = async (email: string) => {
     );
   }
 
-  const jwtPayload = {
-    email: user.email,
-  };
-
-  const verificationToken = createToken({
-    payload: jwtPayload,
-    secret: config.verify_secret as string,
-    expiresIn: "10m",
+  const otpCode = generateOTP();
+  const otpToken = createToken({
+    payload: {
+      otpCode,
+      email: user.email as string,
+    },
+    secret: config.otp_secret as string,
+    expiresIn: config.otp_expires_in as string,
   });
 
-  const verifyUILink = `${config.client_url}/verify-email?email=${user.email}&token=${verificationToken}`;
-  const mailBody = generateVerifyEmailHtml(verifyUILink, user?.name);
+  await User.findByIdAndUpdate(user._id, { otp: otpToken });
+  const mailBody = generateVerifyEmailHtml(otpCode, user?.name);
 
   await sendEmail(user.email, mailBody, "Verify your email");
 };
 
-const verifyEmailService = async (email: string, token: string | undefined) => {
-  if (!token) {
+const verifyEmailService = async (email: string, otp: string | undefined) => {
+  if (!otp) {
     throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      "You are not authorized",
+      httpStatus.CONFLICT,
+      "Verification OTP is required",
       "unauthorized access request"
     );
   }
@@ -279,18 +279,51 @@ const verifyEmailService = async (email: string, token: string | undefined) => {
     );
   }
 
-  const decoded = varifyToken(token, config.verify_secret as string);
+  let decoded;
 
+  try {
+    decoded = jwt.verify(user.otp, config.otp_secret as string) as JwtPayload;
+  } catch (err) {
+    console.log(err);
+    throw new AppError(httpStatus.FORBIDDEN, "Fatiled to verify");
+  }
+
+  // const decoded = varifyToken(user.otp, config.otp_secret as string);
+
+  if (decoded.otpCode !== otp) {
+    throw new AppError(httpStatus.CONFLICT, "OTP did not match");
+  }
   if (email !== decoded.email) {
     throw new AppError(httpStatus.FORBIDDEN, "Wrong email");
   }
 
+  const jwtPayload = {
+    // userRole: userExist.role,
+    email: user.email,
+  };
+
+  const accessToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_secret as string,
+    expiresIn: config.access_token_expires_in as string,
+  });
+  const refreshToken = createToken({
+    payload: jwtPayload,
+    secret: config.refresh_secret as string,
+    expiresIn: config.refresh_token_expires_in as string,
+  });
+
   const verifiedUser = await User.findOneAndUpdate(
     { email },
-    { isVerified: true }
+    { isVerified: true, otp: "" }
   ).select("-password");
 
-  return verifiedUser;
+  return {
+    accessToken,
+    refreshToken,
+    isVerified: user.isVerified,
+    verifiedUser,
+  };
 };
 
 const updatePasswordService = async (
@@ -373,12 +406,25 @@ const createCustomerIntoDB = async (customer: TUser) => {
         "You are already registered. Try singing in"
       );
     }
+    const otpCode = generateOTP();
+    const otpToken = createToken({
+      payload: {
+        otpCode,
+        email: user.email as string,
+      },
+      secret: config.verify_secret as string,
+      expiresIn: config.otp_expires_in as string,
+    });
+
+    user.otp = otpToken;
 
     const userRes = await User.create(user);
 
     if (!userRes) {
       throw new AppError(httpStatus.CONFLICT, "failed to register account");
     }
+
+    const mailBody = generateVerifyEmailHtml(otpCode, user?.name);
 
     await session.commitTransaction();
     await session.endSession();

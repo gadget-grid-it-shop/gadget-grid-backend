@@ -118,9 +118,15 @@ const SendVerificationEmail = catchAsync(async (req, res) => {
 
 const verifyEmail = catchAsync(async (req, res) => {
   const email = req.body.email;
-  const token = req.headers.authorization;
+  const otp = req.body.otp;
 
-  const result = await AuthServices.verifyEmailService(email, token);
+  const result = await AuthServices.verifyEmailService(email, otp);
+
+  const { refreshToken } = result;
+
+  res.cookie("gadget_grid_refresh_token", refreshToken, {
+    secure: config.node_environment !== "development",
+  });
 
   sendResponse(res, {
     success: true,
