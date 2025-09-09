@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { IAddress } from "../address/address.interface";
 
 // Interface for Order Item
 export interface IOrderItem {
@@ -23,14 +24,6 @@ export interface IStatusHistory {
     | "returned";
   timestamp: Date;
   notes?: string;
-}
-
-// Interface for Address
-export interface IAddress {
-  address: string;
-  city: string;
-  district: string;
-  user?: Types.ObjectId;
 }
 
 // Interface for Payment Details

@@ -24,6 +24,12 @@ router.post(
   ProductControllers.bulkUpload
 );
 
+router.get(
+  "/single/:id",
+  checkPermission(EAppFeatures.product, "read"),
+  ProductControllers.getSingleProduct
+);
+
 router.patch(
   "/update-product/:id",
   checkPermission(EAppFeatures.product, "update"),

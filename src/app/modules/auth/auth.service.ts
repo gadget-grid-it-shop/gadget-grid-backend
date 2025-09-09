@@ -13,7 +13,7 @@ import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
 import mongoose from "mongoose";
 import { TUser } from "../user/user.interface";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 
 const generateOTP = () => {
   // Declare a digits variable
@@ -31,6 +31,10 @@ const adminLoginFromDB = async (payload: TLoginCredentials) => {
 
   if (!userExist) {
     throw new AppError(httpStatus.CONFLICT, "User does not exist");
+  }
+
+  if (userExist.userType !== "admin") {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not an admin");
   }
 
   if (userExist.isDeleted) {
@@ -77,7 +81,7 @@ const userLoginFromDB = async (payload: TLoginCredentials) => {
   }
 
   if (userExist.role !== "customer") {
-    throw new AppError(httpStatus.CONFLICT, "User does not exist");
+    throw new AppError(httpStatus.CONFLICT, "You are not a customer");
   }
 
   if (userExist.isDeleted) {
@@ -284,6 +288,9 @@ const verifyEmailService = async (email: string, otp: string | undefined) => {
   try {
     decoded = jwt.verify(user.otp, config.otp_secret as string) as JwtPayload;
   } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      throw new AppError(httpStatus.FORBIDDEN, "OTP has expired");
+    }
     console.log(err);
     throw new AppError(httpStatus.FORBIDDEN, "Fatiled to verify");
   }
@@ -386,11 +393,14 @@ const getMyDataFromDB = async (
 const createCustomerIntoDB = async (customer: TUser) => {
   delete customer.isDeleted;
 
+  console.log({ customer });
+
   const user: Partial<TUser> = {
     email: customer.email,
     password: customer.password,
-    role: "customer",
+    userType: "customer",
     phoneNumber: customer.phoneNumber,
+    name: customer.name,
   };
 
   const session = await mongoose.startSession();
@@ -406,13 +416,14 @@ const createCustomerIntoDB = async (customer: TUser) => {
         "You are already registered. Try singing in"
       );
     }
+
     const otpCode = generateOTP();
     const otpToken = createToken({
       payload: {
         otpCode,
         email: user.email as string,
       },
-      secret: config.verify_secret as string,
+      secret: config.otp_secret as string,
       expiresIn: config.otp_expires_in as string,
     });
 
@@ -426,10 +437,20 @@ const createCustomerIntoDB = async (customer: TUser) => {
 
     const mailBody = generateVerifyEmailHtml(otpCode, user?.name);
 
+    try {
+      await sendEmail(userRes.email, mailBody, "Verify your email");
+    } catch (err) {
+      throw new AppError(httpStatus.CONFLICT, "failed to register account");
+    }
+
     await session.commitTransaction();
     await session.endSession();
-    return userRes;
+    return {
+      user: userRes,
+      verficationSent: true,
+    };
   } catch (err) {
+    console.log(err);
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(

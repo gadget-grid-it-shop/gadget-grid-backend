@@ -110,8 +110,9 @@ const SendVerificationEmail = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message:
-      "A varificatin mail was sent to your email address. The link will expire in 10 minutes",
+    message: `A varificatin mail was sent to your email address. The link will expire in ${
+      config.otp_expires_in?.split("")?.[0]
+    } minutes`,
     data: result,
   });
 });
@@ -131,7 +132,7 @@ const verifyEmail = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Email verification successfull. Please login",
+    message: "Email verification successfull",
     data: result,
   });
 });

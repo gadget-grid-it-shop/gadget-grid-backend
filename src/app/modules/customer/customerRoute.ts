@@ -23,8 +23,6 @@ router.get("/product/search", ProductControllers.getSearchProducts);
 
 router.get("/product/compare", ProductControllers.getCompareProducts);
 
-router.get("/product/single/:id", ProductControllers.getSingleProduct);
-
 // =============== auth ================
 router.post("/login", AuthController.userLogin);
 

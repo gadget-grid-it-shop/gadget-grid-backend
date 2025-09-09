@@ -31,7 +31,7 @@ router.post(
 );
 
 router.post(
-  "/verify-email",
+  "/verify-otp",
   validateRequest(authValidations.forgotPassValidationSchema),
   AuthController.verifyEmail
 );
