@@ -79,7 +79,9 @@ const updateProduct = catchAsync(async (req, res) => {
   });
 });
 const getFeaturedProducts = catchAsync(async (req, res) => {
-  const result = await ProductServices.getFeaturedProductFromDB();
+  const result = await ProductServices.getFeaturedProductFromDB(
+    req.query?.limit as string
+  );
 
   sendResponse(res, {
     success: true,

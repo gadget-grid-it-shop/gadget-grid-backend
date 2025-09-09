@@ -72,7 +72,13 @@ const getAllBrandsFromDB = async () => {
   const result = await Brand.find({ isDeleted: false }).populate([
     {
       path: "createdBy",
-      select: "email name",
+      select: "email name profilePicture name role",
+      populate: [
+        {
+          path: "role",
+          select: "role _id",
+        },
+      ],
     },
   ]);
 

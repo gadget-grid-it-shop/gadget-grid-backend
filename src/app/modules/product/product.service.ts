@@ -582,10 +582,12 @@ const updateProductIntoDB = async (
   return result;
 };
 
-const getFeaturedProductFromDB = async () => {
+const getFeaturedProductFromDB = async (queryLimit?: string) => {
+  const limit = queryLimit ? Number(queryLimit) : 18;
+
   const products = await Product.find({ isFeatured: true })
     .sort("-updatedAt")
-    .limit(18);
+    .limit(Number(limit) || 18);
 
   return products;
 };
