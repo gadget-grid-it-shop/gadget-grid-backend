@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { Product } from "../product/product.model";
-import { AddOrderPayload, IAddress, IOrder } from "./order.interface";
+import { AddOrderPayload, IOrder, IOrderItem } from "./order.interface";
 import { calculateDiscountPrice, generateOrderNumber } from "./order.utils";
 import { Types } from "mongoose";
 import Order from "./order.model";
@@ -156,19 +156,19 @@ const addOrderToDB = async (
     }
   }
 
-  payload.items = products.map((p) => {
+  payload.items = products.map((p): IOrderItem => {
     const discountCal = calculateDiscountPrice(p.price, p.discount);
     return {
       name: p.name,
       productId: p._id,
-      price: discountCal.discountPrice,
+      finalPrice: discountCal.discountPrice,
       quantity:
         data.products.find((pd) => pd.id.toString() === p._id.toString())
           ?.quantity || 1,
       shipping: p.shipping.free ? 0 : p.shipping.cost,
       tax: 0,
       image: p.thumbnail || p.gallery?.[0] || "",
-      discount: discountCal.discountAmount,
+      discountApplied: {},
     };
   });
 
