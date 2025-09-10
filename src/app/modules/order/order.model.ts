@@ -1,7 +1,5 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { IOrder, IOrderItem, IStatusHistory } from "./order.interface";
-import AppError from "../../errors/AppError";
-import httpStatus from "http-status";
 
 // Order Item Schema
 const orderItemSchema = new Schema<IOrderItem>({
@@ -20,15 +18,24 @@ const orderItemSchema = new Schema<IOrderItem>({
     min: [1, "Quantity must be at least 1"],
     default: 1,
   },
-  price: {
+  originalPrice: {
     type: Number,
     required: true,
     min: [0, "Price cannot be negative"],
   },
-  discount: {
+  finalPrice: {
     type: Number,
     required: true,
-    min: [0, "Discount cannot be negative"],
+    min: [0, "Price cannot be negative"],
+  },
+  discountApplied: {
+    type: {
+      type: String,
+      enum: ["product", "flashSale", "deal", "coupon"],
+    },
+    refId: { type: Schema.Types.ObjectId }, // e.g. flashSaleId, dealId, couponId
+    description: { type: String, trim: true }, // e.g. "New Year Flash Sale"
+    discountValue: { type: Number, min: 0 }, // actual discount amount applied
   },
   image: {
     type: String,
@@ -124,6 +131,12 @@ const orderSchema = new Schema<IOrder>(
         required: true,
         trim: true,
       },
+    },
+    subtotal: { type: Number, required: true, min: 0 }, // sum of item.finalPrice * qty
+    couponDiscount: {
+      refId: { type: Schema.Types.ObjectId, ref: "Coupons" },
+      description: { type: String, trim: true },
+      discountValue: { type: Number, min: 0 },
     },
     totalAmount: {
       type: Number,

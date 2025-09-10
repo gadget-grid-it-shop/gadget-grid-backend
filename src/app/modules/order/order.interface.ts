@@ -6,8 +6,14 @@ export interface IOrderItem {
   productId: Types.ObjectId;
   name: string;
   quantity: number;
-  price: number;
-  discount: number;
+  finalPrice: number;
+  originalPrice: number;
+  discountApplied: {
+    type: "product" | "flashSale" | "deal" | "coupon";
+    refId?: Types.ObjectId;
+    description?: string;
+    discountValue: number;
+  };
   image?: string;
   tax: number;
   shipping: number;
@@ -37,6 +43,12 @@ export interface IOrder {
   user: Types.ObjectId;
   orderNumber: string;
   items: IOrderItem[];
+  subtotal: number;
+  couponDiscount: {
+    refId: Types.ObjectId;
+    description: string;
+    discountValue: number;
+  };
   shippingAddress: IAddress;
   billingAddress: IAddress;
   totalAmount: number;

@@ -26,11 +26,11 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
                 ${item.name || "Demo mobile"}<br>
             </td>
             <td style="padding: 10px; text-align: center;">${item.quantity}</td>
-            <td style="padding: 10px; text-align: right;">$${item.price?.toFixed(
+            <td style="padding: 10px; text-align: right;">$${item.finalPrice?.toFixed(
               2
             )}</td>
             <td style="padding: 10px; text-align: right;">$${(
-              item.price * item.quantity
+              item.finalPrice * item.quantity
             )?.toFixed(2)}</td>
         </tr>
     `
