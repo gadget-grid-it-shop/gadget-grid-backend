@@ -5,3 +5,7 @@ export type TSingleSourceResponse<T> = {
   actionType: TNotification["actionType"];
   sourceType: TNotification["notificationType"];
 };
+
+export enum RedisKeys {
+  products = "products",
+}

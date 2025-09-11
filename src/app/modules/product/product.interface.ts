@@ -32,6 +32,7 @@ export type TDiscount = {
 };
 
 export interface TProduct {
+  _id: Types.ObjectId;
   id?: string;
   name: string;
   price: number;

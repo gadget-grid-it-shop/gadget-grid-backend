@@ -9,7 +9,7 @@ export interface IOrderItem {
   finalPrice: number;
   originalPrice: number;
   discountApplied: {
-    type: "product" | "flashSale" | "deal" | "coupon";
+    type: "product" | "flashSale" | "deal";
     refId?: Types.ObjectId;
     description?: string;
     discountValue: number;
@@ -77,6 +77,10 @@ export type AddOrderPayload = {
   products: {
     id: Types.ObjectId;
     quantity: number;
+    offer: {
+      type: "deal" | "flashSale";
+      refId: Types.ObjectId;
+    };
   }[];
   billingAddress: IAddress;
   shippingAddress: IAddress;

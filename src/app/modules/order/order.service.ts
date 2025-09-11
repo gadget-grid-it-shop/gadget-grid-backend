@@ -18,6 +18,10 @@ import {
 } from "../notification/notificaiton.utils";
 import { TNotification } from "../notification/notification.interface";
 import { TUser } from "../user/user.interface";
+import { IAddress } from "../address/address.interface";
+import { TProduct } from "../product/product.interface";
+import Deal from "../deals/deals.model";
+import FlashSale from "../flashSales/flashSale.model";
 
 let stripe: Stripe | null = null;
 
@@ -136,6 +140,9 @@ const addOrderToDB = async (
     orderNumber: await generateOrderNumber(Order.find()),
   };
 
+  const activeDeals = await Deal.find({ isActive: true });
+  const activeSale = await FlashSale.findOne({ isActive: true });
+
   const products = await Product.find({
     _id: { $in: data.products?.map((p) => p.id) },
   }).lean();
@@ -157,7 +164,34 @@ const addOrderToDB = async (
   }
 
   payload.items = products.map((p): IOrderItem => {
-    const discountCal = calculateDiscountPrice(p.price, p.discount);
+    const orderProduct = data.products.find(
+      (op) => op.id.toString() === p._id.toString()
+    );
+    const deal = activeDeals.find(
+      (d) => d._id?.toString() === orderProduct?.offer?.refId.toString()
+    );
+    const hasSale =
+      orderProduct?.offer.type === "flashSale" &&
+      activeSale?._id.toString() === orderProduct?.offer?.refId.toString();
+
+    const dealProduct = deal?.products.find(
+      (dp) => dp.productId.toString() === p._id.toString()
+    );
+
+    const saleProduct = hasSale
+      ? activeSale?.products?.find(
+          (sp) => sp.productId.toString() === p._id.toString()
+        )
+      : null;
+
+    const discountCal = calculateDiscountPrice(
+      p.price,
+      saleProduct
+        ? saleProduct.discount
+        : dealProduct
+        ? dealProduct.discount
+        : p.discount
+    );
     return {
       name: p.name,
       productId: p._id,
@@ -168,12 +202,17 @@ const addOrderToDB = async (
       shipping: p.shipping.free ? 0 : p.shipping.cost,
       tax: 0,
       image: p.thumbnail || p.gallery?.[0] || "",
-      discountApplied: {},
+      discountApplied: {
+        discountValue: discountCal.discountAmount,
+        description: deal?.title,
+        type: deal ? "deal" : "product",
+      },
+      originalPrice: p.price,
     };
   });
 
   const totalItemsCost = payload.items.reduce((acc, item) => {
-    return acc + item.price;
+    return acc + item.finalPrice;
   }, 0);
 
   payload.shippingCost = payload.items.reduce((acc, item) => {
@@ -185,6 +224,8 @@ const addOrderToDB = async (
   }, 0);
   payload.totalAmount =
     totalItemsCost + payload.shippingCost + payload.taxAmount;
+
+  payload.subtotal = totalItemsCost;
 
   const order = await Order.create(payload);
 
@@ -254,7 +295,7 @@ const addOrderToDB = async (
               name: item.name,
               images: item.image ? [item.image] : [],
             },
-            unit_amount: item.price * 100,
+            unit_amount: item.finalPrice * 100,
           },
           quantity: item.quantity,
         })),

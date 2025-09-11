@@ -5,7 +5,6 @@ import { Server } from "http";
 import { initializeSocketIO } from "./socket";
 import Notification from "./app/modules/notification/notification.model";
 import { ValidateIOAuth } from "./app/middleware/socketAuth";
-import { ObjectId } from "mongodb";
 
 let server: Server;
 

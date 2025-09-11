@@ -16,6 +16,7 @@ import { chatRoutes } from "../modules/chat/chat.route";
 import { CustomerRoutes } from "../modules/customer/customerRoute";
 import { OrderRoutes } from "../modules/order/order.route";
 import { AddressRoutes } from "../modules/address/address.route";
+import DealRoutes from "../modules/deals/deal.route";
 
 const router = Router();
 
@@ -39,6 +40,7 @@ const moduleRoutes = [
   { path: "/customer", route: CustomerRoutes },
   { path: "/order", route: OrderRoutes },
   { path: "/address", route: AddressRoutes },
+  { path: "/deal", route: DealRoutes },
 ];
 
 moduleRoutes.forEach((route) => {

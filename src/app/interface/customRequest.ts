@@ -1,21 +1,25 @@
 import { JwtPayload } from "jsonwebtoken";
 import { TUser } from "../modules/user/user.interface";
+import { Types } from "mongoose";
 
 declare global {
   namespace Express {
     interface Request {
-      user: JwtPayload;
-      userRole: string;
-      id: string;
-      userData: TUser;
+      user: {
+        id: Types.ObjectId;
+        userRole: string;
+        email: string;
+        userData: TUser;
+      };
     }
   }
 }
 
 declare module "socket.io" {
   interface Socket {
-    user?: JwtPayload;
-    userData?: TUser;
-    userRole: string;
+    user?: {
+      userData?: TUser;
+      userRole: string;
+    };
   }
 }

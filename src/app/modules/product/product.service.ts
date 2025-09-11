@@ -33,6 +33,9 @@ import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 import {
   addNotifications,
   buildNotifications,
@@ -40,6 +43,9 @@ import {
 import ProductFilter from "../productFilters/filter.model";
 import { TBrand } from "../brand/brand.interface";
 import { TCategory } from "../category/category.interface";
+import { getProductsFromRedis } from "./product.redis";
+import sift from "sift";
+import { ProductJobName, productQueue } from "./product.queue";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -113,6 +119,9 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
     limit: query.limit ? Number(query.limit) : 10,
   };
 
+  const limit = pagination.limit;
+  const skip = (pagination.currentPage - 1) * limit;
+
   if (query.category) {
     query.mainCategory = new ObjectId(query.category as string);
     delete query.categroy;
@@ -124,9 +133,11 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
   if (query.createdAt) {
     const startOfDay = dayjs(query.createdAt as string)
+      .utc()
       .startOf("day")
       .toDate();
     const endOfDay = dayjs(query.createdAt as string)
+      .utc()
       .endOf("day")
       .toDate();
 
@@ -136,29 +147,57 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
     };
   }
 
-  const productQuery = new QueryBuilder(Product.find(), query)
-    .search(searchFields)
-    .filter(excludeFields)
-    .sort()
-    .fields();
+  let result;
 
-  await productQuery.paginate();
+  const redisProducts = await getProductsFromRedis();
 
-  const result = await productQuery.modelQuery
-    .select("price discount name quantity thumbnail slug")
-    .populate([
-      {
-        path: "brand",
-        match: { _id: { $type: "objectId" } },
-        select: "name image",
-      },
-      {
-        path: "mainCategory",
-        model: "Category",
-      },
-    ]);
+  if (!redisProducts || redisProducts?.length === 0) {
+    const productQuery = new QueryBuilder(Product.find(), query)
+      .search(searchFields)
+      .filter(excludeFields)
+      .sort()
+      .fields();
 
-  pagination.total = productQuery.total;
+    await productQuery.paginate();
+
+    result = await productQuery.modelQuery
+      .select("price discount name quantity thumbnail slug")
+      .populate([
+        {
+          path: "brand",
+          match: { _id: { $type: "objectId" } },
+          select: "name image",
+        },
+        {
+          path: "mainCategory",
+          model: "Category",
+        },
+      ]);
+
+    pagination.total = productQuery.total;
+
+    await productQueue.add(ProductJobName.updateAllProducts, {});
+  } else {
+    const siftQuery: Record<string, any> = {};
+
+    if (query.searchTerm) {
+      siftQuery["$or"] = searchFields.map((field) => ({
+        [field]: { $regex: query?.searchTerm, $options: "i" },
+      }));
+    }
+
+    if (query.createdAt) {
+      siftQuery["createdAt"] = query.createdAt;
+    }
+
+    console.log({ siftQuery });
+
+    const filteredProducts = redisProducts.filter(sift(siftQuery));
+
+    pagination.total = filteredProducts.length || 0;
+
+    result = filteredProducts.slice(skip, skip + limit);
+  }
 
   return {
     products: result,
@@ -562,6 +601,8 @@ const updateProductIntoDB = async (
   }
 
   const result = await Product.findByIdAndUpdate(id, payload, { new: true });
+
+  await productQueue.add(ProductJobName.updateSingleProduct, result?._id);
 
   if (result) {
     if (!thisUser || !thisUser._id) {
