@@ -46,6 +46,8 @@ import { TCategory } from "../category/category.interface";
 import { getProductsFromRedis } from "./product.redis";
 import sift from "sift";
 import { ProductJobName, productQueue } from "./product.queue";
+import redisClient from "../../../redis";
+import { RedisKeys } from "../../interface/common";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -122,36 +124,36 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
   const limit = pagination.limit;
   const skip = (pagination.currentPage - 1) * limit;
 
-  if (query.category) {
-    query.mainCategory = new ObjectId(query.category as string);
-    delete query.categroy;
-  }
-
-  if (query.createdBy) {
-    query.createdBy = new ObjectId(query.createdBy as string);
-  }
-
-  if (query.createdAt) {
-    const startOfDay = dayjs(query.createdAt as string)
-      .utc()
-      .startOf("day")
-      .toDate();
-    const endOfDay = dayjs(query.createdAt as string)
-      .utc()
-      .endOf("day")
-      .toDate();
-
-    query.createdAt = {
-      $gte: startOfDay,
-      $lt: endOfDay,
-    };
-  }
-
   let result;
 
   const redisProducts = await getProductsFromRedis();
 
   if (!redisProducts || redisProducts?.length === 0) {
+    if (query.category) {
+      query.mainCategory = new ObjectId(query.category as string);
+      delete query.categroy;
+    }
+
+    if (query.createdBy) {
+      query.createdBy = new ObjectId(query.createdBy as string);
+    }
+
+    if (query.createdAt) {
+      const startOfDay = dayjs(query.createdAt as string)
+        .utc()
+        .startOf("day")
+        .toDate();
+      const endOfDay = dayjs(query.createdAt as string)
+        .utc()
+        .endOf("day")
+        .toDate();
+
+      query.createdAt = {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      };
+    }
+
     const productQuery = new QueryBuilder(Product.find(), query)
       .search(searchFields)
       .filter(excludeFields)
@@ -186,13 +188,30 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
       }));
     }
 
-    if (query.createdAt) {
-      siftQuery["createdAt"] = query.createdAt;
+    if (query.category) {
+      query.mainCategory = query.category;
+      delete query.categroy;
     }
 
-    console.log({ siftQuery });
+    if (query.createdBy) {
+      query.createdBy = query.createdBy;
+    }
 
-    const filteredProducts = redisProducts.filter(sift(siftQuery));
+    let filteredProducts = redisProducts.filter(sift(siftQuery));
+
+    if (query.createdAt) {
+      const startOfDay = dayjs(query.createdAt as string)
+        .startOf("day")
+        .toDate();
+      const endOfDay = dayjs(query.createdAt as string)
+        .endOf("day")
+        .toDate();
+
+      filteredProducts = filteredProducts.filter((item: any) => {
+        const createdAt = new Date(item.createdAt);
+        return createdAt >= startOfDay && createdAt < endOfDay;
+      });
+    }
 
     pagination.total = filteredProducts.length || 0;
 
@@ -790,10 +809,19 @@ const getSearchProductsFromDB = async (query: Record<string, unknown>) => {
     brandFilters["$and"] = [{ isDeleted: false }, { isActive: true }];
   }
 
-  const products = await Product.find(filters)
-    .select("slug _id name thumbnail")
-    .sort(sort)
-    .limit(15);
+  const redisProducts = await getProductsFromRedis();
+
+  let products: TProduct[] = [];
+
+  if (!redisProducts || redisProducts?.length === 0) {
+    products = await Product.find(filters)
+      .select("slug _id name thumbnail")
+      .sort(sort)
+      .limit(15);
+  } else {
+    const filterProducts = redisProducts.filter(sift(filters));
+    products = filterProducts.slice(0, 15);
+  }
 
   let categories: TCategory[] = [];
 

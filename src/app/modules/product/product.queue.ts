@@ -1,7 +1,6 @@
 import { ConnectionOptions, Queue, Worker } from "bullmq";
 import { RedisKeys } from "../../interface/common";
 import { setProductsToRedis, updateSigleProductToRedis } from "./product.redis";
-import { ObjectId } from "mongodb";
 import { Types } from "mongoose";
 
 const redisConnection: ConnectionOptions = {
@@ -20,15 +19,16 @@ export const productQueue = new Queue(RedisKeys.products, {
 
 const productWorker = new Worker(
   RedisKeys.products,
-  async (job, productId) => {
+  async (job) => {
     // sync all products with redis
     if (job.name === ProductJobName.updateAllProducts) {
       await setProductsToRedis();
     }
     // sync single product update
     else if (job.name === ProductJobName.updateSingleProduct) {
+      console.log("productid", job.data);
       await updateSigleProductToRedis(
-        productId as unknown as Types.ObjectId,
+        job.data as unknown as Types.ObjectId,
         "update"
       );
     }

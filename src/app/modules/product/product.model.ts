@@ -103,7 +103,7 @@ const ProductSchema = new Schema<TProduct>(
     filters: {
       type: [
         {
-          filterId: Number,
+          filterId: String,
           value: String,
           filter: String,
         },

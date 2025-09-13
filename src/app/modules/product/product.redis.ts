@@ -49,6 +49,7 @@ export const updateSigleProductToRedis = async (
         path: "brand",
       },
     ]);
+    console.log({ singleProduct: product });
     if (product) {
       let products: TProduct[] = [];
 
@@ -60,7 +61,7 @@ export const updateSigleProductToRedis = async (
           type === "delete"
             ? products.filter((p) => p._id !== id)
             : products?.map((p) => {
-                if (p._id === product._id) {
+                if (p._id.toString() === product._id.toString()) {
                   return product;
                 } else {
                   return p;

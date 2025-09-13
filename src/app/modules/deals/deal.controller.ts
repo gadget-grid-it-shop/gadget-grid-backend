@@ -16,6 +16,25 @@ const createDeal = catchAsync(async (req, res) => {
   });
 });
 
+const addProductsToDeal = catchAsync(async (req, res) => {
+  const user = req.user.id;
+  const deal = req.params.id;
+
+  const result = await DealsServices.addProductsToDealToDB(
+    req.body,
+    user,
+    deal
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Products added to deal successfully",
+    data: result,
+  });
+});
+
 export const DealsController = {
   createDeal,
+  addProductsToDeal,
 };

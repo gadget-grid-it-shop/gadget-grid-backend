@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
-import { AnyZodObject } from "zod";
+import { ZodTypeAny } from "zod";
 
-export const validateRequest = (zSchema: AnyZodObject): RequestHandler => {
+export const validateRequest = (zSchema: ZodTypeAny): RequestHandler => {
   return async (req, res, next) => {
     const data = req.body;
     // console.log(data);
