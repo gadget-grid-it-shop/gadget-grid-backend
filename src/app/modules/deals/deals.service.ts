@@ -123,11 +123,11 @@ const getAllDealsFromDB = async (query: {
 
   const seachQuery: Record<string, any> = {};
 
-  if (query.search) {
+  if (query.search !== "") {
     seachQuery["title"] = { $regex: query.search, $options: "i" };
   }
 
-  const result = await Deal.find(query)
+  const result = await Deal.find(seachQuery)
     .populate([
       {
         path: "products.productId",
