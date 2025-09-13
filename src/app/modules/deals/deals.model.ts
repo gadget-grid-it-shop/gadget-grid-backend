@@ -65,6 +65,10 @@ const dealSchema = new Schema<IDeal>(
       type: Boolean,
       default: false,
     },
+    lastUpdatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

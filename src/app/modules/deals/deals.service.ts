@@ -112,7 +112,53 @@ const addProductsToDealToDB = async (
   };
 };
 
+const getAllDealsFromDB = async (query: {
+  page: string;
+  limit: string;
+  search: string;
+}) => {
+  const page = query.page ? Number(query.page) : 1;
+  const limit = query.limit ? Number(query.limit) : 20;
+  const skip = (page - 1) * limit;
+
+  const seachQuery: Record<string, any> = {};
+
+  if (query.search) {
+    seachQuery["title"] = { $regex: query.search, $options: "i" };
+  }
+
+  const result = await Deal.find(query)
+    .populate([
+      {
+        path: "products.productId",
+        select: "slug name thumbnail price mainCategory",
+      },
+      {
+        path: "createdBy",
+        select: "fullName profilePicture email role",
+        populate: {
+          path: "role",
+          select: "role",
+        },
+      },
+      {
+        path: "lastUpdatedBy",
+        select: "fullName profilePicture email role",
+        populate: {
+          path: "role",
+          select: "role",
+        },
+      },
+    ])
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  return result;
+};
+
 export const DealsServices = {
   createDealToDb,
   addProductsToDealToDB,
+  getAllDealsFromDB,
 };

@@ -34,7 +34,19 @@ const addProductsToDeal = catchAsync(async (req, res) => {
   });
 });
 
+const getAllDeals = catchAsync(async (req, res) => {
+  const result = await DealsServices.getAllDealsFromDB(req.query as any);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Retrived deals successfully",
+    data: result,
+  });
+});
+
 export const DealsController = {
   createDeal,
   addProductsToDeal,
+  getAllDeals,
 };

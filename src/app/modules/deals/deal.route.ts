@@ -20,6 +20,12 @@ router.put(
   DealsController.addProductsToDeal
 );
 
+router.get(
+  "/get-all",
+  checkPermission(EAppFeatures.deals, "read"),
+  DealsController.getAllDeals
+);
+
 const DealRoutes = router;
 
 export default DealRoutes;
