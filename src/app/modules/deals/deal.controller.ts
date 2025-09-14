@@ -41,6 +41,32 @@ const getAllDeals = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Retrived deals successfully",
+    data: result.deals,
+    pagination: result.pagination,
+  });
+});
+
+const getDealById = catchAsync(async (req, res) => {
+  const result = await DealsServices.getDealByIdFromDB(req.params.id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Retrived deal successfully",
+    data: result,
+  });
+});
+
+const getProductsForDeal = catchAsync(async (req, res) => {
+  const result = await DealsServices.getProductsForDealFromDB(
+    req.params.id,
+    req.query
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Retrived deal successfully",
     data: result,
   });
 });
@@ -49,4 +75,6 @@ export const DealsController = {
   createDeal,
   addProductsToDeal,
   getAllDeals,
+  getDealById,
+  getProductsForDeal,
 };

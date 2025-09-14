@@ -9,6 +9,9 @@ import { ObjectId } from "mongodb";
 import { setProductsToRedis } from "../product/product.redis";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
+import { DealJobName, dealQueue } from "./deal.queue";
+import sift from "sift";
+import { ProductJobName, productQueue } from "../product/product.queue";
 
 const createDealToDb = async (data: Partial<IDeal>, user: Types.ObjectId) => {
   const payload: Partial<IDeal> = {
@@ -23,6 +26,8 @@ const createDealToDb = async (data: Partial<IDeal>, user: Types.ObjectId) => {
   };
 
   const result = await Deal.create(payload);
+
+  await dealQueue.add(DealJobName.updateAllDeals, {});
 
   return result;
 };
@@ -105,6 +110,8 @@ const addProductsToDealToDB = async (
     { new: true }
   );
 
+  await dealQueue.add(DealJobName.updateAllDeals, {});
+
   return {
     products: result?.products,
     notFoundProducts,
@@ -127,38 +134,221 @@ const getAllDealsFromDB = async (query: {
     seachQuery["title"] = { $regex: query.search, $options: "i" };
   }
 
-  const result = await Deal.find(seachQuery)
-    .populate([
-      {
-        path: "products.productId",
-        select: "slug name thumbnail price mainCategory",
-      },
-      {
-        path: "createdBy",
-        select: "fullName profilePicture email role",
-        populate: {
-          path: "role",
-          select: "role",
+  const catchData = await redisClient.get(RedisKeys.deals);
+  let total = 0;
+  let result: IDeal[] = [];
+  if (catchData !== null) {
+    const data = JSON.parse(catchData) || [];
+    const filteredData = data.filter(sift(seachQuery)) || [];
+    total = filteredData.length;
+    result = filteredData?.slice(skip, skip + limit);
+  } else {
+    result = await Deal.find(seachQuery)
+      .populate([
+        {
+          path: "products.productId",
+          select: "slug name thumbnail price mainCategory",
         },
-      },
-      {
-        path: "lastUpdatedBy",
-        select: "fullName profilePicture email role",
-        populate: {
-          path: "role",
-          select: "role",
+        {
+          path: "createdBy",
+          select: "fullName profilePicture email role",
+          populate: {
+            path: "role",
+            select: "role",
+          },
         },
-      },
-    ])
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+        {
+          path: "lastUpdatedBy",
+          select: "fullName profilePicture email role",
+          populate: {
+            path: "role",
+            select: "role",
+          },
+        },
+      ])
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-  return result;
+    total = Number(Deal.countDocuments(seachQuery));
+
+    await dealQueue.add(DealJobName.updateAllDeals, {});
+  }
+
+  return {
+    deals: result,
+    pagination: {
+      total,
+      currentPage: page,
+      limit,
+    },
+  };
+};
+
+const getDealByIdFromDB = async (id: string) => {
+  const deal = await Deal.findById(id).populate(
+    "products.productId",
+    "name slug thumbnail price"
+  );
+
+  if (!deal) {
+    throw new AppError(httpStatus.NOT_FOUND, "Could not find deal");
+  }
+
+  return deal;
+};
+
+const getProductsForDealFromDB = async (
+  id: string,
+  query: Record<string, any>
+) => {
+  const page = query?.page ? Number(query.page) : 1;
+  const limit = query?.limit ? Number(query.limit) : 20;
+  const skip = (page - 1) * limit;
+
+  const redisDeals = await redisClient.get(RedisKeys.deals);
+  const redisProducts = await redisClient.get(RedisKeys.products);
+  let deal: IDeal | null;
+  let products: Partial<TProduct>[] = [];
+  let conflictingDeals: any[] = [];
+  let total = 0;
+
+  if (redisDeals !== null && redisProducts !== null) {
+    const storedDeals: IDeal[] = JSON.parse(redisDeals);
+    const storedProducts: TProduct[] = JSON.parse(redisProducts);
+    const redisDeal = storedDeals.find((d) => d._id.toString() === id);
+
+    if (!redisDeal) {
+      deal = await Deal.findById(id).populate("product.productId", "_id slug");
+    } else {
+      deal = redisDeal;
+    }
+
+    if (!deal) {
+      throw new AppError(httpStatus.CONFLICT, "Could not find");
+    }
+
+    if (new Date(deal.endTime) < new Date()) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "Deal has ended cannot add product"
+      );
+    }
+    conflictingDeals = storedDeals.filter(
+      sift({
+        _id: { $ne: id },
+        isActive: true,
+        $or: [
+          {
+            startTime: { $lte: deal.endTime },
+            endTime: { $gte: deal.startTime },
+          },
+        ],
+      })
+    );
+    const conflictingProductIds = conflictingDeals
+      .flatMap((d: any) =>
+        d.products.map((p: any) => p.productId?._id?.toString())
+      )
+      .filter(Boolean);
+    const currentDealProductIds = deal.products
+      .map((p: any) => p.productId?._id?.toString())
+      .filter(Boolean);
+
+    const siftQuery: Record<string, any> = {
+      _id: {
+        $nin: [...currentDealProductIds, ...conflictingProductIds],
+      },
+      isPublished: true,
+      isDeleted: false,
+    };
+
+    if (query.search) {
+      siftQuery["name"] = { $regex: query.search, $options: "i" };
+    }
+
+    const filteredProducts = storedProducts.filter(sift(siftQuery));
+    total = filteredProducts.length;
+
+    products = filteredProducts.slice(skip, skip + limit).map((p) => ({
+      name: p?.name,
+      _id: p?._id,
+      mainCategory: p?.mainCategory,
+      createdBy: p?.createdBy,
+      slug: p?.slug,
+      thumbnail: p?.thumbnail,
+    }));
+  } else {
+    const deal = await Deal.findById(id);
+    if (!deal) {
+      throw new AppError(httpStatus.CONFLICT, "Could not find");
+    }
+
+    if (new Date(deal.endTime) < new Date()) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "Deal has ended cannot add product"
+      );
+    }
+
+    conflictingDeals = await Deal.find({
+      _id: { $ne: id },
+      isActive: true,
+      $or: [
+        {
+          startTime: { $lte: deal.endTime },
+          endTime: { $gte: deal.startTime },
+        },
+      ],
+    }).lean();
+
+    const conflictingProductIds = conflictingDeals
+      .flatMap((d: any) => d.products.map((p: any) => p.productId))
+      .filter(Boolean);
+    const currentDealProductIds = deal.products
+      .map((p: any) => p.productId)
+      .filter(Boolean);
+
+    const dbQuery: Record<string, any> = {
+      _id: {
+        $nin: [...currentDealProductIds, ...conflictingProductIds],
+      },
+      isPublished: true,
+      isDeleted: false,
+    };
+
+    if (query.search) {
+      dbQuery["name"] = { $regex: query.search, $options: "i" };
+    }
+
+    products = await Product.find(dbQuery)
+      .select("name slug _id mainCategory createdBy thumbnail")
+      .populate("mainCategory", "name slug") // Adjust fields as needed
+      .populate("createdBy", "name email") // Adjust fields as needed
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    total = await Product.countDocuments(dbQuery);
+
+    await dealQueue.add(DealJobName.updateAllDeals, {});
+    await productQueue.add(ProductJobName.updateAllProducts, {});
+  }
+
+  return {
+    products,
+    pagination: {
+      currentPage: page,
+      limit: limit,
+      total,
+    },
+  };
 };
 
 export const DealsServices = {
   createDealToDb,
   addProductsToDealToDB,
   getAllDealsFromDB,
+  getDealByIdFromDB,
+  getProductsForDealFromDB,
 };

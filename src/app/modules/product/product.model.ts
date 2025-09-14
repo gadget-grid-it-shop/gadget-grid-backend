@@ -100,6 +100,14 @@ const ProductSchema = new Schema<TProduct>(
     tags: [{ type: String, default: "" }],
     isFeatured: { type: Boolean, default: false },
     sales: { type: Number, default: 0 },
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     filters: {
       type: [
         {

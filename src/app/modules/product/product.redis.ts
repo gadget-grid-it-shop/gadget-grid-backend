@@ -20,9 +20,20 @@ export const setProductsToRedis = async () => {
     const res = await Product.find().populate([
       {
         path: "mainCategory",
+        select: "_id name slug image",
       },
       {
         path: "brand",
+      },
+      {
+        path: "createdBy",
+        select: "role fullName name profilePicture email",
+        populate: [
+          {
+            path: "role",
+            select: "role",
+          },
+        ],
       },
     ]);
 

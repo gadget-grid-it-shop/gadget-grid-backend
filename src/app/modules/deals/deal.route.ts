@@ -26,6 +26,17 @@ router.get(
   DealsController.getAllDeals
 );
 
+router.get(
+  "/get-by-id/:id",
+  checkPermission(EAppFeatures.deals, "read"),
+  DealsController.getDealById
+);
+router.get(
+  "/get-products/:id",
+  checkPermission(EAppFeatures.deals, "read"),
+  DealsController.getProductsForDeal
+);
+
 const DealRoutes = router;
 
 export default DealRoutes;

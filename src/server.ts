@@ -5,6 +5,11 @@ import { Server } from "http";
 import { initializeSocketIO } from "./socket";
 import Notification from "./app/modules/notification/notification.model";
 import { ValidateIOAuth } from "./app/middleware/socketAuth";
+import {
+  ProductJobName,
+  productQueue,
+} from "./app/modules/product/product.queue";
+import { DealJobName, dealQueue } from "./app/modules/deals/deal.queue";
 
 let server: Server;
 
@@ -12,6 +17,9 @@ const main = async () => {
   try {
     console.log(config.database_url);
     await mongoose.connect(config.database_url as string);
+
+    await productQueue.add(ProductJobName.updateAllProducts, {});
+    await dealQueue.add(DealJobName.updateAllDeals, {});
 
     server = app.listen(config.port, () => {
       console.log(`IT shop server running on port ${config.port}`);

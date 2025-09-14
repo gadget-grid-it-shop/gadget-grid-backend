@@ -4,7 +4,7 @@ import { setProductsToRedis, updateSigleProductToRedis } from "./product.redis";
 import { Types } from "mongoose";
 
 const redisConnection: ConnectionOptions = {
-  host: "localhost",
+  host: process.env.NODE_ENV === "development" ? "localhost" : "redis",
   port: 6379,
 };
 
