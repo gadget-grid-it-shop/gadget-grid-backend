@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IDeal } from "./deals.interface";
 import Deal from "./deals.model";
 import redisClient from "../../../redis";
@@ -12,13 +12,22 @@ import httpStatus from "http-status";
 import { DealJobName, dealQueue } from "./deal.queue";
 import sift from "sift";
 import { ProductJobName, productQueue } from "../product/product.queue";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
+function toUTC(dateStr: string) {
+  const date = new Date(dateStr);
+  // Date object stores UTC internally
+  return date.toISOString(); // always in UTC
+}
 
 const createDealToDb = async (data: Partial<IDeal>, user: Types.ObjectId) => {
   const payload: Partial<IDeal> = {
     title: data.title,
     description: data.description,
-    endTime: data.endTime,
-    startTime: data.startTime,
+    endTime: data.endTime ? toUTC(data.endTime) : undefined,
+    startTime: data.startTime ? toUTC(data.startTime) : undefined,
     image: data.image,
     createdBy: user,
     lastUpdatedBy: user,
@@ -345,10 +354,107 @@ const getProductsForDealFromDB = async (
   };
 };
 
+const updateDealToDB = async (
+  id: string,
+  user: Types.ObjectId,
+  data: Partial<IDeal>
+) => {
+  if (!mongoose.isValidObjectId(id)) {
+    throw new AppError(httpStatus.NOT_FOUND, "Could not find deal");
+  }
+
+  const { title, description, startTime, endTime, image } = data;
+
+  let deal: IDeal | null;
+
+  const redisDeals = await redisClient.get(RedisKeys.deals);
+
+  if (redisDeals !== null) {
+    const deals = JSON.parse(redisDeals);
+    deal = deals.find((d: IDeal) => d._id.toString() === id);
+  } else {
+    deal = await Deal.findById(id);
+    await dealQueue.add(DealJobName.updateAllDeals, {});
+  }
+
+  if (!deal) {
+    throw new AppError(httpStatus.NOT_FOUND, "Could not find deal");
+  }
+
+  const now = dayjs().utc();
+  if (startTime) {
+    const newStartTime = dayjs(startTime).utc();
+    const dealStartTime = dayjs(deal.startTime).utc();
+    const newEndTime = endTime
+      ? dayjs(endTime).utc()
+      : dayjs(deal.endTime).utc();
+
+    if (newStartTime.isAfter(newEndTime)) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Start date cannot be before end date and time"
+      );
+    }
+
+    if (newStartTime.isBefore(now)) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Cannot set past date as start date and time"
+      );
+    }
+
+    if (deal.isActive && !newStartTime.isSame(dealStartTime, "minute")) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Cannot change start time of an active deal"
+      );
+    }
+  }
+
+  if (endTime) {
+    const newStartTime = startTime
+      ? dayjs(startTime).utc()
+      : dayjs(deal.startTime).utc(); // string in UTC
+    const newEndTime = dayjs(endTime).utc();
+
+    if (newEndTime.isBefore(now)) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Cannot set past date as end date and time"
+      );
+    }
+    if (newEndTime.isBefore(newStartTime)) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "End date cannot be before start date and time"
+      );
+    }
+  }
+
+  const result = await Deal.findByIdAndUpdate(
+    id,
+    {
+      title,
+      description,
+      image,
+      lastUpdatedBy: user,
+      startTime,
+      endTime,
+    },
+    { new: true }
+  );
+
+  await dealQueue.add(DealJobName.updateAllDeals, {});
+
+  return result;
+};
+
+// }
 export const DealsServices = {
   createDealToDb,
   addProductsToDealToDB,
   getAllDealsFromDB,
   getDealByIdFromDB,
   getProductsForDealFromDB,
+  updateDealToDB,
 };

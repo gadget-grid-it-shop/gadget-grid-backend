@@ -36,6 +36,11 @@ router.get(
   checkPermission(EAppFeatures.deals, "read"),
   DealsController.getProductsForDeal
 );
+router.patch(
+  "/:id",
+  checkPermission(EAppFeatures.deals, "update"),
+  DealsController.updateDeal
+);
 
 const DealRoutes = router;
 

@@ -71,10 +71,26 @@ const getProductsForDeal = catchAsync(async (req, res) => {
   });
 });
 
+const updateDeal = catchAsync(async (req, res) => {
+  const result = await DealsServices.updateDealToDB(
+    req.params.id,
+    req.user.id,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Updated deal successfully",
+    data: result,
+  });
+});
+
 export const DealsController = {
   createDeal,
   addProductsToDeal,
   getAllDeals,
   getDealById,
   getProductsForDeal,
+  updateDeal,
 };
