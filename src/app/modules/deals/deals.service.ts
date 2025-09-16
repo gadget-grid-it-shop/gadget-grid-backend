@@ -120,6 +120,7 @@ const addProductsToDealToDB = async (
   );
 
   await dealQueue.add(DealJobName.updateAllDeals, {});
+  await productQueue.add(ProductJobName.updateAllProducts, {});
 
   return {
     products: result?.products,
@@ -197,7 +198,7 @@ const getAllDealsFromDB = async (query: {
 const getDealByIdFromDB = async (id: string) => {
   const deal = await Deal.findById(id).populate(
     "products.productId",
-    "name slug thumbnail price"
+    "name slug thumbnail price discount"
   );
 
   if (!deal) {
@@ -214,138 +215,62 @@ const getProductsForDealFromDB = async (
   const page = query?.page ? Number(query.page) : 1;
   const limit = query?.limit ? Number(query.limit) : 20;
   const skip = (page - 1) * limit;
-
-  const redisDeals = await redisClient.get(RedisKeys.deals);
-  const redisProducts = await redisClient.get(RedisKeys.products);
-  let deal: IDeal | null;
+  // let deal: IDeal | null;
   let products: Partial<TProduct>[] = [];
   let conflictingDeals: any[] = [];
   let total = 0;
 
-  if (redisDeals !== null && redisProducts !== null) {
-    const storedDeals: IDeal[] = JSON.parse(redisDeals);
-    const storedProducts: TProduct[] = JSON.parse(redisProducts);
-    const redisDeal = storedDeals.find((d) => d._id.toString() === id);
-
-    if (!redisDeal) {
-      deal = await Deal.findById(id).populate("product.productId", "_id slug");
-    } else {
-      deal = redisDeal;
-    }
-
-    if (!deal) {
-      throw new AppError(httpStatus.CONFLICT, "Could not find");
-    }
-
-    if (new Date(deal.endTime) < new Date()) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Deal has ended cannot add product"
-      );
-    }
-    conflictingDeals = storedDeals.filter(
-      sift({
-        _id: { $ne: id },
-        isActive: true,
-        $or: [
-          {
-            startTime: { $lte: deal.endTime },
-            endTime: { $gte: deal.startTime },
-          },
-        ],
-      })
-    );
-    const conflictingProductIds = conflictingDeals
-      .flatMap((d: any) =>
-        d.products.map((p: any) => p.productId?._id?.toString())
-      )
-      .filter(Boolean);
-    const currentDealProductIds = deal.products
-      .map((p: any) => p.productId?._id?.toString())
-      .filter(Boolean);
-
-    const siftQuery: Record<string, any> = {
-      _id: {
-        $nin: [...currentDealProductIds, ...conflictingProductIds],
-      },
-      isPublished: true,
-      isDeleted: false,
-    };
-
-    if (query.search) {
-      siftQuery["name"] = { $regex: query.search, $options: "i" };
-    }
-
-    const filteredProducts = storedProducts.filter(sift(siftQuery));
-    total = filteredProducts.length;
-
-    products = filteredProducts.slice(skip, skip + limit).map((p) => ({
-      name: p?.name,
-      _id: p?._id,
-      mainCategory: p?.mainCategory,
-      createdBy: p?.createdBy,
-      slug: p?.slug,
-      thumbnail: p?.thumbnail,
-      price: p?.price,
-      discount: p?.discount,
-      quantity: p?.quantity,
-    }));
-  } else {
-    const deal = await Deal.findById(id);
-    if (!deal) {
-      throw new AppError(httpStatus.CONFLICT, "Could not find");
-    }
-
-    if (new Date(deal.endTime) < new Date()) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Deal has ended cannot add product"
-      );
-    }
-
-    conflictingDeals = await Deal.find({
-      _id: { $ne: id },
-      isActive: true,
-      $or: [
-        {
-          startTime: { $lte: deal.endTime },
-          endTime: { $gte: deal.startTime },
-        },
-      ],
-    }).lean();
-
-    const conflictingProductIds = conflictingDeals
-      .flatMap((d: any) => d.products.map((p: any) => p.productId))
-      .filter(Boolean);
-    const currentDealProductIds = deal.products
-      .map((p: any) => p.productId)
-      .filter(Boolean);
-
-    const dbQuery: Record<string, any> = {
-      _id: {
-        $nin: [...currentDealProductIds, ...conflictingProductIds],
-      },
-      isPublished: true,
-      isDeleted: false,
-    };
-
-    if (query.search) {
-      dbQuery["name"] = { $regex: query.search, $options: "i" };
-    }
-
-    products = await Product.find(dbQuery)
-      .select("name slug _id mainCategory createdBy thumbnail")
-      .populate("mainCategory", "name slug") // Adjust fields as needed
-      .populate("createdBy", "name email") // Adjust fields as needed
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    total = await Product.countDocuments(dbQuery);
-
-    await dealQueue.add(DealJobName.updateAllDeals, {});
-    await productQueue.add(ProductJobName.updateAllProducts, {});
+  const deal = await Deal.findById(id);
+  if (!deal) {
+    throw new AppError(httpStatus.CONFLICT, "Could not find");
   }
+
+  if (new Date(deal.endTime) < new Date()) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "Deal has ended cannot add product"
+    );
+  }
+
+  conflictingDeals = await Deal.find({
+    _id: { $ne: id },
+    isActive: true,
+    $or: [
+      {
+        startTime: { $lte: deal.endTime },
+        endTime: { $gte: deal.startTime },
+      },
+    ],
+  }).lean();
+
+  const conflictingProductIds = conflictingDeals
+    .flatMap((d: any) => d.products.map((p: any) => p.productId))
+    .filter(Boolean);
+  const currentDealProductIds = deal.products
+    .map((p: any) => p.productId)
+    .filter(Boolean);
+
+  const dbQuery: Record<string, any> = {
+    _id: {
+      $nin: [...currentDealProductIds, ...conflictingProductIds],
+    },
+    isPublished: true,
+    isDeleted: false,
+  };
+
+  if (query.search) {
+    dbQuery["name"] = { $regex: query.search, $options: "i" };
+  }
+
+  products = await Product.find(dbQuery)
+    .select("name slug _id mainCategory createdBy thumbnail")
+    .populate("mainCategory", "name slug") // Adjust fields as needed
+    .populate("createdBy", "name email") // Adjust fields as needed
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  total = await Product.countDocuments(dbQuery);
 
   return {
     products,

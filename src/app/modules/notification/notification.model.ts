@@ -50,6 +50,11 @@ const notificationSchema = new Schema<TNotification>(
   { timestamps: true }
 );
 
+notificationSchema.index({ opened: 1 }, { expireAfterSeconds: 7776000 });
+notificationSchema.index({ userFrom: 1 }, { expireAfterSeconds: 7776000 });
+notificationSchema.index({ userTo: 1 }, { expireAfterSeconds: 7776000 });
+notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
 const Notification = model<TNotification>("notifications", notificationSchema);
 
 export default Notification;
