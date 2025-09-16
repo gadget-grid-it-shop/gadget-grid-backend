@@ -67,7 +67,8 @@ const getProductsForDeal = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Retrived deal successfully",
-    data: result,
+    data: result.products,
+    pagination: result.pagination,
   });
 });
 

@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import QueryBuilder from "../../builder/queryBuilder";
 import { TPagination } from "../product/product.interface";
 import { TNotification } from "./notification.interface";
@@ -10,7 +11,7 @@ const addNotificationToDB = async (payload: TNotification) => {
 };
 
 const getMyNotificationsFromDB = async (
-  user: string,
+  user: Types.ObjectId,
   query: Record<string, unknown>
 ) => {
   const unreadCount = await Notification.countDocuments({
@@ -37,9 +38,23 @@ const getMyNotificationsFromDB = async (
   const result = await notificationQuery.modelQuery.populate([
     {
       path: "userTo",
+      select: "name fullName role email profilePicture",
+      // populate: [
+      //   {
+      //     path: "role",
+      //     select: "role",
+      //   },
+      // ],
     },
     {
       path: "userFrom",
+      select: "name fullName role email profilePicture",
+      // populate: [
+      //   {
+      //     path: "role",
+      //     select: "role",
+      //   },
+      // ],
     },
   ]);
 

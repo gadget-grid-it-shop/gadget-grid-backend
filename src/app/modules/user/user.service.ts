@@ -12,7 +12,9 @@ const createAdminIntoDB = async (admin: TUser) => {
   const user: Partial<TUser> = {
     email: admin.email,
     password: admin.password,
+    name: admin.name,
     role: admin.role,
+    userType: "admin",
   };
 
   const roleExist = await Roles.findById(admin.role);
@@ -46,6 +48,7 @@ const createAdminIntoDB = async (admin: TUser) => {
     await session.endSession();
     return userRes;
   } catch (err) {
+    console.log(err);
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(

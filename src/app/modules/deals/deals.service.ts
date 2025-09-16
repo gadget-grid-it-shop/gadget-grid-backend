@@ -286,6 +286,9 @@ const getProductsForDealFromDB = async (
       createdBy: p?.createdBy,
       slug: p?.slug,
       thumbnail: p?.thumbnail,
+      price: p?.price,
+      discount: p?.discount,
+      quantity: p?.quantity,
     }));
   } else {
     const deal = await Deal.findById(id);
