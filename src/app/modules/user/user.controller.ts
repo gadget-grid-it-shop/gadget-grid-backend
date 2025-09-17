@@ -32,7 +32,7 @@ const getAllUsers = catchAsync(async (req, res) => {
 const getSingleUser = catchAsync(async (req, res) => {
   const id = req.params.id;
   const query = req.query;
-  const result = await UserServices.getSingleUserFromDB(id, query);
+  const result = await UserServices.getSingleUserFromDB(id);
 
   sendResponse(res, {
     success: true,

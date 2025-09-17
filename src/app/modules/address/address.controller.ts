@@ -10,7 +10,7 @@ const createAddress = catchAsync(async (req, res) => {
 const getMyAddresses = catchAsync(async (req, res) => {
   const userId = req.user.id;
 
-  const result = await AddressService.getMyAddressesFromDB(userId);
+  const result = await AddressService.getMyAddressesFromDB(userId.toString());
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -20,7 +20,10 @@ const addOrder = catchAsync(async (req, res) => {
 
 const getMyOrders = catchAsync(async (req, res) => {
   const userId = req.user.id;
-  const result = await OrderServices.getMyOrdersFromDB(req.query, userId);
+  const result = await OrderServices.getMyOrdersFromDB(
+    req.query,
+    userId.toString()
+  );
 
   sendResponse(res, {
     success: true,
@@ -34,7 +37,7 @@ const getOrderByOrderNumber = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const orderNumber = req.params.orderNumber;
   const result = await OrderServices.getOrderByOrderNumberFormDB(
-    userId,
+    userId.toString(),
     orderNumber
   );
 

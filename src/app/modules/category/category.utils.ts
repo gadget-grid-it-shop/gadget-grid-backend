@@ -2,9 +2,11 @@ import { FilterQuery, Query, Types } from "mongoose";
 import { Category } from "./category.model";
 import { TCategory } from "./category.interface";
 
-export const generateCategoryTree = (categories: FilterQuery<TCategory[]>, parent_id = null) => {
+export const generateCategoryTree = (
+  categories: FilterQuery<TCategory[]>,
+  parent_id = null
+) => {
   let categoryTree: TCategory[] = [];
-
 
   let filterCategories;
 
@@ -22,7 +24,10 @@ export const generateCategoryTree = (categories: FilterQuery<TCategory[]>, paren
         parent_id: category.parent_id,
         product_details_categories: category.product_details_categories,
         subCategories: generateCategoryTree(categories, category.id),
-        isDeleted: false
+        isDeleted: false,
+        slug: category.slug,
+        image: category.image,
+        isFeatured: category.isFeatured,
       });
     }
   }

@@ -20,6 +20,7 @@ declare module "socket.io" {
     user?: {
       userData?: TUser;
       userRole: string;
+      email: string;
     };
   }
 }

@@ -4,10 +4,10 @@ import sendResponse from "../../utils/sendResponse";
 import { CategoryServices } from "./category.service";
 
 const createCategory = catchAsync(async (req, res) => {
-  const { thisUser } = req.user;
+  const { userData } = req.user;
   const result = await CategoryServices.createCategoryIntoDB(
     req.body,
-    thisUser
+    userData
   );
 
   sendResponse(res, {
