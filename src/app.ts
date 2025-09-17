@@ -16,6 +16,8 @@ app.use(
       "https://gadget-grid-admin.vercel.app",
       "http://localhost:4000",
       "http://192.168.0.112:3000",
+      "https://gadget-grid-admin-v2-fork.vercel.app",
+      "https://gadget-grid-homepage-fork.vercel.app",
     ],
     credentials: true,
   })

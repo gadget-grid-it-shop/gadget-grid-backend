@@ -19,7 +19,7 @@ const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const chat_service_1 = require("./chat.service");
 const createChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = req.body;
-    const userData = req.userData;
+    const userData = req.user.userData;
     const result = chat_service_1.ChatServices.createChatIntoDB(payload, userData);
     (0, sendResponse_1.default)(res, {
         success: true,

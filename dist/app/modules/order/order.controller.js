@@ -30,7 +30,7 @@ const addOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 
 }));
 const getMyOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.user.id;
-    const result = yield order_service_1.OrderServices.getMyOrdersFromDB(req.query, userId);
+    const result = yield order_service_1.OrderServices.getMyOrdersFromDB(req.query, userId.toString());
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -41,7 +41,7 @@ const getMyOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 const getOrderByOrderNumber = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.user.id;
     const orderNumber = req.params.orderNumber;
-    const result = yield order_service_1.OrderServices.getOrderByOrderNumberFormDB(userId, orderNumber);
+    const result = yield order_service_1.OrderServices.getOrderByOrderNumberFormDB(userId.toString(), orderNumber);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,

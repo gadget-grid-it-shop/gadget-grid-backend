@@ -14,17 +14,16 @@ const bullmq_1 = require("bullmq");
 const common_1 = require("../../interface/common");
 const product_redis_1 = require("./product.redis");
 const redisConnection = {
-    host: process.env.NODE_ENV === "development" ? "localhost" : "redis",
-    port: 6379,
+    connection: {
+        url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+    },
 };
 var ProductJobName;
 (function (ProductJobName) {
     ProductJobName["updateAllProducts"] = "updateAllProducts";
     ProductJobName["updateSingleProduct"] = "updateSingleProduct";
 })(ProductJobName || (exports.ProductJobName = ProductJobName = {}));
-exports.productQueue = new bullmq_1.Queue(common_1.RedisKeys.products, {
-    connection: redisConnection,
-});
+exports.productQueue = new bullmq_1.Queue(common_1.RedisKeys.products, redisConnection);
 const productWorker = new bullmq_1.Worker(common_1.RedisKeys.products, (job) => __awaiter(void 0, void 0, void 0, function* () {
     // sync all products with redis
     if (job.name === ProductJobName.updateAllProducts) {
@@ -35,7 +34,7 @@ const productWorker = new bullmq_1.Worker(common_1.RedisKeys.products, (job) => 
         console.log("productid", job.data);
         yield (0, product_redis_1.updateSigleProductToRedis)(job.data, "update");
     }
-}), { connection: redisConnection });
+}), redisConnection);
 productWorker.on("completed", (job) => {
     console.log(`Job ${job.id} completed!`);
 });

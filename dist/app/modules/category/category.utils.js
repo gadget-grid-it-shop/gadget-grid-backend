@@ -18,7 +18,10 @@ const generateCategoryTree = (categories, parent_id = null) => {
                 parent_id: category.parent_id,
                 product_details_categories: category.product_details_categories,
                 subCategories: (0, exports.generateCategoryTree)(categories, category.id),
-                isDeleted: false
+                isDeleted: false,
+                slug: category.slug,
+                image: category.image,
+                isFeatured: category.isFeatured,
             });
         }
     }

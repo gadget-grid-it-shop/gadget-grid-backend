@@ -18,17 +18,16 @@ var DealJobName;
     DealJobName["updateAllDeals"] = "updateAllDeals";
 })(DealJobName || (exports.DealJobName = DealJobName = {}));
 const redisConnection = {
-    host: process.env.NODE_ENV === "development" ? "localhost" : "redis",
-    port: 6379,
+    connection: {
+        url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+    },
 };
-exports.dealQueue = new bullmq_1.Queue(common_1.RedisKeys.deals, {
-    connection: redisConnection,
-});
+exports.dealQueue = new bullmq_1.Queue(common_1.RedisKeys.deals, redisConnection);
 const dealWorker = new bullmq_1.Worker(common_1.RedisKeys.deals, (job) => __awaiter(void 0, void 0, void 0, function* () {
     if ((job.name = DealJobName.updateAllDeals)) {
         yield (0, deal_redis_1.setDealsToRedis)();
     }
-}), { connection: redisConnection });
+}), redisConnection);
 dealWorker.on("completed", (job) => {
     console.log(`Deal Job ${job.id} completed!`);
 });
