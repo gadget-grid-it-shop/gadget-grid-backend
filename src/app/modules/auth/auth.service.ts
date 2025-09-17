@@ -77,7 +77,7 @@ const userLoginFromDB = async (payload: TLoginCredentials) => {
   const userExist = await User.isUserExistsByEmail(payload.email);
 
   if (!userExist) {
-    throw new AppError(httpStatus.CONFLICT, "User does not exist");
+    throw new AppError(httpStatus.CONFLICT, "Wrong email address");
   }
 
   if (userExist.role !== "customer") {
