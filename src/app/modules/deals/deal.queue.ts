@@ -6,14 +6,13 @@ export enum DealJobName {
   updateAllDeals = "updateAllDeals",
 }
 
-const redisConnection: ConnectionOptions = {
-  host: process.env.NODE_ENV === "development" ? "localhost" : "redis",
-  port: 6379,
+const redisConnection = {
+  connection: {
+    url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+  },
 };
 
-export const dealQueue = new Queue(RedisKeys.deals, {
-  connection: redisConnection,
-});
+export const dealQueue = new Queue(RedisKeys.deals, redisConnection);
 
 const dealWorker = new Worker(
   RedisKeys.deals,
@@ -22,7 +21,7 @@ const dealWorker = new Worker(
       await setDealsToRedis();
     }
   },
-  { connection: redisConnection }
+  redisConnection
 );
 
 dealWorker.on("completed", (job) => {

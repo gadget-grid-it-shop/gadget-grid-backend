@@ -3,19 +3,17 @@ import { RedisKeys } from "../../interface/common";
 import { setProductsToRedis, updateSigleProductToRedis } from "./product.redis";
 import { Types } from "mongoose";
 
-const redisConnection: ConnectionOptions = {
-  host: process.env.NODE_ENV === "development" ? "localhost" : "redis",
-  port: 6379,
+const redisConnection = {
+  connection: {
+    url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+  },
 };
-
 export enum ProductJobName {
   updateAllProducts = "updateAllProducts",
   updateSingleProduct = "updateSingleProduct",
 }
 
-export const productQueue = new Queue(RedisKeys.products, {
-  connection: redisConnection,
-});
+export const productQueue = new Queue(RedisKeys.products, redisConnection);
 
 const productWorker = new Worker(
   RedisKeys.products,
@@ -33,7 +31,7 @@ const productWorker = new Worker(
       );
     }
   },
-  { connection: redisConnection }
+  redisConnection
 );
 
 productWorker.on("completed", (job) => {
