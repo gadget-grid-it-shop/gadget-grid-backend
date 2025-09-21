@@ -71,19 +71,19 @@ const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
     });
 }));
 const forgotPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { email } = req.body;
     const result = yield auth_service_1.AuthServices.forgotPasswordService(email);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: "Reset Link is generated successfully",
+        message: `A varificatin otp has been sent to your email address. The link will expire in ${(_b = (_a = config_1.default.otp_expires_in) === null || _a === void 0 ? void 0 : _a.split("")) === null || _b === void 0 ? void 0 : _b[0]} minutes`,
         data: result,
     });
 }));
 const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
-    const token = req.headers.authorization;
-    const result = yield auth_service_1.AuthServices.resetPasswordService(email, password, token);
+    const { email, password, otp } = req.body;
+    const result = yield auth_service_1.AuthServices.resetPasswordService(email, password, otp);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -98,7 +98,7 @@ const SendVerificationEmail = (0, catchAsync_1.default)((req, res) => __awaiter(
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: `A varificatin mail was sent to your email address. The link will expire in ${(_b = (_a = config_1.default.otp_expires_in) === null || _a === void 0 ? void 0 : _a.split("")) === null || _b === void 0 ? void 0 : _b[0]} minutes`,
+        message: `A varificatin otp has been sent to your email address. The link will expire in ${(_b = (_a = config_1.default.otp_expires_in) === null || _a === void 0 ? void 0 : _a.split("")) === null || _b === void 0 ? void 0 : _b[0]} minutes`,
         data: result,
     });
 }));

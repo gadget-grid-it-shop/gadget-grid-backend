@@ -21,11 +21,10 @@ const order_model_1 = __importDefault(require("./order.model"));
 const config_1 = __importDefault(require("../../config"));
 const user_model_1 = require("../user/user.model");
 const address_model_1 = __importDefault(require("../address/address.model"));
-const sendOrderConfirmationMail_1 = __importDefault(require("../../templates/sendOrderConfirmationMail"));
-const sendPaymentCofimationMail_1 = __importDefault(require("../../templates/sendPaymentCofimationMail"));
 const notificaiton_utils_1 = require("../notification/notificaiton.utils");
 const deals_model_1 = __importDefault(require("../deals/deals.model"));
 const flashSale_model_1 = __importDefault(require("../flashSales/flashSale.model"));
+const email_queue_1 = require("../../queues/email.queue");
 let stripe = null;
 try {
     stripe = require("stripe")(config_1.default.stripe_secret_key || "");
@@ -80,11 +79,14 @@ const paymentWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function*
                         try {
                             const thisUser = yield user_model_1.User.findOne({
                                 email: (_b = paymentData === null || paymentData === void 0 ? void 0 : paymentData.metadata) === null || _b === void 0 ? void 0 : _b.userEmail,
-                            });
+                            }).lean();
                             if (!thisUser) {
                                 return;
                             }
-                            yield (0, sendPaymentCofimationMail_1.default)(thisUser, res);
+                            yield email_queue_1.emailQueue.add(email_queue_1.EmailJobName.sendPaymentConfirmationEmail, {
+                                order: res,
+                                user: thisUser,
+                            });
                         }
                         catch (err) {
                             console.log(err);
@@ -228,7 +230,10 @@ const addOrderToDB = (data, user, customer) => __awaiter(void 0, void 0, void 0,
                 notifications: [...notifications, notification],
                 userFrom: customer,
             });
-            yield (0, sendOrderConfirmationMail_1.default)(thisUser, order);
+            yield email_queue_1.emailQueue.add(email_queue_1.EmailJobName.sendOrderConfirmationEmail, {
+                user: thisUser,
+                order,
+            });
         }
         catch (err) {
             console.log(err);

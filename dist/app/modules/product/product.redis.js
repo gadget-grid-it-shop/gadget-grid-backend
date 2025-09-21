@@ -65,7 +65,6 @@ const updateSigleProductToRedis = (id, type) => __awaiter(void 0, void 0, void 0
                 path: "brand",
             },
         ]);
-        console.log({ singleProduct: product });
         if (product) {
             let products = [];
             const redisData = yield redis_1.default.get(common_1.RedisKeys.products);

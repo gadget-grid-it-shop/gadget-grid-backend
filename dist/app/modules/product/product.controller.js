@@ -121,6 +121,25 @@ const getSearchProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void
         data: result,
     });
 }));
+const downloadJsonTemplate = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const category = req.query.category;
+    const result = yield product_service_1.ProductServices.downloadJsonTemplate(category);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Template retrived successfully",
+        data: result,
+    });
+}));
+const jsonBulkUpload = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.ProductServices.bulkUploadJsonToDB(req.file, req.user.email);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Template retrived successfully",
+        data: result,
+    });
+}));
 exports.ProductControllers = {
     getSingleProductBySlug,
     createProduct,
@@ -132,4 +151,6 @@ exports.ProductControllers = {
     getProductsByCategory,
     getCompareProducts,
     getSearchProducts,
+    downloadJsonTemplate,
+    jsonBulkUpload,
 };
