@@ -8,7 +8,7 @@ export enum DealJobName {
 
 const redisConnection = {
   connection: {
-    url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+    url: process.env.REDIS_URL,
   },
 };
 

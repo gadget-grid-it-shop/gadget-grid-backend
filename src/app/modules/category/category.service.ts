@@ -17,9 +17,7 @@ import { TUser } from "../user/user.interface";
 const createCategoryIntoDB = async (payload: TCategory, admin: TUser) => {
   const parent_id = payload.parent_id || null;
 
-  console.log(payload);
-
-  const slug = payload.slug || slugify(payload.name);
+  const slug = payload.slug?.trim() || slugify(payload.name).trim();
 
   const exist = await Category.findOne({
     slug,
@@ -124,7 +122,11 @@ const updateCategoryIntoDB = async (
 ) => {
   const exist = await Category.findById(id);
   if (exist) {
-    const update = await Category.findByIdAndUpdate(id, payload, { new: true });
+    const update = await Category.findByIdAndUpdate(
+      id,
+      { ...payload, slug: payload.slug.toString() },
+      { new: true }
+    );
 
     if (!update) {
       throw new AppError(httpStatus.CONFLICT, "Failed to update category");

@@ -9,4 +9,5 @@ export type TSingleSourceResponse<T> = {
 export enum RedisKeys {
   products = "products",
   deals = "deals",
+  email = "email",
 }

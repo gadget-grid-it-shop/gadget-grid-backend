@@ -28,7 +28,7 @@ import { Brand } from "../brand/brand.model";
 import handleDuplicateError from "../../errors/handleDuplicateError";
 import { TErrorSourse } from "../../interface/error.interface";
 import { ObjectId } from "mongodb";
-import { Error } from "mongoose";
+import mongoose, { Error } from "mongoose";
 import { TBulkUploadData } from "../bulkUpload/bulkUpload.interface";
 import BulkUpload from "../bulkUpload/bulkUpload.model";
 import QueryBuilder from "../../builder/queryBuilder";
@@ -48,6 +48,7 @@ import sift from "sift";
 import { ProductJobName, productQueue } from "./product.queue";
 import redisClient from "../../../redis";
 import { RedisKeys } from "../../interface/common";
+import { TProductDetailsCategory } from "../productDetailsCategory/productDetailsCategory.interface";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -336,6 +337,7 @@ const bulkUploadToDB = async (
     Papa.parse(fileStream, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
       complete: async (result) => {
         const { data: csvData, errors: csvErrors } = result;
 
@@ -397,7 +399,7 @@ const bulkUploadToDB = async (
                 if (field.value === "category") {
                   const cat = categories.find(
                     (c) =>
-                      c.name === (data as Record<string, any>)[field.key] ||
+                      c.slug === (data as Record<string, any>)[field.key] ||
                       c._id === (data as Record<string, any>)[field.key]
                   );
                   if (cat) {
@@ -480,6 +482,8 @@ const bulkUploadToDB = async (
                   }
                 }
 
+                // console.log({ key: field.value, value });
+
                 newData.slug = slugify(newData.name as string);
                 newData.sku = slugify(newData.name as string);
                 newData.createdBy = user._id;
@@ -490,6 +494,7 @@ const bulkUploadToDB = async (
               }
             }
           }
+          // console.log({ newData });
 
           filteredData.push(transformSvgProductData(newData) as TProduct);
         }
@@ -497,6 +502,7 @@ const bulkUploadToDB = async (
         resolve(filteredData);
       },
       error: (err) => {
+        console.log(err);
         reject(
           new AppError(
             httpStatus.CONFLICT,
@@ -595,6 +601,8 @@ const bulkUploadToDB = async (
     // throw new AppError(httpStatus.CONFLICT, 'Failed to store bulk upload history')
   }
 
+  await productQueue.add(ProductJobName.updateAllProducts, {});
+
   const result: TBulkUploadData = {
     withError,
     successData,
@@ -602,6 +610,297 @@ const bulkUploadToDB = async (
   };
 
   return result;
+};
+
+const bulkUploadJsonToDB = async (
+  file: Express.Multer.File | undefined,
+  email: string
+): Promise<TBulkUploadData> => {
+  if (!file) {
+    throw new AppError(httpStatus.CONFLICT, "No upload file provided");
+  }
+
+  if (
+    !file.mimetype.includes("application/json") &&
+    !file.originalname.endsWith(".json")
+  ) {
+    throw new AppError(httpStatus.CONFLICT, "File must be a JSON file");
+  }
+
+  const filePath = path.resolve(file.path);
+  const user = await User.isUserExistsByEmail(email);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const categories = (await Category.find({ isDeleted: false }).lean()).map(
+    (cat) => ({
+      ...cat,
+      _id: cat._id.toString(),
+    })
+  );
+  const brands = (await Brand.find({ isDeleted: false }).lean()).map(
+    (brand) => ({
+      ...brand,
+      _id: brand._id.toString(),
+    })
+  );
+
+  let payload: TProduct[] = [];
+  try {
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const jsonData = JSON.parse(fileContent);
+
+    if (!Array.isArray(jsonData)) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "JSON file must contain an array of products"
+      );
+    }
+
+    payload = jsonData.map((data: any) => {
+      const newData: Partial<TProduct> = {
+        name: data.name || "",
+        price: Number(data.price) || 0,
+        special_price: Number(data.special_price) || 0,
+        discount: {
+          type: data.discount?.type || "percent",
+          value: Number(data.discount?.value) || 0,
+        },
+        sku: data.sku || slugify(data.name || "", { lower: true }),
+        brand: "",
+        model: data.model || "",
+        warranty: {
+          days: Number(data.warranty?.days) || 0,
+          lifetime: Boolean(data.warranty?.lifetime) || false,
+        },
+        key_features: data.key_features || "",
+        quantity: Number(data.quantity) || 0,
+        category: [],
+        description: data.description || "",
+        videos: Array.isArray(data.videos) ? data.videos : [],
+        gallery: Array.isArray(data.gallery) ? data.gallery : [],
+        thumbnail: data.thumbnail || "",
+        slug: slugify(data.name || "", { lower: true }),
+        attributes: Array.isArray(data.attributes) ? data.attributes : [],
+        meta: {
+          title: data.meta?.title || "",
+          description: data.meta?.description || "",
+          image: data.meta?.image || "",
+        },
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        isFeatured: Boolean(data.isFeatured) ?? true,
+        mainCategory: "",
+        shipping: {
+          free: Boolean(data.shipping?.free) ?? true,
+          cost: Number(data.shipping?.cost) || 0,
+        },
+        createdBy: user._id,
+        isPublished: Boolean(data.isPublished) ?? true,
+        isDeleted: Boolean(data.isDeleted) ?? false,
+        sales: Number(data.sales) || 0,
+      };
+
+      console.log(data);
+
+      // Handle category
+      if (data.category) {
+        const cat = categories.find(
+          (c) =>
+            c.slug.trim() === data.category.trim() ||
+            c._id === data.category.trim()
+        );
+        if (cat) {
+          newData.category = createCategoryArray(categories, cat);
+          newData.mainCategory = cat._id;
+        } else {
+          throw new AppError(
+            httpStatus.BAD_REQUEST,
+            `Invalid category: ${data.category}`
+          );
+        }
+      } else {
+        throw new AppError(httpStatus.BAD_REQUEST, "Category is required");
+      }
+
+      // Handle brand
+      if (data.brand) {
+        const exist = brands.find(
+          (b) => b.name === data.brand || b._id === data.brand
+        );
+        if (exist) {
+          newData.brand = exist._id;
+        } else {
+          throw new AppError(
+            httpStatus.BAD_REQUEST,
+            `Invalid brand: ${data.brand}`
+          );
+        }
+      } else {
+        throw new AppError(httpStatus.BAD_REQUEST, "Brand is required");
+      }
+
+      return transformSvgProductData(newData) as TProduct;
+    });
+  } catch (err: any) {
+    throw new AppError(httpStatus.CONFLICT, `${err.message}`);
+  }
+
+  if (payload.length === 0) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "No valid data parsed from the JSON file"
+    );
+  }
+
+  const withError: {
+    name: string;
+    errorSources: TErrorSourse;
+    data: TProduct;
+  }[] = [];
+  const successData: {
+    name: string;
+    slug: string;
+    sku: string;
+    _id: ObjectId;
+  }[] = [];
+
+  for (const record of payload) {
+    try {
+      const res = await Product.create(record);
+      if (res) {
+        successData.push({
+          name: record.name,
+          slug: record.slug,
+          sku: record.sku,
+          _id: res._id,
+        });
+      }
+    } catch (err: any) {
+      if (err.code === 11000) {
+        const simplifiedError = handleDuplicateError(err);
+        withError.push({
+          name: record.name,
+          errorSources: simplifiedError.errorSources,
+          data: record,
+        });
+      } else if (err instanceof Error.CastError) {
+        withError.push({
+          name: record.name,
+          errorSources: [
+            {
+              path: err.path,
+              message: err.message || "Failed to create product",
+            },
+          ],
+          data: record,
+        });
+      } else if (err instanceof Error.ValidationError) {
+        const errorSources: TErrorSourse = Object.keys(err.errors).map(
+          (key) => ({
+            path: key,
+            message: err.errors[key].message,
+          })
+        );
+        withError.push({
+          name: record.name,
+          errorSources,
+          data: record,
+        });
+      } else {
+        withError.push({
+          name: record.name,
+          errorSources: [
+            { path: "", message: err.message || "Failed to create product" },
+          ],
+          data: record,
+        });
+      }
+    }
+  }
+
+  try {
+    await BulkUpload.create({
+      withError,
+      successData,
+      createdBy: user._id,
+    });
+  } catch (err) {
+    console.error("Failed to store bulk upload history:", err);
+  }
+
+  await productQueue.add(ProductJobName.updateAllProducts, {});
+
+  const result: TBulkUploadData = {
+    withError,
+    successData,
+    createdBy: user._id as ObjectId,
+  };
+
+  return result;
+};
+
+const downloadJsonTemplate = async (category?: string) => {
+  const attributes: TProduct["attributes"] = [];
+  let mainCategory = "";
+
+  if (category && mongoose.isValidObjectId(category)) {
+    const data = await Category.findById(category)
+      .populate("product_details_categories")
+      .lean();
+
+    if (data) {
+      mainCategory = data.slug;
+
+      for (const attr of data?.product_details_categories as unknown as TProductDetailsCategory[]) {
+        const fields: Record<string, string> = {};
+
+        for (const f of attr?.fields) {
+          fields[f] = "";
+        }
+
+        attributes.push({
+          name: attr.name,
+          fields: fields,
+        });
+      }
+    }
+  }
+
+  // Sample product data for the template
+  const templateData: any[] = [
+    {
+      name: "",
+      price: 0,
+      discount: { type: "percent", value: 0 },
+      sku: "",
+      brand: "",
+      model: "",
+      warranty: { days: 0, lifetime: false },
+      key_features: "",
+      quantity: 0,
+      category: mainCategory,
+      description: "",
+      videos: [],
+      gallery: [],
+      thumbnail: "",
+      meta: {
+        title: "",
+        description: "",
+        image: "",
+      },
+      tags: [],
+      isFeatured: true,
+      shipping: { free: false, cost: 0 },
+      isPublished: true,
+      attributes,
+    },
+  ];
+
+  // Convert to JSON string with formatting
+  const jsonContent = JSON.stringify(templateData, null, 2);
+
+  return jsonContent;
 };
 
 const updateProductIntoDB = async (
@@ -858,4 +1157,6 @@ export const ProductServices = {
   getProductByCategory,
   getSingleProductBySlugFromDB,
   getSearchProductsFromDB,
+  downloadJsonTemplate,
+  bulkUploadJsonToDB,
 };
