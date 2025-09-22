@@ -20,6 +20,7 @@ router.get(
 );
 
 router.get("/product/search", ProductControllers.getSearchProducts);
+router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
 
 router.get("/product/compare", ProductControllers.getCompareProducts);
 

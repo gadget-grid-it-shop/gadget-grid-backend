@@ -168,7 +168,18 @@ const jsonBulkUpload = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Template retrived successfully",
+    message: "Upload successfull",
+    data: result,
+  });
+});
+
+const getStaticProductSlugs = catchAsync(async (req, res) => {
+  const result = await ProductServices.getStaticProductSlugsFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Product retrived successfully",
     data: result,
   });
 });
@@ -185,5 +196,6 @@ export const ProductControllers = {
   getCompareProducts,
   getSearchProducts,
   downloadJsonTemplate,
+  getStaticProductSlugs,
   jsonBulkUpload,
 };

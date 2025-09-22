@@ -1147,6 +1147,14 @@ const getSearchProductsFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
+const getStaticProductSlugsFromDB = async () => {
+  const result = await Product.find({ sort: { createdAt: -1 } })
+    .limit(500)
+    .select("slug");
+
+  return result;
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -1158,5 +1166,6 @@ export const ProductServices = {
   getSingleProductBySlugFromDB,
   getSearchProductsFromDB,
   downloadJsonTemplate,
+  getStaticProductSlugsFromDB,
   bulkUploadJsonToDB,
 };
