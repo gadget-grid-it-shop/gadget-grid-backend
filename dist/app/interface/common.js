@@ -5,4 +5,5 @@ var RedisKeys;
 (function (RedisKeys) {
     RedisKeys["products"] = "products";
     RedisKeys["deals"] = "deals";
+    RedisKeys["email"] = "email";
 })(RedisKeys || (exports.RedisKeys = RedisKeys = {}));

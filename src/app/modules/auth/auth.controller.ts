@@ -79,20 +79,16 @@ const forgotPassword = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Reset Link is generated successfully",
+    message: `A varificatin otp has been sent to your email address. The link will expire in ${
+      config.otp_expires_in?.split("")?.[0]
+    } minutes`,
     data: result,
   });
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const token = req.headers.authorization;
-
-  const result = await AuthServices.resetPasswordService(
-    email,
-    password,
-    token
-  );
+  const { email, password, otp } = req.body;
+  const result = await AuthServices.resetPasswordService(email, password, otp);
 
   sendResponse(res, {
     success: true,
@@ -110,7 +106,7 @@ const SendVerificationEmail = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: `A varificatin mail was sent to your email address. The link will expire in ${
+    message: `A varificatin otp has been sent to your email address. The link will expire in ${
       config.otp_expires_in?.split("")?.[0]
     } minutes`,
     data: result,

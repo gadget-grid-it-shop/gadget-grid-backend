@@ -308,15 +308,6 @@ The application uses environment variables for configuration. Key variables incl
 - Redis connection URL
 - CORS origins
 
-### CORS Configuration
-
-The application is configured to accept requests from:
-
-- `http://localhost:3000` (Development frontend)
-- `http://localhost:3001` (Development admin)
-- `https://gadget-grid-admin.vercel.app` (Production admin)
-- `https://gadget-grid-homepage-fork.vercel.app` (Production frontend)
-
 ## 🚀 Deployment
 
 The application is configured for deployment on Vercel with the following setup:
@@ -347,14 +338,6 @@ The `vercel.json` file contains deployment configuration for Vercel platform.
 - Image optimization with Sharp
 - Query builder for efficient database queries
 - Background job processing with BullMQ
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## 📄 License
 

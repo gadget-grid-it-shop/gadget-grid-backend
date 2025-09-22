@@ -10,8 +10,6 @@ import Stripe from "stripe";
 import { User } from "../user/user.model";
 import Address from "../address/address.model";
 import { Response, Request } from "express";
-import sendOrderConfirmationEmail from "../../templates/sendOrderConfirmationMail";
-import sendPaymentConfirmationEmail from "../../templates/sendPaymentCofimationMail";
 import {
   addNotifications,
   buildNotifications,
@@ -22,6 +20,7 @@ import { IAddress } from "../address/address.interface";
 import { TProduct } from "../product/product.interface";
 import Deal from "../deals/deals.model";
 import FlashSale from "../flashSales/flashSale.model";
+import { EmailJobName, emailQueue } from "../../queues/email.queue";
 
 let stripe: Stripe | null = null;
 
@@ -87,11 +86,14 @@ export const paymentWebhook = async (req: Request, res: Response) => {
             try {
               const thisUser = await User.findOne({
                 email: paymentData?.metadata?.userEmail,
-              });
+              }).lean();
               if (!thisUser) {
                 return;
               }
-              await sendPaymentConfirmationEmail(thisUser, res);
+              await emailQueue.add(EmailJobName.sendPaymentConfirmationEmail, {
+                order: res,
+                user: thisUser,
+              });
             } catch (err) {
               console.log(err);
             }
@@ -274,7 +276,10 @@ const addOrderToDB = async (
         notifications: [...notifications, notification],
         userFrom: customer,
       });
-      await sendOrderConfirmationEmail(thisUser, order);
+      await emailQueue.add(EmailJobName.sendOrderConfirmationEmail, {
+        user: thisUser,
+        order,
+      });
     } catch (err) {
       console.log(err);
     }

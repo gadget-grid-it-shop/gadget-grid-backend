@@ -15,6 +15,8 @@ const router = (0, express_1.Router)();
 router.post("/create-product", (0, validateRequest_1.validateRequest)(product_validations_1.ProductValidations.createProductValidationSchema), (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "create"), product_controller_1.ProductControllers.createProduct);
 router.get("/get-all", product_controller_1.ProductControllers.getAllProduct);
 router.post("/bulk-upload", (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "create"), image_multer_1.default.single("bulkFile"), product_controller_1.ProductControllers.bulkUpload);
+router.post("/bulk-upload-json", (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "create"), image_multer_1.default.single("bulkFile"), product_controller_1.ProductControllers.jsonBulkUpload);
 router.get("/single/:id", (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "read"), product_controller_1.ProductControllers.getSingleProduct);
+router.get("/json-template", (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "read"), product_controller_1.ProductControllers.downloadJsonTemplate);
 router.patch("/update-product/:id", (0, checkPermission_1.default)(roles_interface_1.EAppFeatures.product, "update"), product_controller_1.ProductControllers.updateProduct);
 exports.productRoutes = router;

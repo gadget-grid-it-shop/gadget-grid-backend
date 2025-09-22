@@ -2,9 +2,16 @@ import { IOrder } from "../modules/order/order.interface";
 import { TUser } from "../modules/user/user.interface";
 import { sendEmail } from "../utils/sendEmail";
 
-const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
+const generatePaymentConfirmationEmailHTML = (order: IOrder) => {
+  const company = {
+    logo: "",
+    email: "gadgetGrid@gmail.com",
+    name: "Gadget Grid",
+    phone: "088+023342-24-24",
+  };
+
   // Sample data based on your image and schema
-  const orderDate = new Date(order?.createdAt).toLocaleDateString("en-US", {
+  const paymentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -12,7 +19,7 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
     minute: "2-digit",
     timeZone: "Asia/Dhaka", // Adjust for +06 timezone
   });
-  const shippingAddress = order.shippingAddress;
+  const shippingAddress = order.shippingAddress; // Placeholder from image
   const itemsHTML = order.items
     .map(
       (item) => `
@@ -44,37 +51,40 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Order Confirmation</title>
+    <title>Payment Confirmation</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4;">
     <table role="presentation" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <tr>
-            <td style="background-color:rgb(7, 7, 7); color: #ffffff; padding: 20px; text-align: center;">
-                <img src="test" alt="Company Logo" style="max-width: 150px; height: auto;">
-                <h1 style="margin: 0; font-size: 24px;">Order Confirmation</h1>
+            <td style="background-color:rgb(0, 0, 0); color: #ffffff; padding: 20px; text-align: center;">
+                <img src="${
+                  company.logo
+                }" alt="Company Logo" style="max-width: 150px; height: auto;">
+                <h1 style="margin: 0; font-size: 24px;">Payment Confirmation</h1>
             </td>
         </tr>
         <tr>
             <td style="padding: 30px;">
                 <p style="margin: 0 0 10px; font-size: 16px;">Dear ${"Customer"},</p>
-                <p style="margin: 0 0 20px; font-size: 16px;">Thank you for your order! We're excited to confirm that we've received your order ${
+                <p style="margin: 0 0 20px; font-size: 16px;">We've successfully received your payment for order #${
                   order.orderNumber
-                }. Our team is already working on getting it ready for you.</p>
+                }. Your order is now confirmed and being processed for shipment.</p>
                 
                 <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px; margin-bottom: 20px; background-color:rgb(233, 233, 233);">
-                    <h3 style="margin: 0 0 10px; color: #2c3e50; font-size: 18px;">Order Details</h3>
-                    <p style="margin: 0 0 5px; font-size: 14px;"><strong>Order Date:</strong> ${
-                      orderDate || "June 25, 2025, 09:23 PM"
+                    <h3 style="margin: 0 0 10px; color: #2c3e50; font-size: 18px;">Payment Details</h3>
+                    <p style="margin: 0 0 5px; font-size: 14px;"><strong>Payment Date:</strong> ${
+                      paymentDate || "June 30, 2025, 09:23 PM"
                     }</p>
                     <p style="margin: 0 0 5px; font-size: 14px;"><strong>Order Number:</strong> ${
-                      order.orderNumber || "TS-271245846"
+                      order.orderNumber
                     }</p>
                     <p style="margin: 0 0 5px; font-size: 14px;"><strong>Payment Method:</strong> ${
-                      order.paymentMethod || "cod"
+                      order.paymentMethod || "stripe"
                     }</p>
-                    <p style="margin: 0 0 5px; font-size: 14px;"><strong>Payment Status:</strong> ${
-                      order.paymentStatus || "cod"
-                    }</p>
+                    <p style="margin: 0 0 5px; font-size: 14px;"><strong>Payment Status:</strong> <span style="color: #27ae60; font-weight: bold;">Paid</span></p>
+                    <p style="margin: 0 0 5px; font-size: 14px;"><strong>Amount Paid:</strong> $${order.totalAmount?.toFixed(
+                      2
+                    )}</p>
                     
                     <h4 style="margin: 10px 0 5px; color: #2c3e50; font-size: 16px;">Shipping Address</h4>
                     <p style="margin: 0; font-size: 14px;">${
@@ -110,7 +120,7 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
                     <p style="margin: 0 0 5px;">Tax: $${
                       order.taxAmount?.toFixed(2) || "10.00"
                     }</p>
-                    <p style="margin: 0 0 5px;">Total: $${
+                    <p style="margin: 0 0 5px; color: #27ae60;">Total Paid: $${
                       order.totalAmount?.toFixed(2) || "100040.00"
                     }</p>
                 </div>
@@ -123,17 +133,28 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
   }" style="display: inline-block; padding: 12px 24px; background-color:rgb(0, 0, 0); color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Track Your Order</a>
                 </p>
 
-                <p style="margin: 0 0 10px; font-size: 14px;">If you have any questions about your order, please contact our customer support team at gadgetGrid@gmail.com or +088334-343-343.</p>
+                <p style="margin: 0 0 10px; font-size: 14px;">Your order will be processed and shipped within 1-2 business days. You'll receive a shipping confirmation email with tracking information once your order is on its way.</p>
                 
-                <p style="margin: 0 0 10px; font-size: 14px;">Thank you for shopping with us!</p>
-                <p style="margin: 0; font-size: 14px;">Best regards,<br>The 
-                  Gadget Grid Team</p>
+                <p style="margin: 0 0 10px; font-size: 14px;">If you have any questions about your payment or order, please contact our customer support team at ${
+                  company.email
+                } or ${company.phone}.</p>
+                
+                <p style="margin: 0 0 10px; font-size: 14px;">Thank you for your business!</p>
+                <p style="margin: 0; font-size: 14px;">Best regards,<br>The ${
+                  company.name
+                } Team</p>
             </td>
         </tr>
                   <tr>
               <td style="background-color: #f8f8f8; padding: 20px; text-align: center; color: #666666; font-size: 12px;">
-                  <p style="margin: 0;">gadgetGrid@gmail.com</a></p>
-                  <p style="margin: 0;">© ${new Date().getFullYear()} Gadget Grid. All rights reserved.</p>
+                  <p style="margin: 0;">${company.name} | ${
+    company.name
+  } | <a href="mailto:${
+    company.email
+  }" style="color: #666666; text-decoration: none;">${company.email}</a></p>
+                  <p style="margin: 0;">© ${new Date().getFullYear()} ${
+    company.name
+  }. All rights reserved.</p>
               </td>
           </tr>
     </table>
@@ -141,13 +162,3 @@ const generateOrderEmailHTML = (order: IOrder, user: TUser) => {
 </html>
     `;
 };
-
-// Modified order confirmation email sending logic
-const sendOrderConfirmationEmail = async (user: TUser, order: IOrder) => {
-  const subject = `Order Confirmation #${order.orderNumber}`;
-  const html = generateOrderEmailHTML(order, user);
-
-  return sendEmail(user.email, html, subject);
-};
-
-export default sendOrderConfirmationEmail;

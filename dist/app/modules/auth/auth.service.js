@@ -41,11 +41,11 @@ const config_1 = __importDefault(require("../../config"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const user_model_1 = require("../user/user.model");
 const auth_utils_1 = require("./auth.utils");
-const sendEmail_1 = require("../../utils/sendEmail");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const verifyToken_1 = __importDefault(require("../../utils/verifyToken"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
+const email_queue_1 = require("../../queues/email.queue");
 const generateOTP = () => {
     // Declare a digits variable
     // which stores all digits
@@ -94,7 +94,7 @@ const adminLoginFromDB = (payload) => __awaiter(void 0, void 0, void 0, function
 const userLoginFromDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const userExist = yield user_model_1.User.isUserExistsByEmail(payload.email);
     if (!userExist) {
-        throw new AppError_1.default(http_status_1.default.CONFLICT, "User does not exist");
+        throw new AppError_1.default(http_status_1.default.CONFLICT, "Wrong email address");
     }
     if (userExist.role !== "customer") {
         throw new AppError_1.default(http_status_1.default.CONFLICT, "You are not a customer");
@@ -158,27 +158,49 @@ const forgotPasswordService = (email) => __awaiter(void 0, void 0, void 0, funct
     if (!user) {
         throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "User does not exist");
     }
-    const jwtPayload = {
-        email: user.email,
-    };
-    const resetToken = (0, auth_utils_1.createToken)({
-        payload: jwtPayload,
-        secret: config_1.default.access_secret,
-        expiresIn: "60m",
+    if (!user.isVerified) {
+        throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You are not verified. Please verify your email");
+    }
+    const otpCode = generateOTP();
+    const otpToken = (0, auth_utils_1.createToken)({
+        payload: {
+            otpCode,
+            email: user.email,
+        },
+        secret: config_1.default.otp_secret,
+        expiresIn: config_1.default.otp_expires_in,
     });
-    const resetUILink = `${config_1.default.client_url}/reset-password?email=${user.email}&token=${resetToken}`;
-    const mailBody = (0, auth_utils_1.generateResetPassHtml)(resetUILink, user === null || user === void 0 ? void 0 : user.name);
-    yield (0, sendEmail_1.sendEmail)(user.email, mailBody, "Reset your password");
+    yield user_model_1.User.findByIdAndUpdate(user._id, { otp: otpToken });
+    yield email_queue_1.emailQueue.add(email_queue_1.EmailJobName.sendResetPasswordEmail, {
+        user,
+        opt: otpCode,
+    });
 });
-const resetPasswordService = (email, password, token) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!token) {
-        throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You are not authorized", "unauthorized access request");
+const resetPasswordService = (email, password, otp) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!otp) {
+        throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "Please enter opt code");
     }
     const user = yield user_model_1.User.isUserExistsByEmail(email);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "User does not exist");
     }
-    const decoded = (0, verifyToken_1.default)(token, config_1.default.access_secret);
+    if (!user.isVerified) {
+        throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You are not verified. Please verify your email first.");
+    }
+    let decoded;
+    try {
+        decoded = jsonwebtoken_1.default.verify(user.otp, config_1.default.otp_secret);
+    }
+    catch (err) {
+        if (err instanceof jsonwebtoken_1.TokenExpiredError) {
+            throw new AppError_1.default(http_status_1.default.FORBIDDEN, "OTP has expired");
+        }
+        console.log(err);
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Failed to verify");
+    }
+    if (decoded.otpCode !== otp) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, "OTP did not match");
+    }
     if (email !== decoded.email) {
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Wrong email");
     }
@@ -204,8 +226,10 @@ const SendVerificationEmailService = (email) => __awaiter(void 0, void 0, void 0
         expiresIn: config_1.default.otp_expires_in,
     });
     yield user_model_1.User.findByIdAndUpdate(user._id, { otp: otpToken });
-    const mailBody = (0, auth_utils_1.generateVerifyEmailHtml)(otpCode, user === null || user === void 0 ? void 0 : user.name);
-    yield (0, sendEmail_1.sendEmail)(user.email, mailBody, "Verify your email");
+    yield email_queue_1.emailQueue.add(email_queue_1.EmailJobName.sendVerificationEmail, {
+        user,
+        opt: otpCode,
+    });
 });
 const verifyEmailService = (email, otp) => __awaiter(void 0, void 0, void 0, function* () {
     if (!otp) {
@@ -227,7 +251,7 @@ const verifyEmailService = (email, otp) => __awaiter(void 0, void 0, void 0, fun
             throw new AppError_1.default(http_status_1.default.FORBIDDEN, "OTP has expired");
         }
         console.log(err);
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Fatiled to verify");
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Failed to verify");
     }
     // const decoded = varifyToken(user.otp, config.otp_secret as string);
     if (decoded.otpCode !== otp) {
@@ -320,13 +344,10 @@ const createCustomerIntoDB = (customer) => __awaiter(void 0, void 0, void 0, fun
         if (!userRes) {
             throw new AppError_1.default(http_status_1.default.CONFLICT, "failed to register account");
         }
-        const mailBody = (0, auth_utils_1.generateVerifyEmailHtml)(otpCode, user === null || user === void 0 ? void 0 : user.name);
-        try {
-            yield (0, sendEmail_1.sendEmail)(userRes.email, mailBody, "Verify your email");
-        }
-        catch (err) {
-            throw new AppError_1.default(http_status_1.default.CONFLICT, "failed to register account");
-        }
+        yield email_queue_1.emailQueue.add(email_queue_1.EmailJobName.sendVerificationEmail, {
+            opt: otpCode,
+            user,
+        });
         yield session.commitTransaction();
         yield session.endSession();
         return {

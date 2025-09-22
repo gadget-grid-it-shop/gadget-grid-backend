@@ -24,10 +24,22 @@ router.post(
   ProductControllers.bulkUpload
 );
 
+router.post(
+  "/bulk-upload-json",
+  checkPermission(EAppFeatures.product, "create"),
+  upload.single("bulkFile"),
+  ProductControllers.jsonBulkUpload
+);
+
 router.get(
   "/single/:id",
   checkPermission(EAppFeatures.product, "read"),
   ProductControllers.getSingleProduct
+);
+router.get(
+  "/json-template",
+  checkPermission(EAppFeatures.product, "read"),
+  ProductControllers.downloadJsonTemplate
 );
 
 router.patch(

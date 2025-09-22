@@ -19,7 +19,7 @@ var DealJobName;
 })(DealJobName || (exports.DealJobName = DealJobName = {}));
 const redisConnection = {
     connection: {
-        url: process.env.REDIS_URL, // ✅ use Railway's Redis URL
+        url: process.env.REDIS_URL,
     },
 };
 exports.dealQueue = new bullmq_1.Queue(common_1.RedisKeys.deals, redisConnection);

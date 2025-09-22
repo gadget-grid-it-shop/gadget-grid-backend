@@ -147,6 +147,32 @@ const getSearchProducts = catchAsync(async (req, res) => {
   });
 });
 
+const downloadJsonTemplate = catchAsync(async (req, res) => {
+  const category = req.query.category;
+  const result = await ProductServices.downloadJsonTemplate(category as string);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Template retrived successfully",
+    data: result,
+  });
+});
+
+const jsonBulkUpload = catchAsync(async (req, res) => {
+  const result = await ProductServices.bulkUploadJsonToDB(
+    req.file,
+    req.user.email
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Template retrived successfully",
+    data: result,
+  });
+});
+
 export const ProductControllers = {
   getSingleProductBySlug,
   createProduct,
@@ -158,4 +184,6 @@ export const ProductControllers = {
   getProductsByCategory,
   getCompareProducts,
   getSearchProducts,
+  downloadJsonTemplate,
+  jsonBulkUpload,
 };

@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -27,7 +50,7 @@ const product_utils_1 = require("./product.utils");
 const brand_model_1 = require("../brand/brand.model");
 const handleDuplicateError_1 = __importDefault(require("../../errors/handleDuplicateError"));
 const mongodb_1 = require("mongodb");
-const mongoose_1 = require("mongoose");
+const mongoose_1 = __importStar(require("mongoose"));
 const bulkUpload_model_1 = __importDefault(require("../bulkUpload/bulkUpload.model"));
 const queryBuilder_1 = __importDefault(require("../../builder/queryBuilder"));
 const dayjs_1 = __importDefault(require("dayjs"));
@@ -243,6 +266,7 @@ const bulkUploadToDB = (file, mapedFields, email) => __awaiter(void 0, void 0, v
         papaparse_1.default.parse(fileStream, {
             header: true,
             skipEmptyLines: true,
+            transformHeader: (header) => header.trim(),
             complete: (result) => __awaiter(void 0, void 0, void 0, function* () {
                 var _a, _b;
                 const { data: csvData, errors: csvErrors } = result;
@@ -297,7 +321,7 @@ const bulkUploadToDB = (file, mapedFields, email) => __awaiter(void 0, void 0, v
                                 data[field.key];
                             if (value !== undefined) {
                                 if (field.value === "category") {
-                                    const cat = categories.find((c) => c.name === data[field.key] ||
+                                    const cat = categories.find((c) => c.slug === data[field.key] ||
                                         c._id === data[field.key]);
                                     if (cat) {
                                         const productCat = (0, product_utils_1.createCategoryArray)(categories, cat);
@@ -381,6 +405,7 @@ const bulkUploadToDB = (file, mapedFields, email) => __awaiter(void 0, void 0, v
                                         newData.brand = exist._id || "add brand";
                                     }
                                 }
+                                // console.log({ key: field.value, value });
                                 newData.slug = (0, slugify_1.default)(newData.name);
                                 newData.sku = (0, slugify_1.default)(newData.name);
                                 newData.createdBy = user._id;
@@ -388,11 +413,13 @@ const bulkUploadToDB = (file, mapedFields, email) => __awaiter(void 0, void 0, v
                             }
                         }
                     }
+                    // console.log({ newData });
                     filteredData.push((0, product_utils_1.transformSvgProductData)(newData));
                 }
                 resolve(filteredData);
             }),
             error: (err) => {
+                console.log(err);
                 reject(new AppError_1.default(http_status_1.default.CONFLICT, `Error parsing file: ${err.message}`));
             },
         });
@@ -473,12 +500,245 @@ const bulkUploadToDB = (file, mapedFields, email) => __awaiter(void 0, void 0, v
     catch (err) {
         // throw new AppError(httpStatus.CONFLICT, 'Failed to store bulk upload history')
     }
+    yield product_queue_1.productQueue.add(product_queue_1.ProductJobName.updateAllProducts, {});
     const result = {
         withError,
         successData,
         createdBy: user._id,
     };
     return result;
+});
+const bulkUploadJsonToDB = (file, email) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!file) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, "No upload file provided");
+    }
+    if (!file.mimetype.includes("application/json") &&
+        !file.originalname.endsWith(".json")) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, "File must be a JSON file");
+    }
+    const filePath = path_1.default.resolve(file.path);
+    const user = yield user_model_1.User.isUserExistsByEmail(email);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    const categories = (yield category_model_1.Category.find({ isDeleted: false }).lean()).map((cat) => (Object.assign(Object.assign({}, cat), { _id: cat._id.toString() })));
+    const brands = (yield brand_model_1.Brand.find({ isDeleted: false }).lean()).map((brand) => (Object.assign(Object.assign({}, brand), { _id: brand._id.toString() })));
+    let payload = [];
+    try {
+        const fileContent = fs_1.default.readFileSync(filePath, "utf-8");
+        const jsonData = JSON.parse(fileContent);
+        if (!Array.isArray(jsonData)) {
+            throw new AppError_1.default(http_status_1.default.CONFLICT, "JSON file must contain an array of products");
+        }
+        payload = jsonData.map((data) => {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+            const newData = {
+                name: data.name || "",
+                price: Number(data.price) || 0,
+                special_price: Number(data.special_price) || 0,
+                discount: {
+                    type: ((_a = data.discount) === null || _a === void 0 ? void 0 : _a.type) || "percent",
+                    value: Number((_b = data.discount) === null || _b === void 0 ? void 0 : _b.value) || 0,
+                },
+                sku: data.sku || (0, slugify_1.default)(data.name || "", { lower: true }),
+                brand: "",
+                model: data.model || "",
+                warranty: {
+                    days: Number((_c = data.warranty) === null || _c === void 0 ? void 0 : _c.days) || 0,
+                    lifetime: Boolean((_d = data.warranty) === null || _d === void 0 ? void 0 : _d.lifetime) || false,
+                },
+                key_features: data.key_features || "",
+                quantity: Number(data.quantity) || 0,
+                category: [],
+                description: data.description || "",
+                videos: Array.isArray(data.videos) ? data.videos : [],
+                gallery: Array.isArray(data.gallery) ? data.gallery : [],
+                thumbnail: data.thumbnail || "",
+                slug: (0, slugify_1.default)(data.name || "", { lower: true }),
+                attributes: Array.isArray(data.attributes) ? data.attributes : [],
+                meta: {
+                    title: ((_e = data.meta) === null || _e === void 0 ? void 0 : _e.title) || "",
+                    description: ((_f = data.meta) === null || _f === void 0 ? void 0 : _f.description) || "",
+                    image: ((_g = data.meta) === null || _g === void 0 ? void 0 : _g.image) || "",
+                },
+                tags: Array.isArray(data.tags) ? data.tags : [],
+                isFeatured: (_h = Boolean(data.isFeatured)) !== null && _h !== void 0 ? _h : true,
+                mainCategory: "",
+                shipping: {
+                    free: (_k = Boolean((_j = data.shipping) === null || _j === void 0 ? void 0 : _j.free)) !== null && _k !== void 0 ? _k : true,
+                    cost: Number((_l = data.shipping) === null || _l === void 0 ? void 0 : _l.cost) || 0,
+                },
+                createdBy: user._id,
+                isPublished: (_m = Boolean(data.isPublished)) !== null && _m !== void 0 ? _m : true,
+                isDeleted: (_o = Boolean(data.isDeleted)) !== null && _o !== void 0 ? _o : false,
+                sales: Number(data.sales) || 0,
+            };
+            console.log(data);
+            // Handle category
+            if (data.category) {
+                const cat = categories.find((c) => c.slug.trim() === data.category.trim() ||
+                    c._id === data.category.trim());
+                if (cat) {
+                    newData.category = (0, product_utils_1.createCategoryArray)(categories, cat);
+                    newData.mainCategory = cat._id;
+                }
+                else {
+                    throw new AppError_1.default(http_status_1.default.BAD_REQUEST, `Invalid category: ${data.category}`);
+                }
+            }
+            else {
+                throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Category is required");
+            }
+            // Handle brand
+            if (data.brand) {
+                const exist = brands.find((b) => b.name === data.brand || b._id === data.brand);
+                if (exist) {
+                    newData.brand = exist._id;
+                }
+                else {
+                    throw new AppError_1.default(http_status_1.default.BAD_REQUEST, `Invalid brand: ${data.brand}`);
+                }
+            }
+            else {
+                throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Brand is required");
+            }
+            return (0, product_utils_1.transformSvgProductData)(newData);
+        });
+    }
+    catch (err) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, `${err.message}`);
+    }
+    if (payload.length === 0) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, "No valid data parsed from the JSON file");
+    }
+    const withError = [];
+    const successData = [];
+    for (const record of payload) {
+        try {
+            const res = yield product_model_1.Product.create(record);
+            if (res) {
+                successData.push({
+                    name: record.name,
+                    slug: record.slug,
+                    sku: record.sku,
+                    _id: res._id,
+                });
+            }
+        }
+        catch (err) {
+            if (err.code === 11000) {
+                const simplifiedError = (0, handleDuplicateError_1.default)(err);
+                withError.push({
+                    name: record.name,
+                    errorSources: simplifiedError.errorSources,
+                    data: record,
+                });
+            }
+            else if (err instanceof mongoose_1.Error.CastError) {
+                withError.push({
+                    name: record.name,
+                    errorSources: [
+                        {
+                            path: err.path,
+                            message: err.message || "Failed to create product",
+                        },
+                    ],
+                    data: record,
+                });
+            }
+            else if (err instanceof mongoose_1.Error.ValidationError) {
+                const errorSources = Object.keys(err.errors).map((key) => ({
+                    path: key,
+                    message: err.errors[key].message,
+                }));
+                withError.push({
+                    name: record.name,
+                    errorSources,
+                    data: record,
+                });
+            }
+            else {
+                withError.push({
+                    name: record.name,
+                    errorSources: [
+                        { path: "", message: err.message || "Failed to create product" },
+                    ],
+                    data: record,
+                });
+            }
+        }
+    }
+    try {
+        yield bulkUpload_model_1.default.create({
+            withError,
+            successData,
+            createdBy: user._id,
+        });
+    }
+    catch (err) {
+        console.error("Failed to store bulk upload history:", err);
+    }
+    yield product_queue_1.productQueue.add(product_queue_1.ProductJobName.updateAllProducts, {});
+    const result = {
+        withError,
+        successData,
+        createdBy: user._id,
+    };
+    return result;
+});
+const downloadJsonTemplate = (category) => __awaiter(void 0, void 0, void 0, function* () {
+    const attributes = [];
+    let mainCategory = "";
+    if (category && mongoose_1.default.isValidObjectId(category)) {
+        const data = yield category_model_1.Category.findById(category)
+            .populate("product_details_categories")
+            .lean();
+        if (data) {
+            mainCategory = data.slug;
+            for (const attr of data === null || data === void 0 ? void 0 : data.product_details_categories) {
+                const fields = {};
+                for (const f of attr === null || attr === void 0 ? void 0 : attr.fields) {
+                    fields[f] = "";
+                }
+                attributes.push({
+                    name: attr.name,
+                    fields: fields,
+                });
+            }
+        }
+    }
+    // Sample product data for the template
+    const templateData = [
+        {
+            name: "",
+            price: 0,
+            discount: { type: "percent", value: 0 },
+            sku: "",
+            brand: "",
+            model: "",
+            warranty: { days: 0, lifetime: false },
+            key_features: "",
+            quantity: 0,
+            category: mainCategory,
+            description: "",
+            videos: [],
+            gallery: [],
+            thumbnail: "",
+            meta: {
+                title: "",
+                description: "",
+                image: "",
+            },
+            tags: [],
+            isFeatured: true,
+            shipping: { free: false, cost: 0 },
+            isPublished: true,
+            attributes,
+        },
+    ];
+    // Convert to JSON string with formatting
+    const jsonContent = JSON.stringify(templateData, null, 2);
+    return jsonContent;
 });
 const updateProductIntoDB = (id, payload, thisUser) => __awaiter(void 0, void 0, void 0, function* () {
     if (!id) {
@@ -674,4 +934,6 @@ exports.ProductServices = {
     getProductByCategory,
     getSingleProductBySlugFromDB,
     getSearchProductsFromDB,
+    downloadJsonTemplate,
+    bulkUploadJsonToDB,
 };

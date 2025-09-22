@@ -60,7 +60,7 @@ export const updateSigleProductToRedis = async (
         path: "brand",
       },
     ]);
-    console.log({ singleProduct: product });
+
     if (product) {
       let products: TProduct[] = [];
 
