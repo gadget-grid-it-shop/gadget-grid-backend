@@ -23,4 +23,19 @@ const getFeaturedCategories = catchAsync(async (req, res) => {
   });
 });
 
-export const customerController = { getCategories, getFeaturedCategories };
+const getStaticCategorySlugs = catchAsync(async (req, res) => {
+  const result = await CategoryServices.getStaticCategorySlugsFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Categories retrived successfully",
+    data: result,
+  });
+});
+
+export const customerController = {
+  getCategories,
+  getFeaturedCategories,
+  getStaticCategorySlugs,
+};

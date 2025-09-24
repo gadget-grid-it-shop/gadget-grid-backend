@@ -184,6 +184,13 @@ const getSingleCategoryFromDB = async (id: string) => {
   return result;
 };
 
+const getStaticCategorySlugsFromDB = async () => {
+  const result = await Category.find({ sort: { createdAt: -1 } })
+    .limit(500)
+    .select("slug");
+  return result;
+};
+
 export const CategoryServices = {
   createCategoryIntoDB,
   getAllCategoriesFromDB,
@@ -191,4 +198,5 @@ export const CategoryServices = {
   updateCategoryIntoDB,
   getSingleCategoryFromDB,
   getFeaturedCategoriesFromDB,
+  getStaticCategorySlugsFromDB,
 };

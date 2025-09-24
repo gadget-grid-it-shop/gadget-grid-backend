@@ -7,6 +7,7 @@ import { AuthController } from "../auth/auth.controller";
 const router = Router();
 
 router.get("/category/get-all", customerController.getCategories);
+router.get("/category/static-slugs", customerController.getStaticCategorySlugs);
 router.get("/category/get-featured", customerController.getFeaturedCategories);
 router.get("/banner/get-banner/:id", BannerController.getBanner);
 router.get("/product/get-featured", ProductControllers.getFeaturedProducts);
@@ -21,7 +22,6 @@ router.get(
 
 router.get("/product/search", ProductControllers.getSearchProducts);
 router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
-
 router.get("/product/compare", ProductControllers.getCompareProducts);
 
 // =============== auth ================
