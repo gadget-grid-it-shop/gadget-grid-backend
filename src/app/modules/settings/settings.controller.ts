@@ -5,7 +5,7 @@ import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 
 // Get settings (create if not exists)
-export const getSettings = catchAsync(async (req: Request, res: Response) => {
+const getSettings = catchAsync(async (req: Request, res: Response) => {
   const result = await SettingsService.getSettingsFromDB();
 
   sendResponse(res, {
@@ -17,18 +17,33 @@ export const getSettings = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Update settings
-export const updateSettings = catchAsync(
-  async (req: Request, res: Response) => {
-    const result = await SettingsService.updateSettingsToDB(
-      req.user.id,
-      req.body
-    );
+const updateSettings = catchAsync(async (req: Request, res: Response) => {
+  const result = await SettingsService.updateSettingsToDB(
+    req.user.id,
+    req.body
+  );
 
-    sendResponse(res, {
-      success: true,
-      statusCode: httpStatus.OK,
-      message: "Settings updated successfully",
-      data: result,
-    });
-  }
-);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Settings updated successfully",
+    data: result,
+  });
+});
+
+const getPcBuilder = catchAsync(async (req, res) => {
+  const result = await SettingsService.getPcBuilderFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Settings retrived successfully",
+    data: result,
+  });
+});
+
+export const SettingsController = {
+  updateSettings,
+  getSettings,
+  getPcBuilder,
+};

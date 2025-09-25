@@ -57,7 +57,21 @@ const updateSettingsToDB = async (
   return settings;
 };
 
+const getPcBuilderFromDB = async () => {
+  let settings = await Settings.findOne();
+
+  if (!settings) {
+    settings = new Settings(defaultSettings);
+    await settings.save();
+  }
+
+  const pcBuilder = settings.pcBuilder;
+
+  return pcBuilder;
+};
+
 export const SettingsService = {
   getSettingsFromDB,
   updateSettingsToDB,
+  getPcBuilderFromDB,
 };
