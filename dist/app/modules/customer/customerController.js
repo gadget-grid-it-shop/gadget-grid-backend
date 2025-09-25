@@ -35,4 +35,17 @@ const getFeaturedCategories = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: categories,
     });
 }));
-exports.customerController = { getCategories, getFeaturedCategories };
+const getStaticCategorySlugs = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield category_service_1.CategoryServices.getStaticCategorySlugsFromDB();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Categories retrived successfully",
+        data: result,
+    });
+}));
+exports.customerController = {
+    getCategories,
+    getFeaturedCategories,
+    getStaticCategorySlugs,
+};

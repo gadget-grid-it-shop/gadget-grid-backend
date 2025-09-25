@@ -8,12 +8,14 @@ const product_controller_1 = require("../product/product.controller");
 const auth_controller_1 = require("../auth/auth.controller");
 const router = (0, express_1.Router)();
 router.get("/category/get-all", customerController_1.customerController.getCategories);
+router.get("/category/static-slugs", customerController_1.customerController.getStaticCategorySlugs);
 router.get("/category/get-featured", customerController_1.customerController.getFeaturedCategories);
 router.get("/banner/get-banner/:id", banner_controller_1.BannerController.getBanner);
 router.get("/product/get-featured", product_controller_1.ProductControllers.getFeaturedProducts);
 router.get("/product/by-category/:slug", product_controller_1.ProductControllers.getProductsByCategory);
 router.get("/product/get-single/:slug", product_controller_1.ProductControllers.getSingleProductBySlug);
 router.get("/product/search", product_controller_1.ProductControllers.getSearchProducts);
+router.get("/product/static-slugs", product_controller_1.ProductControllers.getStaticProductSlugs);
 router.get("/product/compare", product_controller_1.ProductControllers.getCompareProducts);
 // =============== auth ================
 router.post("/login", auth_controller_1.AuthController.userLogin);

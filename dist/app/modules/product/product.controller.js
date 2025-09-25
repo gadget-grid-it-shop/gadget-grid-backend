@@ -136,7 +136,16 @@ const jsonBulkUpload = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: "Template retrived successfully",
+        message: "Upload successfull",
+        data: result,
+    });
+}));
+const getStaticProductSlugs = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.ProductServices.getStaticProductSlugsFromDB();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Product retrived successfully",
         data: result,
     });
 }));
@@ -152,5 +161,6 @@ exports.ProductControllers = {
     getCompareProducts,
     getSearchProducts,
     downloadJsonTemplate,
+    getStaticProductSlugs,
     jsonBulkUpload,
 };
