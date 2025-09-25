@@ -49,8 +49,6 @@ const updateFilterIntoDB = async (
     throw new Error(`Filter with filterId not found`);
   }
 
-  console.log(payload);
-
   // Prepare the update payload
   const updatePayload: Partial<TProductFilter> = {};
 
@@ -65,7 +63,8 @@ const updateFilterIntoDB = async (
       existingFilter.options.map((opt) => opt.optionId)
     );
     let nextOptionId = existingFilter.options.length
-      ? Math.max(...existingFilter.options.map((opt) => opt.optionId)) + 1
+      ? Math.max(...existingFilter.options.map((opt) => Number(opt.optionId))) +
+        1
       : 1;
     const maxOptionId = 1000;
 
@@ -73,7 +72,7 @@ const updateFilterIntoDB = async (
       // Existing option (has optionId): update value, preserve optionId
       if (newOption.optionId !== undefined) {
         const existingOption = existingFilter.options.find(
-          (opt) => opt.optionId === newOption.optionId
+          (opt) => String(opt.optionId) === String(newOption.optionId)
         );
         if (!existingOption) {
           throw new Error(
@@ -81,12 +80,12 @@ const updateFilterIntoDB = async (
           );
         }
         return {
-          optionId: newOption.optionId,
+          optionId: String(newOption.optionId),
           value: newOption.value,
         };
       }
       // New option (no optionId): assign next available optionId
-      while (existingOptionIds.has(nextOptionId)) {
+      while (existingOptionIds.has(String(nextOptionId))) {
         nextOptionId++;
       }
       if (nextOptionId > maxOptionId) {
@@ -94,9 +93,9 @@ const updateFilterIntoDB = async (
           `Unable to assign unique option ID for filter maximum ID (${maxOptionId}) reached`
         );
       }
-      existingOptionIds.add(nextOptionId);
+      existingOptionIds.add(String(nextOptionId));
       return {
-        optionId: nextOptionId++,
+        optionId: String(nextOptionId++),
         value: newOption.value,
       };
     });

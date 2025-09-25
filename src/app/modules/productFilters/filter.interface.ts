@@ -4,7 +4,7 @@ export interface TProductFilter {
   filterId: number;
   title: string;
   options: {
-    optionId: number;
+    optionId: string;
     value: string;
   }[];
 }
