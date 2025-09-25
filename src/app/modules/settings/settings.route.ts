@@ -1,21 +1,25 @@
 import { Router } from "express";
-import { getSettings, updateSettings } from "./settings.controller";
 import checkPermission from "../../middleware/checkPermission";
 import { EAppFeatures } from "../roles/roles.interface";
 import { validateRequest } from "../../middleware/validateRequest";
 import { SettingsValidationSchema } from "./settings.validation";
+import { SettingsController } from "./settings.controller";
 
 const router = Router();
 
 // GET settings
-router.get("/", checkPermission(EAppFeatures.settings, "read"), getSettings);
+router.get(
+  "/",
+  checkPermission(EAppFeatures.settings, "read"),
+  SettingsController.getSettings
+);
 
 // UPDATE settings
 router.put(
   "/",
   checkPermission(EAppFeatures.settings, "update"),
   validateRequest(SettingsValidationSchema.UpdateSettingsSchema),
-  updateSettings
+  SettingsController?.updateSettings
 );
 
 const SettingsRoute = router;
