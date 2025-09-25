@@ -14,7 +14,7 @@ const pcPartSchema = new Schema<PcPart>({
     required: true,
   },
   category: {
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: "Category",
   },
   isRequired: {
