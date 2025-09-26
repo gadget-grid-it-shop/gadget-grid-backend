@@ -24,6 +24,7 @@ router.get(
 router.get("/product/search", ProductControllers.getSearchProducts);
 router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
 router.get("/product/compare", ProductControllers.getCompareProducts);
+router.get("/product/pc-builder/:id", ProductControllers.getPcBuilderProducts);
 
 // =============== auth ================
 router.post("/login", AuthController.userLogin);

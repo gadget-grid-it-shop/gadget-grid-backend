@@ -49,6 +49,7 @@ import { ProductJobName, productQueue } from "./product.queue";
 import redisClient from "../../../redis";
 import { RedisKeys } from "../../interface/common";
 import { TProductDetailsCategory } from "../productDetailsCategory/productDetailsCategory.interface";
+import Settings from "../settings/settings.model";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -1155,6 +1156,57 @@ const getStaticProductSlugsFromDB = async () => {
   return result;
 };
 
+const getPcBuilderProductsFromDB = async (
+  id: string,
+  query: Record<string, unknown>
+) => {
+  const pcBuilderSettings = await Settings.findOne();
+  const pcBuilder = pcBuilderSettings?.pcBuilder;
+
+  const page = query?.page ? Number(query.page) : 1;
+  const limit = query?.limit ? Number(query?.limit) : 20;
+
+  const skip = (page - 1) * limit;
+
+  if (!pcBuilder) {
+    throw new AppError(httpStatus.NOT_FOUND, "PC builder settigns not found");
+  }
+
+  const allParts = [
+    ...pcBuilder.coreComponents?.parts,
+    ...pcBuilder.peripherals?.parts,
+  ];
+
+  const partCategory = allParts?.find((p) => p.id.toString() === id)?.category;
+
+  if (!partCategory) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Category for this part not found"
+    );
+  }
+
+  const categoryQuery = {
+    $or: [
+      {
+        mainCategory: new ObjectId(partCategory),
+      },
+      {
+        "category.id": new ObjectId(partCategory),
+      },
+    ],
+  };
+
+  const filters = await Product.find(categoryQuery).distinct("filters");
+  const products = await Product.find(categoryQuery)
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit);
+  const total = await Product.countDocuments(categoryQuery);
+
+  return { products, filters, pagination: { total, currentPage: page, limit } };
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -1168,4 +1220,5 @@ export const ProductServices = {
   downloadJsonTemplate,
   getStaticProductSlugsFromDB,
   bulkUploadJsonToDB,
+  getPcBuilderProductsFromDB,
 };
