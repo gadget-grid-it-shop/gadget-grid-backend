@@ -148,8 +148,8 @@ const getSearchProducts = catchAsync(async (req, res) => {
 });
 
 const downloadJsonTemplate = catchAsync(async (req, res) => {
-  const category = req.query.category;
-  const result = await ProductServices.downloadJsonTemplate(category as string);
+  const query = req.query;
+  const result = await ProductServices.downloadJsonTemplate(query);
 
   sendResponse(res, {
     success: true,

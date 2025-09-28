@@ -50,6 +50,7 @@ import redisClient from "../../../redis";
 import { RedisKeys } from "../../interface/common";
 import { TProductDetailsCategory } from "../productDetailsCategory/productDetailsCategory.interface";
 import Settings from "../settings/settings.model";
+import { TProductFilter } from "../productFilters/filter.interface";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -668,6 +669,7 @@ const bulkUploadJsonToDB = async (
           type: data.discount?.type || "percent",
           value: Number(data.discount?.value) || 0,
         },
+        filters: data?.filters || [],
         sku: data.sku || slugify(data.name || "", { lower: true }),
         brand: "",
         model: data.model || "",
@@ -841,7 +843,13 @@ const bulkUploadJsonToDB = async (
   return result;
 };
 
-const downloadJsonTemplate = async (category?: string) => {
+const downloadJsonTemplate = async ({
+  category,
+  filters,
+}: {
+  category?: string;
+  filters?: string[];
+}) => {
   const attributes: TProduct["attributes"] = [];
   let mainCategory = "";
 
@@ -868,6 +876,12 @@ const downloadJsonTemplate = async (category?: string) => {
     }
   }
 
+  let filterData: any[] = [];
+
+  if (filters) {
+    filterData = await ProductFilter.find({ _id: { $in: filters } });
+  }
+
   // Sample product data for the template
   const templateData: any[] = [
     {
@@ -883,6 +897,11 @@ const downloadJsonTemplate = async (category?: string) => {
       category: mainCategory,
       description: "",
       videos: [],
+      filters: filterData.map((f) => ({
+        filter: f?._id,
+        fitlerId: f.filterId,
+        value: "",
+      })),
       gallery: [],
       thumbnail: "",
       meta: {
@@ -899,7 +918,11 @@ const downloadJsonTemplate = async (category?: string) => {
   ];
 
   // Convert to JSON string with formatting
-  const jsonContent = JSON.stringify(templateData, null, 2);
+  const jsonContent = JSON.stringify(
+    { templateData, filters: filterData },
+    null,
+    2
+  );
 
   return jsonContent;
 };
