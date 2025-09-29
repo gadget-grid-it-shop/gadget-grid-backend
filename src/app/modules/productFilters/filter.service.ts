@@ -49,8 +49,6 @@ const updateFilterIntoDB = async (
     throw new Error(`Filter with filterId not found`);
   }
 
-  console.log(payload);
-
   // Prepare the update payload
   const updatePayload: Partial<TProductFilter> = {};
 
@@ -71,7 +69,10 @@ const updateFilterIntoDB = async (
 
     updatePayload.options = payload.options.map((newOption) => {
       // Existing option (has optionId): update value, preserve optionId
-      if (newOption.optionId !== undefined) {
+      if (
+        newOption.optionId !== undefined ||
+        newOption.optionId !== "undefined"
+      ) {
         const existingOption = existingFilter.options.find(
           (opt) => opt.optionId === newOption.optionId
         );

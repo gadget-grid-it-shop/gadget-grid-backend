@@ -29,7 +29,7 @@ const updateFilterValidationSchema = z.object({
   options: z
     .array(
       z.object({
-        optionId: z.number().optional(),
+        optionId: z.string().optional(),
         value: z.string(),
       })
     )
