@@ -15,7 +15,6 @@ let server: Server;
 
 const main = async () => {
   try {
-    console.log(config.database_url);
     await mongoose.connect(config.database_url as string);
 
     await productQueue.add(ProductJobName.updateAllProducts, {});

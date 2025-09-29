@@ -49,6 +49,8 @@ import { ProductJobName, productQueue } from "./product.queue";
 import redisClient from "../../../redis";
 import { RedisKeys } from "../../interface/common";
 import { TProductDetailsCategory } from "../productDetailsCategory/productDetailsCategory.interface";
+import Settings from "../settings/settings.model";
+import { TProductFilter } from "../productFilters/filter.interface";
 
 const createProductIntoDB = async (
   payload: TProduct,
@@ -667,6 +669,7 @@ const bulkUploadJsonToDB = async (
           type: data.discount?.type || "percent",
           value: Number(data.discount?.value) || 0,
         },
+        filters: data?.filters || [],
         sku: data.sku || slugify(data.name || "", { lower: true }),
         brand: "",
         model: data.model || "",
@@ -840,7 +843,13 @@ const bulkUploadJsonToDB = async (
   return result;
 };
 
-const downloadJsonTemplate = async (category?: string) => {
+const downloadJsonTemplate = async ({
+  category,
+  filters,
+}: {
+  category?: string;
+  filters?: string[];
+}) => {
   const attributes: TProduct["attributes"] = [];
   let mainCategory = "";
 
@@ -867,6 +876,12 @@ const downloadJsonTemplate = async (category?: string) => {
     }
   }
 
+  let filterData: any[] = [];
+
+  if (filters) {
+    filterData = await ProductFilter.find({ _id: { $in: filters } });
+  }
+
   // Sample product data for the template
   const templateData: any[] = [
     {
@@ -882,6 +897,11 @@ const downloadJsonTemplate = async (category?: string) => {
       category: mainCategory,
       description: "",
       videos: [],
+      filters: filterData.map((f) => ({
+        filter: f?._id,
+        fitlerId: f.filterId,
+        value: "",
+      })),
       gallery: [],
       thumbnail: "",
       meta: {
@@ -898,7 +918,11 @@ const downloadJsonTemplate = async (category?: string) => {
   ];
 
   // Convert to JSON string with formatting
-  const jsonContent = JSON.stringify(templateData, null, 2);
+  const jsonContent = JSON.stringify(
+    { templateData, filters: filterData },
+    null,
+    2
+  );
 
   return jsonContent;
 };
@@ -1155,6 +1179,57 @@ const getStaticProductSlugsFromDB = async () => {
   return result;
 };
 
+const getPcBuilderProductsFromDB = async (
+  id: string,
+  query: Record<string, unknown>
+) => {
+  const pcBuilderSettings = await Settings.findOne();
+  const pcBuilder = pcBuilderSettings?.pcBuilder;
+
+  const page = query?.page ? Number(query.page) : 1;
+  const limit = query?.limit ? Number(query?.limit) : 20;
+
+  const skip = (page - 1) * limit;
+
+  if (!pcBuilder) {
+    throw new AppError(httpStatus.NOT_FOUND, "PC builder settigns not found");
+  }
+
+  const allParts = [
+    ...pcBuilder.coreComponents?.parts,
+    ...pcBuilder.peripherals?.parts,
+  ];
+
+  const partCategory = allParts?.find((p) => p.id.toString() === id)?.category;
+
+  if (!partCategory) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Category for this part not found"
+    );
+  }
+
+  const categoryQuery = {
+    $or: [
+      {
+        mainCategory: new ObjectId(partCategory),
+      },
+      {
+        "category.id": new ObjectId(partCategory),
+      },
+    ],
+  };
+
+  const filters = await Product.find(categoryQuery).distinct("filters");
+  const products = await Product.find(categoryQuery)
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit);
+  const total = await Product.countDocuments(categoryQuery);
+
+  return { products, filters, pagination: { total, currentPage: page, limit } };
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -1168,4 +1243,5 @@ export const ProductServices = {
   downloadJsonTemplate,
   getStaticProductSlugsFromDB,
   bulkUploadJsonToDB,
+  getPcBuilderProductsFromDB,
 };

@@ -154,6 +154,12 @@ const getSingleCategoryFromDB = (id) => __awaiter(void 0, void 0, void 0, functi
     }
     return result;
 });
+const getStaticCategorySlugsFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield category_model_1.Category.find({ sort: { createdAt: -1 } })
+        .limit(500)
+        .select("slug");
+    return result;
+});
 exports.CategoryServices = {
     createCategoryIntoDB,
     getAllCategoriesFromDB,
@@ -161,4 +167,5 @@ exports.CategoryServices = {
     updateCategoryIntoDB,
     getSingleCategoryFromDB,
     getFeaturedCategoriesFromDB,
+    getStaticCategorySlugsFromDB,
 };

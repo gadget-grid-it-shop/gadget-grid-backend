@@ -18,7 +18,12 @@ const FilterSchema = new Schema<TProductFilter, TFilterModel>(
     options: [
       {
         optionId: {
-          type: Number,
+          type: Schema.Types.Mixed,
+          validate: {
+            validator: (v: any) =>
+              typeof v === "string" || typeof v === "number",
+            message: (props) => `${props.value} must be a string or a number`,
+          },
           required: true,
           min: 1,
         },
@@ -66,7 +71,7 @@ FilterSchema.pre("save", async function (next) {
 
       while (optionId <= maxOptionId) {
         if (!existingOptionIds.has(optionId)) {
-          option.optionId = optionId;
+          option.optionId = String(optionId);
           existingOptionIds.add(optionId);
           break;
         }

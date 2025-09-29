@@ -17,6 +17,7 @@ import { CustomerRoutes } from "../modules/customer/customerRoute";
 import { OrderRoutes } from "../modules/order/order.route";
 import { AddressRoutes } from "../modules/address/address.route";
 import DealRoutes from "../modules/deals/deal.route";
+import SettingsRoute from "../modules/settings/settings.route";
 
 const router = Router();
 
@@ -41,6 +42,7 @@ const moduleRoutes = [
   { path: "/order", route: OrderRoutes },
   { path: "/address", route: AddressRoutes },
   { path: "/deal", route: DealRoutes },
+  { path: "/settings", route: SettingsRoute },
 ];
 
 moduleRoutes.forEach((route) => {

@@ -924,6 +924,12 @@ const getSearchProductsFromDB = (query) => __awaiter(void 0, void 0, void 0, fun
         brands,
     };
 });
+const getStaticProductSlugsFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_model_1.Product.find({ sort: { createdAt: -1 } })
+        .limit(500)
+        .select("slug");
+    return result;
+});
 exports.ProductServices = {
     createProductIntoDB,
     getAllProductsFromDB,
@@ -935,5 +941,6 @@ exports.ProductServices = {
     getSingleProductBySlugFromDB,
     getSearchProductsFromDB,
     downloadJsonTemplate,
+    getStaticProductSlugsFromDB,
     bulkUploadJsonToDB,
 };

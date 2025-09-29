@@ -26,7 +26,11 @@ const FilterSchema = new mongoose_1.Schema({
     options: [
         {
             optionId: {
-                type: Number,
+                type: mongoose_1.Schema.Types.Mixed,
+                validate: {
+                    validator: (v) => typeof v === "string" || typeof v === "number",
+                    message: (props) => `${props.value} must be a string or a number`,
+                },
                 required: true,
                 min: 1,
             },
@@ -65,7 +69,7 @@ FilterSchema.pre("save", function (next) {
                 const maxOptionId = 1000;
                 while (optionId <= maxOptionId) {
                     if (!existingOptionIds.has(optionId)) {
-                        option.optionId = optionId;
+                        option.optionId = String(optionId);
                         existingOptionIds.add(optionId);
                         break;
                     }

@@ -3,6 +3,7 @@ import { customerController } from "./customerController";
 import { BannerController } from "../banner/banner.controller";
 import { ProductControllers } from "../product/product.controller";
 import { AuthController } from "../auth/auth.controller";
+import { SettingsController } from "../settings/settings.controller";
 
 const router = Router();
 
@@ -23,8 +24,12 @@ router.get(
 router.get("/product/search", ProductControllers.getSearchProducts);
 router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
 router.get("/product/compare", ProductControllers.getCompareProducts);
+router.get("/product/pc-builder/:id", ProductControllers.getPcBuilderProducts);
 
 // =============== auth ================
 router.post("/login", AuthController.userLogin);
+
+// ==== pc builder ====
+router.get("/settings/pc-builder", SettingsController.getPcBuilder);
 
 export const CustomerRoutes = router;

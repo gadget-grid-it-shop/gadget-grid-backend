@@ -25,7 +25,7 @@ const updateFilterValidationSchema = zod_1.z.object({
         .optional(),
     options: zod_1.z
         .array(zod_1.z.object({
-        optionId: zod_1.z.number().optional(),
+        optionId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
         value: zod_1.z.string(),
     }))
         .min(1, { message: "At least one option is required" })

@@ -19,6 +19,8 @@ const createCategoryIntoDB = async (payload: TCategory, admin: TUser) => {
 
   const slug = payload.slug?.trim() || slugify(payload.name).trim();
 
+  console.log({ payload });
+
   const exist = await Category.findOne({
     slug,
     isDeleted: false,
@@ -124,9 +126,11 @@ const updateCategoryIntoDB = async (
   if (exist) {
     const update = await Category.findByIdAndUpdate(
       id,
-      { ...payload, slug: payload.slug.toString() },
+      { ...payload },
       { new: true }
     );
+
+    console.log(payload);
 
     if (!update) {
       throw new AppError(httpStatus.CONFLICT, "Failed to update category");

@@ -148,8 +148,8 @@ const getSearchProducts = catchAsync(async (req, res) => {
 });
 
 const downloadJsonTemplate = catchAsync(async (req, res) => {
-  const category = req.query.category;
-  const result = await ProductServices.downloadJsonTemplate(category as string);
+  const query = req.query;
+  const result = await ProductServices.downloadJsonTemplate(query);
 
   sendResponse(res, {
     success: true,
@@ -184,6 +184,24 @@ const getStaticProductSlugs = catchAsync(async (req, res) => {
   });
 });
 
+const getPcBuilderProducts = catchAsync(async (req, res) => {
+  const result = await ProductServices.getPcBuilderProductsFromDB(
+    req.params.id,
+    req.query
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Products retrived successfully",
+    data: {
+      products: result.products,
+      filters: result.filters,
+    },
+    pagination: result.pagination,
+  });
+});
+
 export const ProductControllers = {
   getSingleProductBySlug,
   createProduct,
@@ -198,4 +216,5 @@ export const ProductControllers = {
   downloadJsonTemplate,
   getStaticProductSlugs,
   jsonBulkUpload,
+  getPcBuilderProducts,
 };
