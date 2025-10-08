@@ -173,7 +173,7 @@ const addOrderToDB = async (
       (d) => d._id?.toString() === orderProduct?.offer?.refId.toString()
     );
     const hasSale =
-      orderProduct?.offer.type === "flashSale" &&
+      orderProduct?.offer?.type === "flashSale" &&
       activeSale?._id.toString() === orderProduct?.offer?.refId.toString();
 
     const dealProduct = deal?.products.find(
