@@ -21,6 +21,8 @@ router.get(
   ProductControllers.getSingleProductBySlug
 );
 
+router.get("/data-for-sitemap", customerController.getDataForSitemap);
+
 router.get("/product/search", ProductControllers.getSearchProducts);
 router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
 router.get("/product/compare", ProductControllers.getCompareProducts);

@@ -13,6 +13,7 @@ import {
 } from "../../utils/sendSourceSocket";
 import slugify from "slugify";
 import { TUser } from "../user/user.interface";
+import { Product } from "../product/product.model";
 
 const createCategoryIntoDB = async (payload: TCategory, admin: TUser) => {
   const parent_id = payload.parent_id || null;
@@ -195,6 +196,22 @@ const getStaticCategorySlugsFromDB = async () => {
   return result;
 };
 
+const getDataForSitemapFromDB = async () => {
+  const products = await Product.find({
+    isDeleted: false,
+    isPublished: true,
+  }).select("slug updatedAt");
+
+  const categories = await Category.find({ isDeleted: false }).select(
+    "slug updatedAt"
+  );
+
+  return {
+    products,
+    categories,
+  };
+};
+
 export const CategoryServices = {
   createCategoryIntoDB,
   getAllCategoriesFromDB,
@@ -203,4 +220,5 @@ export const CategoryServices = {
   getSingleCategoryFromDB,
   getFeaturedCategoriesFromDB,
   getStaticCategorySlugsFromDB,
+  getDataForSitemapFromDB,
 };

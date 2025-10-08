@@ -34,8 +34,20 @@ const getStaticCategorySlugs = catchAsync(async (req, res) => {
   });
 });
 
+const getDataForSitemap = catchAsync(async (req, res) => {
+  const result = await CategoryServices.getDataForSitemapFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Data retrived successfully",
+    data: result,
+  });
+});
+
 export const customerController = {
   getCategories,
   getFeaturedCategories,
+  getDataForSitemap,
   getStaticCategorySlugs,
 };
