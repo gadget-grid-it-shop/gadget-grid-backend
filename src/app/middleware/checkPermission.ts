@@ -38,7 +38,7 @@ const checkPermission = (feature: string, accessType: TAccessType) => {
 
     const role: TRole | null = await Roles.findById(userExist.role);
 
-    if (!role) {
+    if (!role || role.isDeleted) {
       throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized user request");
     }
 
