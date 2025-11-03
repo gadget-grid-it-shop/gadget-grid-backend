@@ -176,6 +176,21 @@ const registerCustomer = catchAsync(async (req, res) => {
   });
 });
 
+const updateMyProfile = catchAsync(async (req, res) => {
+  const user = req.user.id;
+  const data = req.body;
+
+  console.log("updateing profile");
+
+  const result = await AuthServices.updateMyProfileToDB(data, user);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 export const AuthController = {
   adminLogin,
   refreshToken,
@@ -187,4 +202,5 @@ export const AuthController = {
   updatePassword,
   userLogin,
   registerCustomer,
+  updateMyProfile,
 };
