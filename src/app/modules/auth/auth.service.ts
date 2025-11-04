@@ -7,7 +7,7 @@ import { createToken } from "./auth.utils";
 import { sendEmail } from "../../utils/sendEmail";
 import bcrypt from "bcrypt";
 import varifyToken from "../../utils/verifyToken";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { TUser } from "../user/user.interface";
 import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 import { EmailJobName, emailQueue } from "../../queues/email.queue";
@@ -410,15 +410,13 @@ const getMyDataFromDB = async (
 
   const result = await User.findOne({ email })
     .populate(populate)
-    .select(select);
+    .select(`${select} -password -otp`);
 
   return result;
 };
 
 const createCustomerIntoDB = async (customer: TUser) => {
   delete customer.isDeleted;
-
-  console.log({ customer });
 
   const user: Partial<TUser> = {
     email: customer.email,
@@ -482,6 +480,26 @@ const createCustomerIntoDB = async (customer: TUser) => {
   }
 };
 
+const updateMyProfileToDB = async (data: TUser, user: Types.ObjectId) => {
+  try {
+    const { name, address, phoneNumber, profilePicture } = data;
+
+    const result = await User.findByIdAndUpdate(user, {
+      name,
+      address,
+      profilePicture,
+      phoneNumber,
+    });
+
+    return result;
+  } catch (err) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      err instanceof AppError ? err?.message : "Failed to update profile"
+    );
+  }
+};
+
 export const AuthServices = {
   adminLoginFromDB,
   refreshToken,
@@ -493,4 +511,5 @@ export const AuthServices = {
   updatePasswordService,
   userLoginFromDB,
   createCustomerIntoDB,
+  updateMyProfileToDB,
 };

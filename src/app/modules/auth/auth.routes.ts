@@ -37,6 +37,7 @@ router.post(
 );
 
 router.get("/getMyData", validateAuth(), AuthController.getMyData);
+router.post("/updateProfile", validateAuth(), AuthController.updateMyProfile);
 
 // router.get(
 //   "/getMyData/customer",
