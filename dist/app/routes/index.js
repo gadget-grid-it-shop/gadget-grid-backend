@@ -22,6 +22,7 @@ const customerRoute_1 = require("../modules/customer/customerRoute");
 const order_route_1 = require("../modules/order/order.route");
 const address_route_1 = require("../modules/address/address.route");
 const deal_route_1 = __importDefault(require("../modules/deals/deal.route"));
+const settings_route_1 = __importDefault(require("../modules/settings/settings.route"));
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     { path: "/product-details-category", route: productDetailsCategory_route_1.ProductDetailsCategoryRoutes },
@@ -44,6 +45,7 @@ const moduleRoutes = [
     { path: "/order", route: order_route_1.OrderRoutes },
     { path: "/address", route: address_route_1.AddressRoutes },
     { path: "/deal", route: deal_route_1.default },
+    { path: "/settings", route: settings_route_1.default },
 ];
 moduleRoutes.forEach((route) => {
     if (route.path === "/auth" || route.path === "/customer") {

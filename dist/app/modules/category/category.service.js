@@ -19,10 +19,12 @@ const http_status_1 = __importDefault(require("http-status"));
 const notificaiton_utils_1 = require("../notification/notificaiton.utils");
 const sendSourceSocket_1 = require("../../utils/sendSourceSocket");
 const slugify_1 = __importDefault(require("slugify"));
+const product_model_1 = require("../product/product.model");
 const createCategoryIntoDB = (payload, admin) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const parent_id = payload.parent_id || null;
     const slug = ((_a = payload.slug) === null || _a === void 0 ? void 0 : _a.trim()) || (0, slugify_1.default)(payload.name).trim();
+    console.log({ payload });
     const exist = yield category_model_1.Category.findOne({
         slug,
         isDeleted: false,
@@ -106,7 +108,8 @@ const deleteCategoryFromDB = (id, admin) => __awaiter(void 0, void 0, void 0, fu
 const updateCategoryIntoDB = (id, payload, admin) => __awaiter(void 0, void 0, void 0, function* () {
     const exist = yield category_model_1.Category.findById(id);
     if (exist) {
-        const update = yield category_model_1.Category.findByIdAndUpdate(id, Object.assign(Object.assign({}, payload), { slug: payload.slug.toString() }), { new: true });
+        const update = yield category_model_1.Category.findByIdAndUpdate(id, Object.assign({}, payload), { new: true });
+        console.log(payload);
         if (!update) {
             throw new AppError_1.default(http_status_1.default.CONFLICT, "Failed to update category");
         }
@@ -160,6 +163,17 @@ const getStaticCategorySlugsFromDB = () => __awaiter(void 0, void 0, void 0, fun
         .select("slug");
     return result;
 });
+const getDataForSitemapFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    const products = yield product_model_1.Product.find({
+        isDeleted: false,
+        isPublished: true,
+    }).select("slug updatedAt");
+    const categories = yield category_model_1.Category.find({ isDeleted: false }).select("slug updatedAt");
+    return {
+        products,
+        categories,
+    };
+});
 exports.CategoryServices = {
     createCategoryIntoDB,
     getAllCategoriesFromDB,
@@ -168,4 +182,5 @@ exports.CategoryServices = {
     getSingleCategoryFromDB,
     getFeaturedCategoriesFromDB,
     getStaticCategorySlugsFromDB,
+    getDataForSitemapFromDB,
 };

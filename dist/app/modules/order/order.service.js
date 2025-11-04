@@ -146,14 +146,14 @@ const addOrderToDB = (data, user, customer) => __awaiter(void 0, void 0, void 0,
         }
     }
     payload.items = products.map((p) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         const orderProduct = data.products.find((op) => op.id.toString() === p._id.toString());
         const deal = activeDeals.find((d) => { var _a, _b; return ((_a = d._id) === null || _a === void 0 ? void 0 : _a.toString()) === ((_b = orderProduct === null || orderProduct === void 0 ? void 0 : orderProduct.offer) === null || _b === void 0 ? void 0 : _b.refId.toString()); });
-        const hasSale = (orderProduct === null || orderProduct === void 0 ? void 0 : orderProduct.offer.type) === "flashSale" &&
-            (activeSale === null || activeSale === void 0 ? void 0 : activeSale._id.toString()) === ((_a = orderProduct === null || orderProduct === void 0 ? void 0 : orderProduct.offer) === null || _a === void 0 ? void 0 : _a.refId.toString());
+        const hasSale = ((_a = orderProduct === null || orderProduct === void 0 ? void 0 : orderProduct.offer) === null || _a === void 0 ? void 0 : _a.type) === "flashSale" &&
+            (activeSale === null || activeSale === void 0 ? void 0 : activeSale._id.toString()) === ((_b = orderProduct === null || orderProduct === void 0 ? void 0 : orderProduct.offer) === null || _b === void 0 ? void 0 : _b.refId.toString());
         const dealProduct = deal === null || deal === void 0 ? void 0 : deal.products.find((dp) => dp.productId.toString() === p._id.toString());
         const saleProduct = hasSale
-            ? (_b = activeSale === null || activeSale === void 0 ? void 0 : activeSale.products) === null || _b === void 0 ? void 0 : _b.find((sp) => sp.productId.toString() === p._id.toString())
+            ? (_c = activeSale === null || activeSale === void 0 ? void 0 : activeSale.products) === null || _c === void 0 ? void 0 : _c.find((sp) => sp.productId.toString() === p._id.toString())
             : null;
         const discountCal = (0, order_utils_1.calculateDiscountPrice)(p.price, saleProduct
             ? saleProduct.discount
@@ -164,10 +164,10 @@ const addOrderToDB = (data, user, customer) => __awaiter(void 0, void 0, void 0,
             name: p.name,
             productId: p._id,
             finalPrice: discountCal.discountPrice,
-            quantity: ((_c = data.products.find((pd) => pd.id.toString() === p._id.toString())) === null || _c === void 0 ? void 0 : _c.quantity) || 1,
+            quantity: ((_d = data.products.find((pd) => pd.id.toString() === p._id.toString())) === null || _d === void 0 ? void 0 : _d.quantity) || 1,
             shipping: p.shipping.free ? 0 : p.shipping.cost,
             tax: 0,
-            image: p.thumbnail || ((_d = p.gallery) === null || _d === void 0 ? void 0 : _d[0]) || "",
+            image: p.thumbnail || ((_e = p.gallery) === null || _e === void 0 ? void 0 : _e[0]) || "",
             discountApplied: {
                 discountValue: discountCal.discountAmount,
                 description: deal === null || deal === void 0 ? void 0 : deal.title,

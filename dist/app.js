@@ -15,7 +15,7 @@ app.use((0, cors_1.default)({
     origin: [
         "http://localhost:3000",
         "http://localhost:3001",
-        "http://192.168.0.101:4000",
+        "http://192.168.0.103:3000",
         "http://localhost:4000",
         "http://192.168.0.112:3000",
         "https://gadget-grid-admin-v2-fork.vercel.app",

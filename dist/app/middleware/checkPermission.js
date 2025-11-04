@@ -34,7 +34,7 @@ const checkPermission = (feature, accessType) => {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "Your account is blocked", "unauthorized access request");
         }
         const role = yield roles_model_1.Roles.findById(userExist.role);
-        if (!role) {
+        if (!role || role.isDeleted) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "Unauthorized user request");
         }
         const permission = role.permissions.find((p) => p.feature === feature);

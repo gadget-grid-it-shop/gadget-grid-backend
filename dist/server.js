@@ -23,7 +23,6 @@ const deal_queue_1 = require("./app/modules/deals/deal.queue");
 let server;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(config_1.default.database_url);
         yield mongoose_1.default.connect(config_1.default.database_url);
         yield product_queue_1.productQueue.add(product_queue_1.ProductJobName.updateAllProducts, {});
         yield deal_queue_1.dealQueue.add(deal_queue_1.DealJobName.updateAllDeals, {});

@@ -5,6 +5,7 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
 import cookieParser from "cookie-parser";
 import { paymentWebhook } from "./app/modules/order/order.service";
+import redisClient from "./redis";
 
 const app: Application = express();
 
@@ -33,6 +34,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1", router);
+
+app.get("/ping", async (req, res) => {
+  const pong = await redisClient.ping();
+  res.json({ message: "Hello Docker!", redis: pong });
+});
 
 app.use(globalErrorHandler);
 

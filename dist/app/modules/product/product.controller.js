@@ -122,8 +122,8 @@ const getSearchProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void
     });
 }));
 const downloadJsonTemplate = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const category = req.query.category;
-    const result = yield product_service_1.ProductServices.downloadJsonTemplate(category);
+    const query = req.query;
+    const result = yield product_service_1.ProductServices.downloadJsonTemplate(query);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -149,6 +149,19 @@ const getStaticProductSlugs = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result,
     });
 }));
+const getPcBuilderProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.ProductServices.getPcBuilderProductsFromDB(req.params.id, req.query);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Products retrived successfully",
+        data: {
+            products: result.products,
+            filters: result.filters,
+        },
+        pagination: result.pagination,
+    });
+}));
 exports.ProductControllers = {
     getSingleProductBySlug,
     createProduct,
@@ -163,4 +176,5 @@ exports.ProductControllers = {
     downloadJsonTemplate,
     getStaticProductSlugs,
     jsonBulkUpload,
+    getPcBuilderProducts,
 };

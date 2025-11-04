@@ -62,6 +62,7 @@ const userLogin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
 }));
 const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { gadget_grid_refresh_token } = req.cookies;
+    console.log(gadget_grid_refresh_token);
     const result = yield auth_service_1.AuthServices.refreshToken(gadget_grid_refresh_token);
     (0, sendResponse_1.default)(res, {
         success: true,

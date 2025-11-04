@@ -14,4 +14,5 @@ var EAppFeatures;
     EAppFeatures["bulkUpload"] = "bulkUpload";
     EAppFeatures["productFilter"] = "productFilter";
     EAppFeatures["deals"] = "deals";
+    EAppFeatures["settings"] = "settings";
 })(EAppFeatures || (exports.EAppFeatures = EAppFeatures = {}));

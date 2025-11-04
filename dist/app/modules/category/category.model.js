@@ -38,6 +38,6 @@ const CategorySchema = new mongoose_1.Schema({
     },
     image: { type: String, default: "" },
     description: { type: String, default: "" },
-});
+}, { timestamps: true });
 CategorySchema.index({ name: 1 });
 exports.Category = (0, mongoose_1.model)("Category", CategorySchema);

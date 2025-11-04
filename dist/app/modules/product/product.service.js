@@ -61,6 +61,7 @@ const filter_model_1 = __importDefault(require("../productFilters/filter.model")
 const product_redis_1 = require("./product.redis");
 const sift_1 = __importDefault(require("sift"));
 const product_queue_1 = require("./product.queue");
+const settings_model_1 = __importDefault(require("../settings/settings.model"));
 const createProductIntoDB = (payload, email, thisUser) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const user = yield user_model_1.User.isUserExistsByEmail(email);
@@ -540,6 +541,7 @@ const bulkUploadJsonToDB = (file, email) => __awaiter(void 0, void 0, void 0, fu
                     type: ((_a = data.discount) === null || _a === void 0 ? void 0 : _a.type) || "percent",
                     value: Number((_b = data.discount) === null || _b === void 0 ? void 0 : _b.value) || 0,
                 },
+                filters: (data === null || data === void 0 ? void 0 : data.filters) || [],
                 sku: data.sku || (0, slugify_1.default)(data.name || "", { lower: true }),
                 brand: "",
                 model: data.model || "",
@@ -686,7 +688,7 @@ const bulkUploadJsonToDB = (file, email) => __awaiter(void 0, void 0, void 0, fu
     };
     return result;
 });
-const downloadJsonTemplate = (category) => __awaiter(void 0, void 0, void 0, function* () {
+const downloadJsonTemplate = (_a) => __awaiter(void 0, [_a], void 0, function* ({ category, filters, }) {
     const attributes = [];
     let mainCategory = "";
     if (category && mongoose_1.default.isValidObjectId(category)) {
@@ -707,6 +709,10 @@ const downloadJsonTemplate = (category) => __awaiter(void 0, void 0, void 0, fun
             }
         }
     }
+    let filterData = [];
+    if (filters) {
+        filterData = yield filter_model_1.default.find({ _id: { $in: filters } });
+    }
     // Sample product data for the template
     const templateData = [
         {
@@ -722,6 +728,11 @@ const downloadJsonTemplate = (category) => __awaiter(void 0, void 0, void 0, fun
             category: mainCategory,
             description: "",
             videos: [],
+            filters: filterData.map((f) => ({
+                filter: f === null || f === void 0 ? void 0 : f._id,
+                fitlerId: f.filterId,
+                value: "",
+            })),
             gallery: [],
             thumbnail: "",
             meta: {
@@ -737,7 +748,7 @@ const downloadJsonTemplate = (category) => __awaiter(void 0, void 0, void 0, fun
         },
     ];
     // Convert to JSON string with formatting
-    const jsonContent = JSON.stringify(templateData, null, 2);
+    const jsonContent = JSON.stringify({ templateData, filters: filterData }, null, 2);
     return jsonContent;
 });
 const updateProductIntoDB = (id, payload, thisUser) => __awaiter(void 0, void 0, void 0, function* () {
@@ -930,6 +941,42 @@ const getStaticProductSlugsFromDB = () => __awaiter(void 0, void 0, void 0, func
         .select("slug");
     return result;
 });
+const getPcBuilderProductsFromDB = (id, query) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    const pcBuilderSettings = yield settings_model_1.default.findOne();
+    const pcBuilder = pcBuilderSettings === null || pcBuilderSettings === void 0 ? void 0 : pcBuilderSettings.pcBuilder;
+    const page = (query === null || query === void 0 ? void 0 : query.page) ? Number(query.page) : 1;
+    const limit = (query === null || query === void 0 ? void 0 : query.limit) ? Number(query === null || query === void 0 ? void 0 : query.limit) : 20;
+    const skip = (page - 1) * limit;
+    if (!pcBuilder) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "PC builder settigns not found");
+    }
+    const allParts = [
+        ...(_a = pcBuilder.coreComponents) === null || _a === void 0 ? void 0 : _a.parts,
+        ...(_b = pcBuilder.peripherals) === null || _b === void 0 ? void 0 : _b.parts,
+    ];
+    const partCategory = (_c = allParts === null || allParts === void 0 ? void 0 : allParts.find((p) => p.id.toString() === id)) === null || _c === void 0 ? void 0 : _c.category;
+    if (!partCategory) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Category for this part not found");
+    }
+    const categoryQuery = {
+        $or: [
+            {
+                mainCategory: new mongodb_1.ObjectId(partCategory),
+            },
+            {
+                "category.id": new mongodb_1.ObjectId(partCategory),
+            },
+        ],
+    };
+    const filters = yield product_model_1.Product.find(categoryQuery).distinct("filters");
+    const products = yield product_model_1.Product.find(categoryQuery)
+        .sort("createdAt")
+        .skip(skip)
+        .limit(limit);
+    const total = yield product_model_1.Product.countDocuments(categoryQuery);
+    return { products, filters, pagination: { total, currentPage: page, limit } };
+});
 exports.ProductServices = {
     createProductIntoDB,
     getAllProductsFromDB,
@@ -943,4 +990,5 @@ exports.ProductServices = {
     downloadJsonTemplate,
     getStaticProductSlugsFromDB,
     bulkUploadJsonToDB,
+    getPcBuilderProductsFromDB,
 };

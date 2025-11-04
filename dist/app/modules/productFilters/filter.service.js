@@ -60,7 +60,8 @@ const updateFilterIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, fu
         const maxOptionId = 1000;
         updatePayload.options = payload.options.map((newOption) => {
             // Existing option (has optionId): update value, preserve optionId
-            if (newOption.optionId !== undefined) {
+            if (newOption.optionId !== undefined ||
+                newOption.optionId !== "undefined") {
                 const existingOption = existingFilter.options.find((opt) => String(opt.optionId) === String(newOption.optionId));
                 if (!existingOption) {
                     throw new Error(`Option with optionId ${newOption.optionId} not found in filter`);
