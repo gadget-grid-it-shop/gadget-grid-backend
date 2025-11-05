@@ -17,6 +17,7 @@ app.use(
       "http://192.168.0.103:3000",
       "http://localhost:4000",
       "https://www.admin.gadgetgrid.live",
+      "https://admin.gadgetgrid.live",
       "https://gadgetgrid.live",
       "https://www.gadgetgrid.live",
       "https://gadget-grid-admin-v2-fork.vercel.app",
