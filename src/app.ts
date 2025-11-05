@@ -39,7 +39,11 @@ app.use("/api/v1", router);
 
 app.get("/ping", async (req, res) => {
   const pong = await redisClient.ping();
-  res.json({ message: "Hello Docker! update from docker image", redis: pong });
+  res.json({
+    message:
+      "Hello Docker! update from docker image. test after deleting files",
+    redis: pong,
+  });
 });
 
 app.use(globalErrorHandler);
