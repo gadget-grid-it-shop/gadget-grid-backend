@@ -19,8 +19,8 @@ jobs:
 
       - name: Build & Push
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USER }}/gadgetgrid:test .
-          docker push ${{ secrets.DOCKERHUB_USER }}/gadgetgrid:test
+          docker build -t ${{ secrets.DOCKERHUB_USER }}/gadgetgrid:latest .
+          docker push ${{ secrets.DOCKERHUB_USER }}/gadgetgrid:latest
 
   deploy:
     needs: build-and-push
