@@ -20,6 +20,7 @@ export enum EAppFeatures {
   productFilter = "productFilter",
   deals = "deals",
   settings = "settings",
+  orders = "orders",
 }
 
 export interface TPermission {

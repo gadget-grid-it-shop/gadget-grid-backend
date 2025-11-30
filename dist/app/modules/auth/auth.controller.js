@@ -148,6 +148,18 @@ const registerCustomer = (0, catchAsync_1.default)((req, res) => __awaiter(void 
         data: result,
     });
 }));
+const updateMyProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user.id;
+    const data = req.body;
+    console.log("updateing profile");
+    const result = yield auth_service_1.AuthServices.updateMyProfileToDB(data, user);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Profile updated successfully",
+        data: result,
+    });
+}));
 exports.AuthController = {
     adminLogin,
     refreshToken,
@@ -159,4 +171,5 @@ exports.AuthController = {
     updatePassword,
     userLogin,
     registerCustomer,
+    updateMyProfile,
 };

@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const product_model_1 = require("../product/product.model");
 const order_utils_1 = require("./order.utils");
+const mongoose_1 = require("mongoose");
 const order_model_1 = __importDefault(require("./order.model"));
 const config_1 = __importDefault(require("../../config"));
 const user_model_1 = require("../user/user.model");
@@ -305,6 +306,104 @@ const getMyOrdersFromDB = (query, userId) => __awaiter(void 0, void 0, void 0, f
     const orders = yield order_model_1.default.find({ user: userId }).skip(skip).limit(limit);
     return orders;
 });
+const admingetAllOrdersFromDb = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(query.limit) || 10)); // cap limit
+    const skip = (page - 1) * limit;
+    // Build filter object
+    const filter = {};
+    // 1. Filter by user (optional now for admin)
+    if (query.userId) {
+        filter.user = new mongoose_1.Types.ObjectId(query.userId);
+    }
+    // 2. Filter by discountApplied.type inside items array
+    if (query.discountType && query.discountType !== "all") {
+        filter["items.discountApplied.type"] = query.discountType;
+    }
+    // 3. Price range filtering on totalAmount
+    if (query.minPrice || query.maxPrice) {
+        filter.totalAmount = {};
+        if (query.minPrice) {
+            filter.totalAmount.$gte = Number(query.minPrice);
+        }
+        if (query.maxPrice) {
+            filter.totalAmount.$lte = Number(query.maxPrice);
+        }
+    }
+    // Optional: filter by current status
+    if (query.status && query.status !== "all") {
+        filter.currentStatus = query.status;
+    }
+    // Optional: filter by payment status
+    if (query.paymentStatus && query.paymentStatus !== "all") {
+        filter.paymentStatus = query.paymentStatus;
+    }
+    // Optional: search by order number (partial match)
+    if (query.search) {
+        filter.orderNumber = { $regex: query.search, $options: "i" };
+    }
+    // Sorting
+    const sort = {};
+    const sortBy = query.sortBy || "createdAt";
+    const sortOrder = query.sortOrder === "asc" ? 1 : -1;
+    if (["createdAt", "totalAmount", "orderNumber"].includes(sortBy)) {
+        sort[sortBy] = sortOrder;
+    }
+    else {
+        sort.createdAt = -1; // default
+    }
+    // Execute query with aggregation for better performance on array fields
+    const orders = yield order_model_1.default.aggregate([
+        { $match: filter },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "userInfo",
+            },
+        },
+        { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: true } },
+        {
+            $addFields: {
+                userEmail: "$userInfo.email",
+                "userInfo.fullName": {
+                    $concat: ["$userInfo.firstName", " ", "$userInfo.lastName"],
+                },
+            },
+        },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $project: {
+                "userInfo.password": 0,
+                "userInfo.__v": 0,
+                "userInfo.address": 0,
+                "userInfo.opt": 0,
+                "userInfo.userType": 0,
+                "userInfo.isVerified": 0,
+            },
+        },
+    ]);
+    // Get total count for pagination metadata
+    const totalPipeline = [{ $match: filter }, { $count: "total" }];
+    const totalResult = yield order_model_1.default.aggregate(totalPipeline);
+    const total = ((_a = totalResult[0]) === null || _a === void 0 ? void 0 : _a.total) || 0;
+    const totalPages = Math.ceil(total / limit);
+    return {
+        orders,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+        },
+    };
+});
 const getOrderByOrderNumberFormDB = (user, orderNumber) => __awaiter(void 0, void 0, void 0, function* () {
     const result = order_model_1.default.findOne({ user, orderNumber });
     return result;
@@ -313,4 +412,5 @@ exports.OrderServices = {
     addOrderToDB,
     getMyOrdersFromDB,
     getOrderByOrderNumberFormDB,
+    admingetAllOrdersFromDb,
 };

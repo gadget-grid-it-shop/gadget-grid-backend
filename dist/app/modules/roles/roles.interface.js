@@ -15,4 +15,5 @@ var EAppFeatures;
     EAppFeatures["productFilter"] = "productFilter";
     EAppFeatures["deals"] = "deals";
     EAppFeatures["settings"] = "settings";
+    EAppFeatures["orders"] = "orders";
 })(EAppFeatures || (exports.EAppFeatures = EAppFeatures = {}));

@@ -363,6 +363,129 @@ const getMyOrdersFromDB = async (
   return orders;
 };
 
+interface AdminOrderQuery {
+  page?: string | number;
+  limit?: string | number;
+  userId?: string; // filter by user
+  discountType?: "product" | "flashSale" | "deal" | "coupon" | "all"; // discountApplied.type
+  minPrice?: string | number;
+  maxPrice?: string | number;
+  status?: string;
+  paymentStatus?: string;
+  search?: string; // optional: search by orderNumber
+  sortBy?: string; // e.g., "createdAt", "totalAmount"
+  sortOrder?: "asc" | "desc";
+}
+
+const admingetAllOrdersFromDb = async (query: AdminOrderQuery) => {
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 10)); // cap limit
+  const skip = (page - 1) * limit;
+
+  // Build filter object
+  const filter: any = {};
+
+  // 1. Filter by user (optional now for admin)
+  if (query.userId) {
+    filter.user = new Types.ObjectId(query.userId);
+  }
+
+  // 2. Filter by discountApplied.type inside items array
+  if (query.discountType && query.discountType !== "all") {
+    filter["items.discountApplied.type"] = query.discountType;
+  }
+
+  // 3. Price range filtering on totalAmount
+  if (query.minPrice || query.maxPrice) {
+    filter.totalAmount = {};
+    if (query.minPrice) {
+      filter.totalAmount.$gte = Number(query.minPrice);
+    }
+    if (query.maxPrice) {
+      filter.totalAmount.$lte = Number(query.maxPrice);
+    }
+  }
+
+  // Optional: filter by current status
+  if (query.status && query.status !== "all") {
+    filter.currentStatus = query.status;
+  }
+
+  // Optional: filter by payment status
+  if (query.paymentStatus && query.paymentStatus !== "all") {
+    filter.paymentStatus = query.paymentStatus;
+  }
+
+  // Optional: search by order number (partial match)
+  if (query.search) {
+    filter.orderNumber = { $regex: query.search, $options: "i" };
+  }
+
+  // Sorting
+  const sort: any = {};
+  const sortBy = query.sortBy || "createdAt";
+  const sortOrder = query.sortOrder === "asc" ? 1 : -1;
+
+  if (["createdAt", "totalAmount", "orderNumber"].includes(sortBy)) {
+    sort[sortBy] = sortOrder;
+  } else {
+    sort.createdAt = -1; // default
+  }
+
+  // Execute query with aggregation for better performance on array fields
+  const orders = await Order.aggregate([
+    { $match: filter },
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "userInfo",
+      },
+    },
+    { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        userEmail: "$userInfo.email",
+        "userInfo.fullName": {
+          $concat: ["$userInfo.firstName", " ", "$userInfo.lastName"],
+        },
+      },
+    },
+    { $sort: sort },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        "userInfo.password": 0,
+        "userInfo.__v": 0,
+        "userInfo.address": 0,
+        "userInfo.opt": 0,
+        "userInfo.userType": 0,
+        "userInfo.isVerified": 0,
+      },
+    },
+  ]);
+
+  // Get total count for pagination metadata
+  const totalPipeline = [{ $match: filter }, { $count: "total" }];
+  const totalResult = await Order.aggregate(totalPipeline);
+  const total = totalResult[0]?.total || 0;
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    orders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+};
+
 const getOrderByOrderNumberFormDB = async (
   user: string,
   orderNumber: string
@@ -376,4 +499,5 @@ export const OrderServices = {
   addOrderToDB,
   getMyOrdersFromDB,
   getOrderByOrderNumberFormDB,
+  admingetAllOrdersFromDb,
 };

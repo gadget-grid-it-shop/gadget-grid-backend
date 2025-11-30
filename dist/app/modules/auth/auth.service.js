@@ -310,12 +310,11 @@ const getMyDataFromDB = (email, query) => __awaiter(void 0, void 0, void 0, func
     }
     const result = yield user_model_1.User.findOne({ email })
         .populate(populate)
-        .select(select);
+        .select(`${select} -password -otp`);
     return result;
 });
 const createCustomerIntoDB = (customer) => __awaiter(void 0, void 0, void 0, function* () {
     delete customer.isDeleted;
-    console.log({ customer });
     const user = {
         email: customer.email,
         password: customer.password,
@@ -362,6 +361,21 @@ const createCustomerIntoDB = (customer) => __awaiter(void 0, void 0, void 0, fun
         throw new AppError_1.default(http_status_1.default.CONFLICT, err instanceof AppError_1.default ? err === null || err === void 0 ? void 0 : err.message : "Failed to create user");
     }
 });
+const updateMyProfileToDB = (data, user) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { name, address, phoneNumber, profilePicture } = data;
+        const result = yield user_model_1.User.findByIdAndUpdate(user, {
+            name,
+            address,
+            profilePicture,
+            phoneNumber,
+        });
+        return result;
+    }
+    catch (err) {
+        throw new AppError_1.default(http_status_1.default.CONFLICT, err instanceof AppError_1.default ? err === null || err === void 0 ? void 0 : err.message : "Failed to update profile");
+    }
+});
 exports.AuthServices = {
     adminLoginFromDB,
     refreshToken,
@@ -373,4 +387,5 @@ exports.AuthServices = {
     updatePasswordService,
     userLoginFromDB,
     createCustomerIntoDB,
+    updateMyProfileToDB,
 };

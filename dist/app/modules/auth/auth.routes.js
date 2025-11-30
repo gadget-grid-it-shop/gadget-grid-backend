@@ -18,6 +18,7 @@ router.post("/reset-password", (0, validateRequest_1.validateRequest)(auth_valid
 router.post("/send-verification", (0, validateRequest_1.validateRequest)(auth_validation_1.authValidations.forgotPassValidationSchema), auth_controller_1.AuthController.SendVerificationEmail);
 router.post("/verify-otp", (0, validateRequest_1.validateRequest)(auth_validation_1.authValidations.forgotPassValidationSchema), auth_controller_1.AuthController.verifyEmail);
 router.get("/getMyData", (0, auth_1.default)(), auth_controller_1.AuthController.getMyData);
+router.post("/updateProfile", (0, auth_1.default)(), auth_controller_1.AuthController.updateMyProfile);
 // router.get(
 //   "/getMyData/customer",
 //   validateAuth(),

@@ -49,4 +49,22 @@ const getOrderByOrderNumber = catchAsync(async (req, res) => {
   });
 });
 
-export const OrderController = { addOrder, getMyOrders, getOrderByOrderNumber };
+const admingetAllOrders = catchAsync(async (req, res) => {
+  const query = req.query;
+
+  const result = await OrderServices.admingetAllOrdersFromDb(query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Orders retrived successfully",
+    data: result,
+  });
+});
+
+export const OrderController = {
+  addOrder,
+  getMyOrders,
+  getOrderByOrderNumber,
+  admingetAllOrders,
+};
