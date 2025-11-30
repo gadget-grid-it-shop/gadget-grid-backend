@@ -79,6 +79,10 @@ const statusHistorySchema = new Schema<IStatusHistory>(
       type: String,
       trim: true,
     },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
@@ -137,6 +141,9 @@ const orderSchema = new Schema<IOrder>(
       refId: { type: Schema.Types.ObjectId, ref: "Coupons" },
       description: { type: String, trim: true },
       discountValue: { type: Number, min: 0 },
+    },
+    trackingNumber: {
+      type: String,
     },
     totalAmount: {
       type: Number,

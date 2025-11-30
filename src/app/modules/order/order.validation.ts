@@ -32,8 +32,67 @@ const createOrderValidationSchema = z.object({
   saveAddress: z.boolean().optional(),
 });
 
+const OrderStatusEnum = z.enum([
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
+]);
+
+const PaymentStatusEnum = z.enum(["pending", "paid", "failed", "refunded"]);
+const PaymentMethodEnum = z.enum(["card", "paypal", "bank_transfer", "cod"]);
+const ShippingMethodEnum = z.enum(["standard", "express", "overnight"]);
+
+const AdminUpdateOrderSchema = z
+  .object({
+    currentStatus: OrderStatusEnum.optional(),
+    paymentStatus: PaymentStatusEnum.optional(),
+    paymentMethod: PaymentMethodEnum.optional(),
+    shippingMethod: ShippingMethodEnum.optional(),
+    trackingNumber: z
+      .string()
+      .regex(/^[A-Z0-9-]{5,50}$/i, "Invalid tracking number format")
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
+
+    adminNotes: z
+      .string()
+      .max(500, "Notes too long (max 500 chars)")
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
+
+    // Addresses — at least one field must change or be provided
+    shippingAddress: addressSchema.optional(),
+
+    billingAddress: addressSchema.optional().nullable(), // can be null = same as shipping
+
+    // Optional: allow partial updates
+  })
+  .refine(
+    (data) => {
+      // At least one field must be provided for update
+      const hasUpdate = Object.values(data).some(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          (typeof value !== "object" || Object.keys(value).length > 0)
+      );
+      return hasUpdate;
+    },
+    {
+      message: "At least one field must be provided to update the order",
+    }
+  );
+
+// TypeScript type from schema
+export type TAdminUpdateOrderPayload = z.infer<typeof AdminUpdateOrderSchema>;
+
 const orderValidations = {
   createOrderValidationSchema,
+  AdminUpdateOrderSchema,
 };
 
 export default orderValidations;

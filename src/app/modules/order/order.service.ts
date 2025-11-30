@@ -17,7 +17,6 @@ import {
 import { TNotification } from "../notification/notification.interface";
 import { TUser } from "../user/user.interface";
 import { IAddress } from "../address/address.interface";
-import { TProduct } from "../product/product.interface";
 import Deal from "../deals/deals.model";
 import FlashSale from "../flashSales/flashSale.model";
 import { EmailJobName, emailQueue } from "../../queues/email.queue";
@@ -486,13 +485,101 @@ const admingetAllOrdersFromDb = async (query: AdminOrderQuery) => {
   };
 };
 
-const getOrderByOrderNumberFormDB = async (
-  user: string,
-  orderNumber: string
-) => {
-  const result = Order.findOne({ user, orderNumber });
-
+const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
+  const result = Order.findOne({ orderNumber })
+    .populate("user")
+    .populate([
+      {
+        path: "statusHistory.updatedBy",
+        select: "fullName name email profilePicture role",
+        populate: [
+          {
+            path: "role",
+            select: "role",
+          },
+        ],
+      },
+    ]);
   return result;
+};
+
+const adminUpdateOrderToDB = async (
+  userId: Types.ObjectId,
+  id: string,
+  updateData: Partial<IOrder> & { adminNotes?: string }
+) => {
+  const order = await Order.findById(id);
+  if (!order) throw new Error("Order not found");
+
+  const customer = await User.findById(order.user);
+
+  // Auto-add to status history if currentStatus changed
+  if (
+    updateData.currentStatus &&
+    updateData.currentStatus !== order.currentStatus
+  ) {
+    order.statusHistory.push({
+      status: updateData.currentStatus,
+      notes:
+        updateData.adminNotes?.trim() ||
+        `Status updated to ${updateData.currentStatus} by admin`,
+      timestamp: new Date(),
+      updatedBy: userId,
+    });
+  }
+
+  // Merge updates
+  const updatedOrder = await Order.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        ...updateData,
+        shippingAddress: updateData.shippingAddress,
+        billingAddress: updateData.billingAddress || updateData.shippingAddress,
+        currentStatus: updateData.currentStatus || order.currentStatus,
+        paymentStatus: updateData.paymentStatus || order.paymentStatus,
+        paymentMethod: updateData.paymentMethod || order.paymentMethod,
+        shippingMethod: updateData.shippingMethod || order.shippingMethod,
+        trackingNumber: updateData.trackingNumber,
+      },
+      ...(updateData.currentStatus && { statusHistory: order.statusHistory }),
+    },
+    { new: true, runValidators: true }
+  ).populate("user", "name email phone");
+
+  if (order && customer) {
+    try {
+      const notifications = await buildNotifications({
+        actionType: "update",
+        notificationType: "order",
+        source: order.orderNumber,
+        text: `updated an order ${order.orderNumber}`,
+        thisUser: customer,
+      });
+
+      const notification: TNotification = {
+        notificationType: "order",
+        actionType: "update",
+        opened: false,
+        userFrom: customer._id,
+        userTo: customer?._id,
+        source: String(order.orderNumber),
+        text: `Order update ${order.orderNumber}. ${
+          updateData.currentStatus &&
+          updateData.currentStatus !== order.currentStatus &&
+          `Your order is ${updateData.currentStatus}`
+        }`,
+      };
+
+      await addNotifications({
+        notifications: [...notifications, notification],
+        userFrom: customer,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  return updatedOrder;
 };
 
 export const OrderServices = {
@@ -500,4 +587,5 @@ export const OrderServices = {
   getMyOrdersFromDB,
   getOrderByOrderNumberFormDB,
   admingetAllOrdersFromDb,
+  adminUpdateOrderToDB,
 };

@@ -27,9 +27,11 @@ export interface IStatusHistory {
     | "shipped"
     | "delivered"
     | "cancelled"
-    | "returned";
+    | "returned"
+    | "confirmed";
   timestamp: Date;
   notes?: string;
+  updatedBy?: Types.ObjectId;
 }
 
 // Interface for Payment Details
@@ -41,6 +43,7 @@ export interface IPaymentDetails {
 // Main Order Interface
 export interface IOrder {
   user: Types.ObjectId;
+  trackingNumber?: string;
   orderNumber: string;
   items: IOrderItem[];
   subtotal: number;

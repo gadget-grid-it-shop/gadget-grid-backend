@@ -18,6 +18,13 @@ router.post(
 router.get("/my-orders", validateCustomer(), OrderController.getMyOrders);
 router.get("/single/:orderNumber", OrderController.getOrderByOrderNumber);
 
+router.patch(
+  "/admin/update/:id",
+  checkPermission(EAppFeatures.orders, "update"),
+  validateRequest(orderValidations.AdminUpdateOrderSchema),
+  OrderController.adminUpdateOrder
+);
+
 router.get(
   "/admin/get-all",
   checkPermission(EAppFeatures.orders, "read"),

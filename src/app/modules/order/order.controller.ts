@@ -34,10 +34,10 @@ const getMyOrders = catchAsync(async (req, res) => {
 });
 
 const getOrderByOrderNumber = catchAsync(async (req, res) => {
-  const userId = req.user.id;
+  // const userId = req.user.id;
   const orderNumber = req.params.orderNumber;
   const result = await OrderServices.getOrderByOrderNumberFormDB(
-    userId.toString(),
+    // userId.toString(),
     orderNumber
   );
 
@@ -62,9 +62,25 @@ const admingetAllOrders = catchAsync(async (req, res) => {
   });
 });
 
+const adminUpdateOrder = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const id = req.params.id;
+  const data = req.body;
+
+  const result = await OrderServices.adminUpdateOrderToDB(userId, id, data);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Order updated successfully",
+    data: result,
+  });
+});
+
 export const OrderController = {
   addOrder,
   getMyOrders,
   getOrderByOrderNumber,
   admingetAllOrders,
+  adminUpdateOrder,
 };
