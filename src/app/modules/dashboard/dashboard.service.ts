@@ -13,6 +13,41 @@ const getDashboardAnalyticsFromDB = async (year?: string) => {
     createdAt: { $gte: startOfYear, $lt: endOfYear },
   };
 
+  const stats = await Order.aggregate([
+    {
+      $facet: {
+        totals: [
+          {
+            $group: {
+              _id: null,
+              totalOrders: { $sum: 1 },
+              totalRevenue: { $sum: "$totalAmount" },
+              avgOrderValue: { $avg: "$totalAmount" },
+            },
+          },
+        ],
+        pending: [
+          {
+            $match: { currentStatus: "pending" },
+          },
+          {
+            $count: "pendingOrders",
+          },
+        ],
+      },
+    },
+  ]);
+
+  const totals = stats[0].totals[0] || {};
+  const pending = stats[0].pending[0] || { pendingOrders: 0 };
+
+  const overview = {
+    totalOrders: totals.totalOrders || 0,
+    totalRevenue: totals.totalRevenue || 0,
+    avgOrderValue: totals.avgOrderValue || 0,
+    pendingOrders: pending.pendingOrders || 0,
+  };
+
   // 1. Monthly Revenue & Orders (12 months guaranteed)
   const monthlyStats = await Order.aggregate([
     { $match: matchStage },
@@ -174,36 +209,73 @@ const getDashboardAnalyticsFromDB = async (year?: string) => {
   ]);
 
   // 6. Order Amount Distribution
+
+  const highestOrder = await Order.findOne().sort({ totalAmount: -1 });
+  console.log(highestOrder);
   const orderAmountDistribution = await Order.aggregate([
     { $match: matchStage },
+
     {
-      $group: {
-        _id: {
+      $bucket: {
+        groupBy: "$totalAmount",
+        boundaries: [
+          0,
+          1000,
+          3000,
+          5000,
+          10000,
+          20000,
+          50000,
+          100000,
+          150000,
+          200000,
+          highestOrder?.totalAmount,
+          Infinity,
+        ],
+        default: "Other",
+        output: {
+          orders: { $sum: 1 },
+        },
+      },
+    },
+
+    // Convert bucket _id (number) → readable range label
+    {
+      $addFields: {
+        range: {
           $switch: {
             branches: [
-              { case: { $lt: ["$totalAmount", 100] }, then: "$0-100" },
-              { case: { $lt: ["$totalAmount", 300] }, then: "$100-300" },
-              { case: { $lt: ["$totalAmount", 500] }, then: "$300-500" },
-              { case: { $lt: ["$totalAmount", 1000] }, then: "$500-1000" },
+              { case: { $eq: ["$_id", 0] }, then: "0 - 999" },
+              { case: { $eq: ["$_id", 1000] }, then: "1000 - 2999" },
+              { case: { $eq: ["$_id", 3000] }, then: "3000 - 4999" },
+              { case: { $eq: ["$_id", 5000] }, then: "5000 - 9999" },
+              { case: { $eq: ["$_id", 10000] }, then: "10000 - 19999" },
+              { case: { $eq: ["$_id", 20000] }, then: "20000 - 49999" },
+              { case: { $eq: ["$_id", 50000] }, then: "50000 - 99999" },
+              { case: { $eq: ["$_id", 100000] }, then: "50000 - 149999" },
+              { case: { $eq: ["$_id", 150000] }, then: "150000 - 199999" },
+              { case: { $eq: ["$_id", 200000] }, then: "200000 - 219999" },
+              {
+                case: { $eq: ["$_id", 210000] },
+                then: `210000 - ${highestOrder?.totalAmount}`,
+              },
             ],
-            default: "$1000+",
+            default: "Other",
           },
         },
-        orders: { $sum: 1 },
       },
     },
+
+    // Final projection - make sure to include all needed fields
     {
       $project: {
-        range: "$_id",
-        orders: 1,
         _id: 0,
-      },
-    },
-    {
-      $sort: {
         range: 1,
+        orders: 1,
       },
     },
+
+    { $sort: { _id: 1 } }, // sort by bucket order
   ]);
 
   // 7. Top Selling Products
@@ -252,6 +324,7 @@ const getDashboardAnalyticsFromDB = async (year?: string) => {
     shippingMethodDistribution,
     orderAmountDistribution,
     topProducts,
+    overview,
   };
 };
 
