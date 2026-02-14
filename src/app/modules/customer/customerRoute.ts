@@ -8,17 +8,22 @@ import { SettingsController } from "../settings/settings.controller";
 const router = Router();
 
 router.get("/category/get-all", customerController.getCategories);
+router.get("/category/:slug", customerController.getCategoryDataBySlug);
 router.get("/category/static-slugs", customerController.getStaticCategorySlugs);
 router.get("/category/get-featured", customerController.getFeaturedCategories);
 router.get("/banner/get-banner/:id", BannerController.getBanner);
 router.get("/product/get-featured", ProductControllers.getFeaturedProducts);
 router.get(
   "/product/by-category/:slug",
-  ProductControllers.getProductsByCategory
+  ProductControllers.getProductsByCategory,
+);
+router.get(
+  "/filters/by-category/:slug",
+  ProductControllers.getFiltersByCategory,
 );
 router.get(
   "/product/get-single/:slug",
-  ProductControllers.getSingleProductBySlug
+  ProductControllers.getSingleProductBySlug,
 );
 
 router.get("/data-for-sitemap", customerController.getDataForSitemap);

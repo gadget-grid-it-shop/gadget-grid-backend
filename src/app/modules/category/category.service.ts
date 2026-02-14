@@ -121,14 +121,14 @@ const deleteCategoryFromDB = async (id: string, admin: TUser) => {
 const updateCategoryIntoDB = async (
   id: string,
   payload: TUpdateCategory,
-  admin: TUser
+  admin: TUser,
 ) => {
   const exist = await Category.findById(id);
   if (exist) {
     const update = await Category.findByIdAndUpdate(
       id,
       { ...payload },
-      { new: true }
+      { new: true },
     );
 
     console.log(payload);
@@ -203,13 +203,100 @@ const getDataForSitemapFromDB = async () => {
   }).select("slug updatedAt");
 
   const categories = await Category.find({ isDeleted: false }).select(
-    "slug updatedAt"
+    "slug updatedAt",
   );
 
   return {
     products,
     categories,
   };
+};
+
+const getCatgoryDataBySlugFromDB = async (slug: string) => {
+  const catExist = await Category.findOne({ slug, isDeleted: false }).select(
+    "_id slug name description",
+  );
+  if (!catExist) {
+    throw new AppError(httpStatus.CONFLICT, "Category does not exist");
+  }
+
+  const allCategories = await Category.find()
+    .select("_id name slug parent_id image")
+    .lean()
+    .exec();
+  const categoryMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
+
+  // Function to build category tree using pre-fetched categories
+  const buildCategoryTree = (categoryId: string) => {
+    const tree = [];
+
+    let currentId = categoryId?.toString();
+    while (currentId && categoryMap.has(currentId)) {
+      const category = categoryMap.get(currentId);
+      if (category) {
+        tree.unshift({
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+        });
+        currentId = category.parent_id?.toString();
+      }
+    }
+
+    // Log warning if a category or parent was not found
+    if (currentId && !categoryMap.has(currentId)) {
+      console.warn(`Parent category not found for ID: ${currentId}`);
+    }
+
+    return tree;
+  };
+
+  const buildChildTree = (categoryId: string) => {
+    const tree = [];
+    const queue = [categoryId?.toString()];
+    const visited = new Set();
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId || visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const category = categoryMap.get(currentId);
+      if (!category) {
+        console.warn(`Child category not found for ID: ${currentId}`);
+        continue;
+      }
+
+      if (category._id.toString() !== catExist._id.toString()) {
+        tree.push({
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+          image: category.image,
+          description: category?.description,
+        });
+      }
+
+      // Find all children of the current category
+      const children = allCategories.filter(
+        (c) => c.parent_id?.toString() === currentId,
+      );
+      queue.push(...children.map((c) => c._id.toString()));
+    }
+
+    return tree;
+  };
+
+  const categoryTree = buildCategoryTree(catExist._id.toString());
+  const childTree = buildChildTree(catExist._id.toString());
+
+  const data = {
+    categoryTree,
+    childTree,
+    category: catExist,
+  };
+
+  return data;
 };
 
 export const CategoryServices = {
@@ -221,4 +308,5 @@ export const CategoryServices = {
   getFeaturedCategoriesFromDB,
   getStaticCategorySlugsFromDB,
   getDataForSitemapFromDB,
+  getCatgoryDataBySlugFromDB,
 };

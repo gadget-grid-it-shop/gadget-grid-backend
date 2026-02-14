@@ -45,9 +45,23 @@ const getDataForSitemap = catchAsync(async (req, res) => {
   });
 });
 
+const getCategoryDataBySlug = catchAsync(async (req, res) => {
+  const result = await CategoryServices.getCatgoryDataBySlugFromDB(
+    req.params.slug,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retirved category data by slug",
+    data: result,
+  });
+});
+
 export const customerController = {
   getCategories,
   getFeaturedCategories,
   getDataForSitemap,
   getStaticCategorySlugs,
+  getCategoryDataBySlug,
 };

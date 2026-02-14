@@ -58,20 +58,29 @@ const createAdminIntoDB = async (admin: TUser) => {
   }
 };
 
-const getAllAdminsFromDB = async () => {
-  const result = await User.find({
-    isDeleted: false,
-    userType: "admin",
-  })
-    .select("name fullName email role _id profilePicture isActive isVerified")
-    .populate([
-      {
-        path: "role",
-        select: "role isDeleted -_id",
-      },
-    ]);
+const getAllAdminsFromDB = async (userType?: "admin" | "customer") => {
+  if (userType === "admin") {
+    const result = await User.find({
+      isDeleted: false,
+      userType: "admin",
+    })
+      .select("name fullName email role _id profilePicture isActive isVerified")
+      .populate([
+        {
+          path: "role",
+          select: "role isDeleted -_id",
+        },
+      ]);
 
-  return result;
+    return result;
+  } else {
+    const result = await User.find({
+      isDeleted: false,
+      userType,
+    }).select("name fullName email _id profilePicture isActive isVerified");
+
+    return result;
+  }
 };
 
 const getSingleUserFromDB = async (id: string) => {

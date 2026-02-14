@@ -92,7 +92,7 @@ const getFeaturedProducts = catchAsync(async (req, res) => {
 });
 
 const getProductsByCategory = catchAsync(async (req, res) => {
-  const result = await ProductServices.getProductByCategory(
+  const result = await ProductServices.getProductByCategoryFromDB(
     req.params.slug,
     req.query
   );
@@ -103,6 +103,18 @@ const getProductsByCategory = catchAsync(async (req, res) => {
     message: "Successfully retrived all products",
     data: result.result,
     pagination: result.pagination,
+  });
+});
+const getFiltersByCategory = catchAsync(async (req, res) => {
+  const result = await ProductServices.getFiltersByCategoryFromDB(
+    req.params.slug
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully retrived all filters",
+    data: result.result,
   });
 });
 
@@ -217,4 +229,5 @@ export const ProductControllers = {
   getStaticProductSlugs,
   jsonBulkUpload,
   getPcBuilderProducts,
+  getFiltersByCategory,
 };

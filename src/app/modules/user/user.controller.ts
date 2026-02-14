@@ -19,7 +19,9 @@ const createUser = catchAsync(async (req, res, next) => {
 });
 
 const getAllUsers = catchAsync(async (req, res) => {
-  const result = await UserServices.getAllAdminsFromDB();
+  const result = await UserServices.getAllAdminsFromDB(
+    req.query.userType as TUser["userType"]
+  );
 
   sendResponse(res, {
     success: true,

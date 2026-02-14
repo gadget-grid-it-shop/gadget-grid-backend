@@ -55,7 +55,7 @@ import { TProductFilter } from "../productFilters/filter.interface";
 const createProductIntoDB = async (
   payload: TProduct,
   email: string,
-  thisUser: TUser
+  thisUser: TUser,
 ) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
@@ -69,13 +69,13 @@ const createProductIntoDB = async (
   productData.createdBy = user._id;
   productData.slug = slug;
   productData.mainCategory = productData.category?.find(
-    (c) => c.main === true
+    (c) => c.main === true,
   )?.id;
 
   if (payload.discount && payload.discount?.value > 0) {
     productData.special_price = claculateSpecialPrice(
       payload.discount,
-      payload.price
+      payload.price,
     );
   }
 
@@ -229,12 +229,12 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
 const getSingleProductFromDB = async (
   id: string,
-  query: Record<string, any>
+  query: Record<string, any>,
 ) => {
   if (!id) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "Please provide product id to get details"
+      "Please provide product id to get details",
     );
   }
 
@@ -254,7 +254,7 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
   if (!slug) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "Please provide product id to get details"
+      "Please provide product id to get details",
     );
   }
 
@@ -311,7 +311,7 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
 const bulkUploadToDB = async (
   file: Express.Multer.File | undefined,
   mapedFields: THeader[],
-  email: string
+  email: string,
 ) => {
   if (!file) {
     throw new AppError(httpStatus.CONFLICT, "No upload file provided");
@@ -323,13 +323,13 @@ const bulkUploadToDB = async (
     (cat) => ({
       ...cat,
       _id: cat._id.toString(),
-    })
+    }),
   );
   const brands = (await Brand.find({ isDeleted: false }).lean()).map(
     (brand) => ({
       ...brand,
       _id: brand._id.toString(),
-    })
+    }),
   );
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
@@ -402,7 +402,7 @@ const bulkUploadToDB = async (
                   const cat = categories.find(
                     (c) =>
                       c.slug === (data as Record<string, any>)[field.key] ||
-                      c._id === (data as Record<string, any>)[field.key]
+                      c._id === (data as Record<string, any>)[field.key],
                   );
                   if (cat) {
                     const productCat = createCategoryArray(categories, cat);
@@ -456,11 +456,11 @@ const bulkUploadToDB = async (
 
                   newData.meta.image = value;
                 } else if (field.value === "warranty.days") {
-                  (newData.warranty = newData.warranty || {
+                  ((newData.warranty = newData.warranty || {
                     days: 0,
                     lifetime: false,
                   }),
-                    (newData.warranty.days = value);
+                    (newData.warranty.days = value));
                 } else if (field.value === "warranty.lifetime") {
                   newData.warranty = newData.warranty || {
                     days: 0,
@@ -476,7 +476,7 @@ const bulkUploadToDB = async (
 
                 if (field.value === "brand") {
                   const exist = brands.find(
-                    (b) => b.name === value || b._id === value
+                    (b) => b.name === value || b._id === value,
                   );
 
                   if (exist) {
@@ -491,7 +491,7 @@ const bulkUploadToDB = async (
                 newData.createdBy = user._id;
                 newData.special_price = claculateSpecialPrice(
                   newData.discount as TDiscount,
-                  Number(newData.price)
+                  Number(newData.price),
                 );
               }
             }
@@ -508,8 +508,8 @@ const bulkUploadToDB = async (
         reject(
           new AppError(
             httpStatus.CONFLICT,
-            `Error parsing file: ${err.message}`
-          )
+            `Error parsing file: ${err.message}`,
+          ),
         );
       },
     });
@@ -518,7 +518,7 @@ const bulkUploadToDB = async (
   if (payload.length === 0 || !payload) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "Failed to parse data. Pelase map all the fields properly"
+      "Failed to parse data. Pelase map all the fields properly",
     );
   }
 
@@ -616,7 +616,7 @@ const bulkUploadToDB = async (
 
 const bulkUploadJsonToDB = async (
   file: Express.Multer.File | undefined,
-  email: string
+  email: string,
 ): Promise<TBulkUploadData> => {
   if (!file) {
     throw new AppError(httpStatus.CONFLICT, "No upload file provided");
@@ -639,13 +639,13 @@ const bulkUploadJsonToDB = async (
     (cat) => ({
       ...cat,
       _id: cat._id.toString(),
-    })
+    }),
   );
   const brands = (await Brand.find({ isDeleted: false }).lean()).map(
     (brand) => ({
       ...brand,
       _id: brand._id.toString(),
-    })
+    }),
   );
 
   let payload: TProduct[] = [];
@@ -656,7 +656,7 @@ const bulkUploadJsonToDB = async (
     if (!Array.isArray(jsonData)) {
       throw new AppError(
         httpStatus.CONFLICT,
-        "JSON file must contain an array of products"
+        "JSON file must contain an array of products",
       );
     }
 
@@ -711,7 +711,7 @@ const bulkUploadJsonToDB = async (
         const cat = categories.find(
           (c) =>
             c.slug.trim() === data.category.trim() ||
-            c._id === data.category.trim()
+            c._id === data.category.trim(),
         );
         if (cat) {
           newData.category = createCategoryArray(categories, cat);
@@ -719,7 +719,7 @@ const bulkUploadJsonToDB = async (
         } else {
           throw new AppError(
             httpStatus.BAD_REQUEST,
-            `Invalid category: ${data.category}`
+            `Invalid category: ${data.category}`,
           );
         }
       } else {
@@ -729,14 +729,14 @@ const bulkUploadJsonToDB = async (
       // Handle brand
       if (data.brand) {
         const exist = brands.find(
-          (b) => b.name === data.brand || b._id === data.brand
+          (b) => b.name === data.brand || b._id === data.brand,
         );
         if (exist) {
           newData.brand = exist._id;
         } else {
           throw new AppError(
             httpStatus.BAD_REQUEST,
-            `Invalid brand: ${data.brand}`
+            `Invalid brand: ${data.brand}`,
           );
         }
       } else {
@@ -752,7 +752,7 @@ const bulkUploadJsonToDB = async (
   if (payload.length === 0) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "No valid data parsed from the JSON file"
+      "No valid data parsed from the JSON file",
     );
   }
 
@@ -803,7 +803,7 @@ const bulkUploadJsonToDB = async (
           (key) => ({
             path: key,
             message: err.errors[key].message,
-          })
+          }),
         );
         withError.push({
           name: record.name,
@@ -921,7 +921,7 @@ const downloadJsonTemplate = async ({
   const jsonContent = JSON.stringify(
     { templateData, filters: filterData },
     null,
-    2
+    2,
   );
 
   return jsonContent;
@@ -930,7 +930,7 @@ const downloadJsonTemplate = async ({
 const updateProductIntoDB = async (
   id: string,
   payload: Partial<TProduct>,
-  thisUser: TUser
+  thisUser: TUser,
 ) => {
   if (!id) {
     throw new AppError(httpStatus.FORBIDDEN, "Please provide product id");
@@ -975,13 +975,16 @@ const getFeaturedProductFromDB = async (queryLimit?: string) => {
   return products;
 };
 
-const getProductByCategory = async (
+const getProductByCategoryFromDB = async (
   slug: string,
-  query: Record<string, unknown>
+  query: Record<string, unknown>,
 ) => {
   const catExist = await Category.findOne({ slug, isDeleted: false }).select(
-    "_id slug name description"
+    "_id slug name description",
   );
+  if (!catExist) {
+    throw new AppError(httpStatus.CONFLICT, "Category does not exist");
+  }
 
   const parsedFilters: ParsedFilters = parseFilters(query.filter as any);
 
@@ -991,13 +994,9 @@ const getProductByCategory = async (
     limit: query.limit ? Number(query.limit) : 10,
   };
 
-  if (!catExist) {
-    throw new AppError(httpStatus.CONFLICT, "Category does not exist");
-  }
-
   const categoryQuery = buildProductQuery(
     catExist._id.toString(),
-    parsedFilters
+    parsedFilters,
   );
 
   // Get paginated products
@@ -1008,6 +1007,28 @@ const getProductByCategory = async (
     .lean();
 
   const total = await Product.countDocuments(categoryQuery);
+
+  pagination.total = total;
+
+  const data = {
+    products,
+    category: catExist,
+  };
+
+  return {
+    result: data,
+    pagination,
+  };
+};
+
+const getFiltersByCategoryFromDB = async (slug: string) => {
+  const catExist = await Category.findOne({ slug, isDeleted: false }).select(
+    "_id slug name description",
+  );
+
+  if (!catExist) {
+    throw new AppError(httpStatus.CONFLICT, "Category does not exist");
+  }
 
   const allCategoryProducts = await Product.find({
     "category.id": catExist._id,
@@ -1026,89 +1047,13 @@ const getProductByCategory = async (
     }
   }
 
-  pagination.total = total;
-
-  const allCategories = await Category.find()
-    .select("_id name slug parent_id image")
-    .lean()
-    .exec();
-  const categoryMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
-
-  // Function to build category tree using pre-fetched categories
-  const buildCategoryTree = (categoryId: string) => {
-    const tree = [];
-
-    let currentId = categoryId?.toString();
-    while (currentId && categoryMap.has(currentId)) {
-      const category = categoryMap.get(currentId);
-      if (category) {
-        tree.unshift({
-          _id: category._id,
-          name: category.name,
-          slug: category.slug,
-        });
-        currentId = category.parent_id?.toString();
-      }
-    }
-
-    // Log warning if a category or parent was not found
-    if (currentId && !categoryMap.has(currentId)) {
-      console.warn(`Parent category not found for ID: ${currentId}`);
-    }
-
-    return tree;
-  };
-
-  const buildChildTree = (categoryId: string) => {
-    const tree = [];
-    const queue = [categoryId?.toString()];
-    const visited = new Set();
-
-    while (queue.length > 0) {
-      const currentId = queue.shift();
-      if (!currentId || visited.has(currentId)) continue;
-      visited.add(currentId);
-
-      const category = categoryMap.get(currentId);
-      if (!category) {
-        console.warn(`Child category not found for ID: ${currentId}`);
-        continue;
-      }
-
-      if (category._id.toString() !== catExist._id.toString()) {
-        tree.push({
-          _id: category._id,
-          name: category.name,
-          slug: category.slug,
-          image: category.image,
-          description: category?.description,
-        });
-      }
-
-      // Find all children of the current category
-      const children = allCategories.filter(
-        (c) => c.parent_id?.toString() === currentId
-      );
-      queue.push(...children.map((c) => c._id.toString()));
-    }
-
-    return tree;
-  };
-
-  const categoryTree = buildCategoryTree(catExist._id.toString());
-  const childTree = buildChildTree(catExist._id.toString());
-
   const data = {
-    products,
     filters,
-    categoryTree,
-    childTree,
     category: catExist,
   };
 
   return {
     result: data,
-    pagination,
   };
 };
 
@@ -1181,7 +1126,7 @@ const getStaticProductSlugsFromDB = async () => {
 
 const getPcBuilderProductsFromDB = async (
   id: string,
-  query: Record<string, unknown>
+  query: Record<string, unknown>,
 ) => {
   const pcBuilderSettings = await Settings.findOne();
   const pcBuilder = pcBuilderSettings?.pcBuilder;
@@ -1205,7 +1150,7 @@ const getPcBuilderProductsFromDB = async (
   if (!partCategory) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      "Category for this part not found"
+      "Category for this part not found",
     );
   }
 
@@ -1237,11 +1182,12 @@ export const ProductServices = {
   getSingleProductFromDB,
   updateProductIntoDB,
   getFeaturedProductFromDB,
-  getProductByCategory,
+  getProductByCategoryFromDB,
   getSingleProductBySlugFromDB,
   getSearchProductsFromDB,
   downloadJsonTemplate,
   getStaticProductSlugsFromDB,
   bulkUploadJsonToDB,
   getPcBuilderProductsFromDB,
+  getFiltersByCategoryFromDB,
 };

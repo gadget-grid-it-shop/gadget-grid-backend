@@ -7,7 +7,7 @@ const createCategory = catchAsync(async (req, res) => {
   const { userData } = req.user;
   const result = await CategoryServices.createCategoryIntoDB(
     req.body,
-    userData
+    userData,
   );
 
   sendResponse(res, {
@@ -44,7 +44,7 @@ const deleteCategory = catchAsync(async (req, res) => {
   const { userData } = req.user;
   const result = await CategoryServices.deleteCategoryFromDB(
     req.params.id,
-    userData
+    userData,
   );
 
   sendResponse(res, {
@@ -60,7 +60,7 @@ const updateCategory = catchAsync(async (req, res) => {
   const result = await CategoryServices.updateCategoryIntoDB(
     req.params.id,
     req.body,
-    userData
+    userData,
   );
 
   sendResponse(res, {
