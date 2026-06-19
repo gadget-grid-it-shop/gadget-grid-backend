@@ -50,13 +50,13 @@ export const createProductValidationSchema = z.object({
     z.object({
       name: z.string(),
       fields: z.record(z.string(), z.string()),
-    })
+    }),
   ),
   meta: MetaSchema.optional(),
   tags: z.array(z.string()).optional(),
   isFeatured: z.boolean().optional(),
   sales: z.number().optional(),
-  createdBy: z.string({ required_error: "Creator information is required" }),
+  createdBy: z.string().optional(),
 });
 
 export const ProductValidations = {

@@ -59,6 +59,8 @@ const createProductIntoDB = async (
 ) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
+  console.log({ payload, email, user });
+
   if (!user._id) {
     throw new AppError(httpStatus.CONFLICT, "Could not find admin information");
   }
