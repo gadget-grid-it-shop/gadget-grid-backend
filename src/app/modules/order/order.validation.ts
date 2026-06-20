@@ -1,14 +1,29 @@
 import z from "zod";
 
 const addressSchema = z.object({
-  address: z.string().min(1, "Address is required").trim(),
-  city: z.string().min(1, "City is required").trim(),
-  district: z.string().min(1, "District is required").trim(),
+  address: z
+    .string({ required_error: "Address is required" })
+    .min(1, "Address is required")
+    .trim(),
+  area: z
+    .string({ required_error: "Area is required" })
+    .min(1, "Area is required")
+    .trim(),
+  district: z
+    .string({ required_error: "District is required" })
+    .min(1, "District is required")
+    .trim(),
 });
 
 const productSchema = z.object({
-  id: z.string().min(1, "District is required").trim(),
-  quantity: z.number().int().positive("Quantity must be a positive integer"),
+  id: z
+    .string({ required_error: "Product ID is required" })
+    .min(1, "Product ID is required")
+    .trim(),
+  quantity: z
+    .number({ required_error: "Quantity is required" })
+    .int()
+    .positive("Quantity must be a positive integer"),
 });
 
 const createOrderValidationSchema = z.object({
@@ -21,15 +36,29 @@ const createOrderValidationSchema = z.object({
       return new Set(ids).size === ids.length;
     }, "Duplicate products are not allowed"),
   billingAddress: addressSchema,
-  shippingAddress: addressSchema,
+  shippingAddress: addressSchema.optional(),
   paymentMethod: z.enum(["card", "paypal", "bank_transfer", "cod"], {
     errorMap: () => ({ message: "Invalid payment method" }),
   }),
-  shippingMethod: z.enum(["standard", "express", "overnight"], {
+  shippingMethod: z.enum(["inside", "outside"], {
     errorMap: () => ({ message: "Invalid shipping method" }),
   }),
   notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
   saveAddress: z.boolean().optional(),
+});
+
+const getCartPriceDataValidationSchema = z.object({
+  products: z
+    .array(productSchema)
+    .min(1, "At least one product is required")
+    .refine((products) => {
+      // Check for duplicate product IDs
+      const ids = products.map((p) => p.id.toString());
+      return new Set(ids).size === ids.length;
+    }, "Duplicate products are not allowed"),
+  paymentMethod: z.enum(["card", "paypal", "bank_transfer", "cod"], {
+    errorMap: () => ({ message: "Invalid payment method" }),
+  }),
 });
 
 const OrderStatusEnum = z.enum([
@@ -44,7 +73,7 @@ const OrderStatusEnum = z.enum([
 
 const PaymentStatusEnum = z.enum(["pending", "paid", "failed", "refunded"]);
 const PaymentMethodEnum = z.enum(["card", "paypal", "bank_transfer", "cod"]);
-const ShippingMethodEnum = z.enum(["standard", "express", "overnight"]);
+const ShippingMethodEnum = z.enum(["inside", "outside"]);
 
 const AdminUpdateOrderSchema = z
   .object({
@@ -78,13 +107,13 @@ const AdminUpdateOrderSchema = z
         (value) =>
           value !== undefined &&
           value !== null &&
-          (typeof value !== "object" || Object.keys(value).length > 0)
+          (typeof value !== "object" || Object.keys(value).length > 0),
       );
       return hasUpdate;
     },
     {
       message: "At least one field must be provided to update the order",
-    }
+    },
   );
 
 // TypeScript type from schema
@@ -93,6 +122,7 @@ export type TAdminUpdateOrderPayload = z.infer<typeof AdminUpdateOrderSchema>;
 const orderValidations = {
   createOrderValidationSchema,
   AdminUpdateOrderSchema,
+  getCartPriceDataValidationSchema,
 };
 
 export default orderValidations;

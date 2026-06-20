@@ -84,7 +84,7 @@ const statusHistorySchema = new Schema<IStatusHistory>(
       ref: "User",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Main Order Schema
@@ -93,7 +93,6 @@ const orderSchema = new Schema<IOrder>(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User ID is required"],
     },
     orderNumber: {
       type: String,
@@ -105,17 +104,14 @@ const orderSchema = new Schema<IOrder>(
     shippingAddress: {
       address: {
         type: String,
-        required: true,
         trim: true,
       },
-      city: {
+      area: {
         type: String,
-        required: true,
         trim: true,
       },
       district: {
         type: String,
-        required: true,
         trim: true,
       },
     },
@@ -125,7 +121,7 @@ const orderSchema = new Schema<IOrder>(
         required: true,
         trim: true,
       },
-      city: {
+      area: {
         type: String,
         required: true,
         trim: true,
@@ -197,7 +193,15 @@ const orderSchema = new Schema<IOrder>(
     },
     shippingMethod: {
       type: String,
-      enum: ["standard", "express", "overnight"],
+      enum: ["inside", "outside"],
+      required: true,
+    },
+    userEmail: {
+      type: String,
+      required: true,
+    },
+    userPhone: {
+      type: String,
       required: true,
     },
     notes: {
@@ -207,7 +211,7 @@ const orderSchema = new Schema<IOrder>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for better query performance

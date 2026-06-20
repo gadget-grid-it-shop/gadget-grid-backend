@@ -2,7 +2,11 @@ import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { Product } from "../product/product.model";
 import { AddOrderPayload, IOrder, IOrderItem } from "./order.interface";
-import { calculateDiscountPrice, generateOrderNumber } from "./order.utils";
+import {
+  calculateDiscountPrice,
+  calculateOrderPricing,
+  generateOrderNumber,
+} from "./order.utils";
 import { Types } from "mongoose";
 import Order from "./order.model";
 import config from "../../config";
@@ -20,6 +24,7 @@ import { IAddress } from "../address/address.interface";
 import Deal from "../deals/deals.model";
 import FlashSale from "../flashSales/flashSale.model";
 import { EmailJobName, emailQueue } from "../../queues/email.queue";
+import { OrderJobName, orderQueue } from "./order.queue";
 
 let stripe: Stripe | null = null;
 
@@ -78,7 +83,7 @@ export const paymentWebhook = async (req: Request, res: Response) => {
                 ],
               },
             },
-            { new: true }
+            { new: true },
           );
 
           if (res) {
@@ -109,20 +114,18 @@ export const paymentWebhook = async (req: Request, res: Response) => {
   }
 };
 
-const addOrderToDB = async (
-  data: AddOrderPayload,
-  user: Types.ObjectId,
-  customer: TUser
-) => {
-  const thisUser = await User.findById(user);
+const getCartPriceDataFromDB = async (data: AddOrderPayload) => {
+  const orderPricingData = await calculateOrderPricing(data);
+  const { shippingCost, taxAmount, totalAmount, subtotal } =
+    orderPricingData || {};
+  return { shippingCost, taxAmount, totalAmount, subtotal };
+};
 
-  if (!thisUser) {
-    throw new AppError(httpStatus.FORBIDDEN, "Failed to create order");
-  }
+const addOrderToDB = async (data: AddOrderPayload) => {
+  const thisUser = await User.findOne({ email: data.userEmail });
 
   const payload: Partial<IOrder> = {
     billingAddress: data.billingAddress,
-    shippingAddress: data.shippingAddress,
     paymentDetails: {
       transactionId: "",
     },
@@ -137,105 +140,30 @@ const addOrderToDB = async (
         notes: "Order placed successfully",
       },
     ],
-    user: thisUser._id,
+    ...(thisUser && { user: thisUser._id }),
+    userEmail: data.userEmail,
+    userPhone: data.userPhone,
     orderNumber: await generateOrderNumber(Order.find()),
   };
 
-  const activeDeals = await Deal.find({ isActive: true });
-  const activeSale = await FlashSale.findOne({ isActive: true });
+  const orderPricingData = await calculateOrderPricing(data);
+  const { items, shippingCost, taxAmount, totalAmount, subtotal } =
+    orderPricingData || {};
 
-  const products = await Product.find({
-    _id: { $in: data.products?.map((p) => p.id) },
-  }).lean();
-
-  for (const pdt of data.products) {
-    const exist = products.find((p) => p._id.toString() === pdt.id.toString());
-    if (!exist) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Sorry, some products are not available"
-      );
-    }
-    if (exist.quantity < pdt.quantity) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Sorry, some products are not available"
-      );
-    }
-  }
-
-  payload.items = products.map((p): IOrderItem => {
-    const orderProduct = data.products.find(
-      (op) => op.id.toString() === p._id.toString()
-    );
-    const deal = activeDeals.find(
-      (d) => d._id?.toString() === orderProduct?.offer?.refId.toString()
-    );
-    const hasSale =
-      orderProduct?.offer?.type === "flashSale" &&
-      activeSale?._id.toString() === orderProduct?.offer?.refId.toString();
-
-    const dealProduct = deal?.products.find(
-      (dp) => dp.productId.toString() === p._id.toString()
-    );
-
-    const saleProduct = hasSale
-      ? activeSale?.products?.find(
-          (sp) => sp.productId.toString() === p._id.toString()
-        )
-      : null;
-
-    const discountCal = calculateDiscountPrice(
-      p.price,
-      saleProduct
-        ? saleProduct.discount
-        : dealProduct
-        ? dealProduct.discount
-        : p.discount
-    );
-    return {
-      name: p.name,
-      productId: p._id,
-      finalPrice: discountCal.discountPrice,
-      quantity:
-        data.products.find((pd) => pd.id.toString() === p._id.toString())
-          ?.quantity || 1,
-      shipping: p.shipping.free ? 0 : p.shipping.cost,
-      tax: 0,
-      image: p.thumbnail || p.gallery?.[0] || "",
-      discountApplied: {
-        discountValue: discountCal.discountAmount,
-        description: deal?.title,
-        type: deal ? "deal" : "product",
-      },
-      originalPrice: p.price,
-    };
-  });
-
-  const totalItemsCost = payload.items.reduce((acc, item) => {
-    return acc + item.finalPrice;
-  }, 0);
-
-  payload.shippingCost = payload.items.reduce((acc, item) => {
-    return acc + item.shipping;
-  }, 0);
-
-  payload.taxAmount = payload.items.reduce((acc, item) => {
-    return acc + item.tax;
-  }, 0);
-  payload.totalAmount =
-    totalItemsCost + payload.shippingCost + payload.taxAmount;
-
-  payload.subtotal = totalItemsCost;
+  payload.items = items;
+  payload.shippingCost = shippingCost;
+  payload.taxAmount = taxAmount;
+  payload.totalAmount = totalAmount;
+  payload.subtotal = subtotal;
 
   const order = await Order.create(payload);
 
-  if (data.saveAddress) {
+  if (data.saveAddress && thisUser) {
     try {
       const addressPayload: IAddress = {
         user: thisUser._id,
         address: data.shippingAddress?.address,
-        city: data.shippingAddress?.city,
+        area: data.shippingAddress?.area,
         district: data.shippingAddress?.district,
       };
 
@@ -245,43 +173,42 @@ const addOrderToDB = async (
     }
   }
 
-  for (const pdt of order.items) {
-    await Product.findByIdAndUpdate(pdt.productId, {
-      $inc: { quantity: -pdt.quantity },
-    });
-  }
-
   if (order) {
+    await orderQueue.add(OrderJobName.updateProductStock, data);
+
     try {
       const notifications = await buildNotifications({
         actionType: "create",
         notificationType: "order",
         source: order.orderNumber,
         text: "added an order",
-        thisUser: customer,
+        thisUser: thisUser || undefined,
       });
 
-      const notification: TNotification = {
-        notificationType: "order",
-        actionType: "create",
-        opened: false,
-        userFrom: customer._id,
-        userTo: customer?._id,
-        source: String(order.orderNumber),
-        text: `Order placed successfully`,
-      };
+      const notification: TNotification | null = thisUser
+        ? {
+            notificationType: "order",
+            actionType: "create",
+            opened: false,
+            userFrom: thisUser?._id,
+            userTo: thisUser?._id,
+            source: String(order.orderNumber),
+            text: `Order placed successfully`,
+          }
+        : null;
 
       await addNotifications({
-        notifications: [...notifications, notification],
-        userFrom: customer,
+        notifications: [
+          ...notifications,
+          ...(notification ? [notification] : []),
+        ],
+        userFrom: thisUser || undefined,
       });
       await emailQueue.add(EmailJobName.sendOrderConfirmationEmail, {
         user: thisUser,
         order,
       });
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   }
 
   if (data.paymentMethod === "card") {
@@ -335,8 +262,9 @@ const addOrderToDB = async (
       client_reference_id: order._id.toString(),
       metadata: {
         orderId: order._id.toString(),
-        userEmail: thisUser.email,
-        userRole: thisUser.role,
+        userEmail: data.userEmail,
+        userPhone: data.userPhone,
+        ...(thisUser && { userRole: thisUser.role }),
         company: "Gadget Grid",
       },
     });
@@ -346,11 +274,13 @@ const addOrderToDB = async (
       sessionId: session.url,
     };
   }
+
+  return { order };
 };
 
 const getMyOrdersFromDB = async (
   query: Record<string, unknown>,
-  userId: string
+  userId: string,
 ) => {
   const page = query.page ? Number(query.page) : 1;
   const limit = query.limit ? Number(query.limit) : 10;
@@ -506,7 +436,7 @@ const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
 const adminUpdateOrderToDB = async (
   userId: Types.ObjectId,
   id: string,
-  updateData: Partial<IOrder> & { adminNotes?: string }
+  updateData: Partial<IOrder> & { adminNotes?: string },
 ) => {
   const order = await Order.findById(id);
   if (!order) throw new Error("Order not found");
@@ -544,7 +474,7 @@ const adminUpdateOrderToDB = async (
       },
       ...(updateData.currentStatus && { statusHistory: order.statusHistory }),
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   ).populate("user", "name email phone");
 
   if (order && customer) {
@@ -588,4 +518,5 @@ export const OrderServices = {
   getOrderByOrderNumberFormDB,
   admingetAllOrdersFromDb,
   adminUpdateOrderToDB,
+  getCartPriceDataFromDB,
 };

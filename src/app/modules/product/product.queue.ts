@@ -1,4 +1,4 @@
-import { ConnectionOptions, Queue, Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import { RedisKeys } from "../../interface/common";
 import { setProductsToRedis, updateSigleProductToRedis } from "./product.redis";
 import { Types } from "mongoose";
@@ -24,14 +24,13 @@ const productWorker = new Worker(
     }
     // sync single product update
     else if (job.name === ProductJobName.updateSingleProduct) {
-      console.log("productid", job.data);
       await updateSigleProductToRedis(
         job.data as unknown as Types.ObjectId,
-        "update"
+        "update",
       );
     }
   },
-  redisConnection
+  redisConnection,
 );
 
 productWorker.on("completed", (job) => {

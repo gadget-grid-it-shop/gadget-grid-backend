@@ -13,7 +13,7 @@ export const buildNotifications = async ({
   actionType,
   text,
 }: {
-  thisUser: TUser;
+  thisUser?: TUser;
   source: ObjectId | string;
   text: string;
   notificationType: TNotification["notificationType"];
@@ -31,7 +31,7 @@ export const buildNotifications = async ({
       text: `${
         String(admin._id) === String(thisUser?._id)
           ? "You"
-          : makeFullName(thisUser.name)
+          : makeFullName(thisUser?.name)
       } ${text}`,
     };
 

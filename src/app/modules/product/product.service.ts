@@ -59,8 +59,6 @@ const createProductIntoDB = async (
 ) => {
   const user: TUser | undefined = await User.isUserExistsByEmail(email);
 
-  console.log({ payload, email, user });
-
   if (!user._id) {
     throw new AppError(httpStatus.CONFLICT, "Could not find admin information");
   }
@@ -99,6 +97,8 @@ const createProductIntoDB = async (
     await addNotifications({ notifications, userFrom: thisUser });
   }
 
+  await productQueue.add(ProductJobName.updateAllProducts, {});
+
   return result;
 };
 
@@ -136,7 +136,7 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
   if (!redisProducts || redisProducts?.length === 0) {
     if (query.category) {
       query.mainCategory = new ObjectId(query.category as string);
-      delete query.categroy;
+      delete query.category;
     }
 
     if (query.createdBy) {
@@ -195,7 +195,7 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
 
     if (query.category) {
       query.mainCategory = query.category;
-      delete query.categroy;
+      delete query.category;
     }
 
     if (query.createdBy) {

@@ -4,6 +4,9 @@ import { BannerController } from "../banner/banner.controller";
 import { ProductControllers } from "../product/product.controller";
 import { AuthController } from "../auth/auth.controller";
 import { SettingsController } from "../settings/settings.controller";
+import { validateRequest } from "../../middleware/validateRequest";
+import orderValidations from "../order/order.validation";
+import { OrderController } from "../order/order.controller";
 
 const router = Router();
 
@@ -32,6 +35,19 @@ router.get("/product/search", ProductControllers.getSearchProducts);
 router.get("/product/static-slugs", ProductControllers.getStaticProductSlugs);
 router.get("/product/compare", ProductControllers.getCompareProducts);
 router.get("/product/pc-builder/:id", ProductControllers.getPcBuilderProducts);
+
+// ================ order ================
+router.post(
+  "/order/create",
+  validateRequest(orderValidations.createOrderValidationSchema),
+  OrderController.addOrder,
+);
+
+router.post(
+  "/order/get-cart-price-data",
+  validateRequest(orderValidations.getCartPriceDataValidationSchema),
+  OrderController.getCartPriceDataFrom,
+);
 
 // =============== auth ================
 router.post("/login", AuthController.userLogin);

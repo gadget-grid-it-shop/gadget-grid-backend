@@ -7,7 +7,7 @@ const addressSchema = new Schema<IAddress>(
       type: String,
       required: true,
     },
-    city: {
+    area: {
       type: String,
       required: true,
     },
@@ -21,7 +21,7 @@ const addressSchema = new Schema<IAddress>(
       ref: "User",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Address = model<IAddress>("Address", addressSchema);

@@ -13,7 +13,6 @@ const notificationSchema = new Schema<TNotification>(
     },
     userFrom: {
       type: Schema.Types.ObjectId,
-      required: true,
       ref: "User",
     },
     userTo: {
@@ -47,7 +46,7 @@ const notificationSchema = new Schema<TNotification>(
       enum: ["create", "update", "delete"],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 notificationSchema.index({ opened: 1 }, { expireAfterSeconds: 7776000 });

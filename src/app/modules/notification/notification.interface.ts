@@ -3,7 +3,7 @@ import { EAppFeatures } from "../roles/roles.interface";
 
 export type TNotification = {
   userTo: Types.ObjectId;
-  userFrom: Types.ObjectId;
+  userFrom?: Types.ObjectId;
   opened: boolean;
   notificationType:
     | "order"

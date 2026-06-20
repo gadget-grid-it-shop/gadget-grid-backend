@@ -44,6 +44,8 @@ export interface IPaymentDetails {
 export interface IOrder {
   user: Types.ObjectId;
   trackingNumber?: string;
+  userEmail: string;
+  userPhone: string;
   orderNumber: string;
   items: IOrderItem[];
   subtotal: number;
@@ -70,7 +72,7 @@ export interface IOrder {
     | "delivered"
     | "cancelled"
     | "returned";
-  shippingMethod: "standard" | "express" | "overnight";
+  shippingMethod: "inside" | "outside";
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -87,8 +89,10 @@ export type AddOrderPayload = {
   }[];
   billingAddress: IAddress;
   shippingAddress: IAddress;
+  userEmail: string;
+  userPhone: string;
   paymentMethod: "card" | "paypal" | "bank_transfer" | "cod";
-  shippingMethod: "standard" | "express" | "overnight";
+  shippingMethod: "inside" | "outside";
   notes?: string;
   saveAddress?: boolean;
 };
