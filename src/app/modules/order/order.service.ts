@@ -116,9 +116,9 @@ export const paymentWebhook = async (req: Request, res: Response) => {
 
 const getCartPriceDataFromDB = async (data: AddOrderPayload) => {
   const orderPricingData = await calculateOrderPricing(data);
-  const { shippingCost, taxAmount, totalAmount, subtotal } =
+  const { shippingCost, taxAmount, totalAmount, subtotal, items } =
     orderPricingData || {};
-  return { shippingCost, taxAmount, totalAmount, subtotal };
+  return { shippingCost, taxAmount, totalAmount, subtotal, items };
 };
 
 const addOrderToDB = async (data: AddOrderPayload) => {

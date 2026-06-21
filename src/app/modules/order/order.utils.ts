@@ -100,7 +100,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
     }
   }
 
-  const items: IOrderItem[] = products.map((p): IOrderItem => {
+  const items: IOrderItem[] = products.map((p) => {
     const orderProduct = data.products.find(
       (op) => op.id.toString() === p._id.toString(),
     );
@@ -142,6 +142,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
       shipping: p.shipping.free ? 0 : p.shipping.cost,
       tax: 0,
       image: p.thumbnail || p.gallery?.[0] || "",
+      prePayment: p?.prePayment,
       discountApplied: {
         discountValue: discountCal.discountAmount,
         description: deal?.title,

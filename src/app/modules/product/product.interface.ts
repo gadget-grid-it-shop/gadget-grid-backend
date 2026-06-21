@@ -38,6 +38,10 @@ export interface TProduct {
   price: number;
   special_price: number;
   discount?: TDiscount;
+  prePayment?: {
+    hasPrePayment: boolean;
+    prePaymentAmount: number;
+  };
   sku: string;
   brand: string;
   model?: string;

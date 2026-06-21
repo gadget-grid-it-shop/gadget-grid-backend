@@ -71,6 +71,10 @@ const ProductSchema = new Schema<TProduct>(
       required: [true, "Product quantity is required"],
       default: 0,
     },
+    prePayment: {
+      hasPrePayment: { type: Boolean, default: false },
+      prePaymentAmount: { type: Number, default: 0 },
+    },
     category: {
       type: [ProductCategorySchema],
       required: [true, "At least one product category is required"],
@@ -136,7 +140,7 @@ const ProductSchema = new Schema<TProduct>(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ProductSchema.index({ name: 1 });
@@ -149,7 +153,7 @@ ProductSchema.index(
     name: "text",
     model: "text",
   },
-  { weights: { name: 10, model: 2 } }
+  { weights: { name: 10, model: 2 } },
 );
 
 export const Product = model<TProduct>("Product", ProductSchema);
