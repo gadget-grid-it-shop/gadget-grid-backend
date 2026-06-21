@@ -6,11 +6,11 @@ import { TGenericErrorResponse } from "../interface/error.interface";
 const notFound = (req: Request, res: Response, next: NextFunction) => {
   const errorResponse: TGenericErrorResponse = {
     success: false,
-    message: "API not found test cicd",
+    message: "API not found",
     errorSources: [
       {
         path: "api",
-        message: "API not found test cicd",
+        message: "API not found",
       },
     ],
     statusCode: httpStatus.NOT_FOUND,
