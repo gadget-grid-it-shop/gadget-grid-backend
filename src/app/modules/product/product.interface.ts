@@ -31,6 +31,32 @@ export type TDiscount = {
   value: number;
 };
 
+export type TAttributeValue = {
+  id: string;
+  isColor?: boolean;
+  color?: string;
+  value: string;
+};
+
+export type TProductAttribute = {
+  id: Types.ObjectId;
+  values: TAttributeValue[];
+};
+
+export type TVariantAttribute = {
+  [attributeId: string]: string;
+};
+
+export type TVariant = {
+  attributes: TVariantAttribute;
+  quantity: number;
+  price: number;
+  originalPrice: number;
+  thumbnail?: string;
+};
+
+export type TProductType = "normal" | "variant";
+
 export interface TProduct {
   _id: Types.ObjectId;
   id?: string;
@@ -55,7 +81,9 @@ export interface TProduct {
   gallery?: string[];
   thumbnail: string;
   slug: string;
-  attributes?: { name: string; fields: Record<string, string> }[];
+  productType?: TProductType;
+  attributes?: TProductAttribute[];
+  variants?: TVariant[];
   filters: { filter: string; fitlerId: string; value: string }[];
   meta?: TMeta;
   tags?: string[];

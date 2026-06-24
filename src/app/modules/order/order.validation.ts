@@ -15,6 +15,13 @@ const addressSchema = z.object({
     .trim(),
 });
 
+const variantOptionSchema = z.object({
+  id: z.string(),
+  isColor: z.boolean().optional(),
+  value: z.string(),
+  color: z.string().optional(),
+});
+
 const productSchema = z.object({
   id: z
     .string({ required_error: "Product ID is required" })
@@ -24,6 +31,7 @@ const productSchema = z.object({
     .number({ required_error: "Quantity is required" })
     .int()
     .positive("Quantity must be a positive integer"),
+  selectedVariant: z.record(z.string(), z.union([z.string(), variantOptionSchema])).optional(),
 });
 
 const createOrderValidationSchema = z.object({

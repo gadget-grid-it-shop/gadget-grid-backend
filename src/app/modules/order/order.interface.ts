@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { IAddress } from "../address/address.interface";
+import { TAttributeOption } from "../attribute/attribute.interface";
 
 // Interface for Order Item
 export interface IOrderItem {
@@ -18,6 +19,7 @@ export interface IOrderItem {
   tax: number;
   shipping: number;
   supplier?: string;
+  selectedVariant?: Record<string, string | TAttributeOption>;
 }
 
 // Interface for Status History
@@ -88,6 +90,7 @@ export type AddOrderPayload = {
       type: "deal" | "flashSale";
       refId: Types.ObjectId;
     };
+    selectedVariant?: Record<string, TAttributeOption>;
   }[];
   billingAddress: IAddress;
   shippingAddress: IAddress;

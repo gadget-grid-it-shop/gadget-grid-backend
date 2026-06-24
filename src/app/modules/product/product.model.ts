@@ -2,8 +2,12 @@ import { model, Schema, Types } from "mongoose";
 import {
   TMeta,
   TProduct,
+  TProductAttribute,
   TProductCategory,
   TReview,
+  TVariant,
+  TVariantAttribute,
+  TAttributeValue,
 } from "./product.interface";
 
 const ProductCategorySchema = new Schema<TProductCategory>({
@@ -37,6 +41,40 @@ const DiscountSchema = new Schema({
   },
 });
 
+const AttributeValueSchema = new Schema<TAttributeValue>(
+  {
+    id: { type: String, required: true },
+    isColor: { type: Boolean, default: false },
+    color: { type: String },
+    value: { type: String, required: true },
+  },
+  { _id: false },
+);
+
+const ProductAttributeSchema = new Schema<TProductAttribute>(
+  {
+    id: { type: Schema.Types.ObjectId, ref: "Attribute", required: true },
+    values: { type: [AttributeValueSchema], default: [] },
+  },
+  { _id: false },
+);
+
+const VariantAttributeSchema = new Schema<TVariantAttribute>(
+  {},
+  { _id: false, strict: false },
+);
+
+const VariantSchema = new Schema<TVariant>(
+  {
+    attributes: { type: VariantAttributeSchema, default: {} },
+    quantity: { type: Number, default: 0 },
+    price: { type: Number, default: 0 },
+    originalPrice: { type: Number, default: 0 },
+    thumbnail: { type: String },
+  },
+  { _id: false },
+);
+
 const ProductSchema = new Schema<TProduct>(
   {
     name: { type: String, required: [true, "Product title is required"] },
@@ -44,7 +82,6 @@ const ProductSchema = new Schema<TProduct>(
     special_price: { type: Number },
     discount: {
       type: DiscountSchema,
-      // required: [true, 'Discount is required']
     },
     sku: {
       type: String,
@@ -67,7 +104,6 @@ const ProductSchema = new Schema<TProduct>(
       days: { type: Number, default: 0 },
       lifetime: { type: Boolean, default: false },
     },
-    // reviews: [ReviewSchema],
     key_features: {
       type: String,
       required: [true, "Key features are required"],
@@ -91,18 +127,16 @@ const ProductSchema = new Schema<TProduct>(
     gallery: [{ type: String, default: "" }],
     thumbnail: {
       type: String,
-      // required: [true, "Product thumbnail is required"],
       default: "",
     },
     slug: { type: String, required: [true, "Product slug is required"] },
-    attributes: [
-      {
-        name: { type: String },
-        fields: {
-          type: Object,
-        },
-      },
-    ],
+    productType: {
+      type: String,
+      enum: ["normal", "variant"],
+      default: "normal",
+    },
+    attributes: { type: [ProductAttributeSchema], default: [] },
+    variants: { type: [VariantSchema], default: [] },
     meta: {
       type: MetaSchema,
       required: [true, "Meta information is required"],

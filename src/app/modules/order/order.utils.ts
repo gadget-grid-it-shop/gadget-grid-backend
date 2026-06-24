@@ -1,6 +1,7 @@
 import { Model, Query } from "mongoose";
 import { TProduct } from "../product/product.interface";
 import Deal from "../deals/deals.model";
+import { TAttributeOption } from "../attribute/attribute.interface";
 import { AddOrderPayload, IOrderItem } from "./order.interface";
 import FlashSale from "../flashSales/flashSale.model";
 import { Product } from "../product/product.model";
@@ -83,7 +84,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
     _id: { $in: data.products?.map((p) => p.id) },
   }).lean();
 
-  // Validation (same logic as original)
+  // Validation
   for (const pdt of data.products) {
     const exist = products.find((p) => p._id.toString() === pdt.id.toString());
     if (!exist) {
@@ -92,11 +93,42 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
         "Sorry, some products are not available",
       );
     }
-    if (exist.quantity < pdt.quantity) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Sorry, some products are not available",
-      );
+
+    if (exist.productType === "variant" && exist.variants && exist.variants.length > 0) {
+      if (!pdt.selectedVariant) {
+        throw new AppError(
+          httpStatus.CONFLICT,
+          "Variant selection is required for variant products",
+        );
+      }
+
+      const variant = exist.variants.find((v) => {
+        return Object.entries(pdt.selectedVariant!).every(
+          ([key, value]) =>
+            v.attributes[key] === (typeof value === "string" ? value : value.id),
+        );
+      });
+
+      if (!variant) {
+        throw new AppError(
+          httpStatus.CONFLICT,
+          "Selected variant combination is not available",
+        );
+      }
+
+      if (variant.quantity < pdt.quantity) {
+        throw new AppError(
+          httpStatus.CONFLICT,
+          "Sorry, some products are not available",
+        );
+      }
+    } else {
+      if (exist.quantity < pdt.quantity) {
+        throw new AppError(
+          httpStatus.CONFLICT,
+          "Sorry, some products are not available",
+        );
+      }
     }
   }
 
@@ -136,9 +168,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
       name: p.name,
       productId: p._id,
       finalPrice: discountCal.discountPrice,
-      quantity:
-        data.products.find((pd) => pd.id.toString() === p._id.toString())
-          ?.quantity || 1,
+      quantity: orderProduct?.quantity || 1,
       shipping: p.shipping.free ? 0 : p.shipping.cost,
       tax: 0,
       image: p.thumbnail || p.gallery?.[0] || "",
@@ -149,6 +179,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
         type: deal ? "deal" : "product",
       },
       originalPrice: p.price,
+      selectedVariant: orderProduct?.selectedVariant,
     };
   });
 

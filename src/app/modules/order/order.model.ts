@@ -53,6 +53,10 @@ const orderItemSchema = new Schema<IOrderItem>({
     min: [0, "Subtotal cannot be negative"],
     default: 0,
   },
+  selectedVariant: {
+    type: Map,
+    of: Schema.Types.Mixed,
+  },
 });
 
 // Status History Schema

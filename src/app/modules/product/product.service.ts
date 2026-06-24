@@ -15,6 +15,7 @@ import Papa from "papaparse";
 import fs, { appendFile } from "fs";
 import path from "path";
 import { Category } from "../category/category.model";
+import { Attribute } from "../attribute/attribute.model";
 import {
   buildProductQuery,
   claculateSpecialPrice,
@@ -229,6 +230,32 @@ const getAllProductsFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
+const resolveProductAttributes = async (
+  product: Record<string, any> | null,
+) => {
+  if (!product?.attributes?.length) return;
+
+  const attrIds = product.attributes
+    .map((a: Record<string, unknown>) => a.id)
+    .filter(Boolean);
+  const attributes = await Attribute.find({ _id: { $in: attrIds } }).lean();
+  const attrMap = new Map(
+    attributes.map((a) => [a._id.toString(), a]),
+  );
+
+  product.attributes = product.attributes.map(
+    (a: Record<string, unknown>) => {
+      const attrDoc = attrMap.get((a.id as string)?.toString());
+      return {
+        ...a,
+        id: a.id?.toString() || "",
+        title: attrDoc?.title || "",
+        values: a.values || [],
+      };
+    },
+  );
+};
+
 const getSingleProductFromDB = async (
   id: string,
   query: Record<string, any>,
@@ -249,6 +276,7 @@ const getSingleProductFromDB = async (
   console.log({ select });
 
   const product = await Product.findById(id).select(select).lean();
+  await resolveProductAttributes(product);
 
   return product;
 };
@@ -261,6 +289,7 @@ const getSingleProductBySlugFromDB = async (slug: string) => {
   }
 
   const product = await Product.findOne({ slug }).lean();
+  await resolveProductAttributes(product);
 
   const category = product?.mainCategory;
 
@@ -864,16 +893,9 @@ const downloadJsonTemplate = async ({
       mainCategory = data.slug;
 
       for (const attr of data?.product_details_categories as unknown as TProductDetailsCategory[]) {
-        const fields: Record<string, string> = {};
+        const values: TProduct["attributes"] = [];
 
-        for (const f of attr?.fields) {
-          fields[f] = "";
-        }
-
-        attributes.push({
-          name: attr.name,
-          fields: fields,
-        });
+        attributes.push(...values);
       }
     }
   }

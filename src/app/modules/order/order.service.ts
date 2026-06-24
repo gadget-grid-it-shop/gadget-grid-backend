@@ -1,12 +1,5 @@
-import httpStatus from "http-status";
-import AppError from "../../errors/AppError";
-import { Product } from "../product/product.model";
-import { AddOrderPayload, IOrder, IOrderItem } from "./order.interface";
-import {
-  calculateDiscountPrice,
-  calculateOrderPricing,
-  generateOrderNumber,
-} from "./order.utils";
+import { AddOrderPayload, IOrder } from "./order.interface";
+import { calculateOrderPricing, generateOrderNumber } from "./order.utils";
 import { Types } from "mongoose";
 import Order from "./order.model";
 import config from "../../config";
@@ -19,10 +12,7 @@ import {
   buildNotifications,
 } from "../notification/notificaiton.utils";
 import { TNotification } from "../notification/notification.interface";
-import { TUser } from "../user/user.interface";
 import { IAddress } from "../address/address.interface";
-import Deal from "../deals/deals.model";
-import FlashSale from "../flashSales/flashSale.model";
 import { EmailJobName, emailQueue } from "../../queues/email.queue";
 import { OrderJobName, orderQueue } from "./order.queue";
 
@@ -156,6 +146,8 @@ const addOrderToDB = async (data: AddOrderPayload) => {
   payload.taxAmount = taxAmount;
   payload.totalAmount = totalAmount;
   payload.subtotal = subtotal;
+
+  console.log({ items });
 
   const order = await Order.create(payload);
 
@@ -477,10 +469,11 @@ const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
           },
         ],
       },
-    ]);
+    ])
+    .lean();
 
   if (result) {
-    const plain = result.toObject();
+    const plain = result;
     plain.items = plain.items.map((item) => {
       const product = item.productId as any;
       return {
