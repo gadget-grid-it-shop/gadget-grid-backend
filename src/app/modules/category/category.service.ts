@@ -80,8 +80,6 @@ const getFeaturedCategoriesFromDB = async () => {
       },
     ]);
 
-  console.log("Featured categories fetched from DB:", categories); // Log the fetched categories
-
   return categories;
 };
 

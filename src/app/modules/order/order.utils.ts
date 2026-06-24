@@ -94,7 +94,11 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
       );
     }
 
-    if (exist.productType === "variant" && exist.variants && exist.variants.length > 0) {
+    if (
+      exist.productType === "variant" &&
+      exist.variants &&
+      exist.variants.length > 0
+    ) {
       if (!pdt.selectedVariant) {
         throw new AppError(
           httpStatus.CONFLICT,
@@ -105,7 +109,8 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
       const variant = exist.variants.find((v) => {
         return Object.entries(pdt.selectedVariant!).every(
           ([key, value]) =>
-            v.attributes[key] === (typeof value === "string" ? value : value.id),
+            v.attributes[key] ===
+            (typeof value === "string" ? value : value.id),
         );
       });
 
@@ -172,7 +177,10 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
       shipping: p.shipping.free ? 0 : p.shipping.cost,
       tax: 0,
       image: p.thumbnail || p.gallery?.[0] || "",
-      prePayment: p?.prePayment,
+      prePayment: p?.prePayment || {
+        hasPrePayment: false,
+        prePaymentAmount: 0,
+      },
       discountApplied: {
         discountValue: discountCal.discountAmount,
         description: deal?.title,
