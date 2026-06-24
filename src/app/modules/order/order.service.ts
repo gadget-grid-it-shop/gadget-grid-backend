@@ -495,6 +495,8 @@ const adminUpdateOrderToDB = async (
   const order = await Order.findById(id);
   if (!order) throw new Error("Order not found");
 
+  const thisUser = await User.findById(userId);
+
   const customer = await User.findById(order.user);
 
   // Auto-add to status history if currentStatus changed
@@ -531,33 +533,42 @@ const adminUpdateOrderToDB = async (
     { new: true, runValidators: true },
   ).populate("user", "name email phone");
 
-  if (order && customer) {
+  if (order && thisUser) {
     try {
       const notifications = await buildNotifications({
         actionType: "update",
         notificationType: "order",
         source: order.orderNumber,
         text: `updated an order ${order.orderNumber}`,
-        thisUser: customer,
+        thisUser: thisUser,
       });
 
-      const notification: TNotification = {
-        notificationType: "order",
-        actionType: "update",
-        opened: false,
-        userFrom: customer._id,
-        userTo: customer?._id,
-        source: String(order.orderNumber),
-        text: `Order update ${order.orderNumber}. ${
-          updateData.currentStatus &&
-          updateData.currentStatus !== order.currentStatus &&
-          `Your order is ${updateData.currentStatus}`
-        }`,
-      };
+      let notification: TNotification;
+
+      if (customer) {
+        notification = {
+          notificationType: "order",
+          actionType: "update",
+          opened: false,
+          userFrom: customer._id,
+          userTo: customer?._id,
+          source: String(order.orderNumber),
+          text: `Order update ${order.orderNumber}. ${
+            updateData.currentStatus &&
+            updateData.currentStatus !== order.currentStatus &&
+            `Your order is ${updateData.currentStatus}`
+          }`,
+        };
+
+        await addNotifications({
+          notifications: [notification],
+          userFrom: customer,
+        });
+      }
 
       await addNotifications({
-        notifications: [...notifications, notification],
-        userFrom: customer,
+        notifications,
+        userFrom: thisUser,
       });
     } catch (err) {
       console.log(err);

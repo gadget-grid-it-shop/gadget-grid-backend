@@ -148,6 +148,7 @@ const orderSchema = new Schema<IOrder>(
     },
     trackingNumber: {
       type: String,
+      default: "",
     },
     totalAmount: {
       type: Number,

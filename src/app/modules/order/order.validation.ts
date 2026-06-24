@@ -96,7 +96,6 @@ const AdminUpdateOrderSchema = z
     shippingMethod: ShippingMethodEnum.optional(),
     trackingNumber: z
       .string()
-      .regex(/^[A-Z0-9-]{5,50}$/i, "Invalid tracking number format")
       .optional()
       .or(z.literal("").transform(() => undefined)),
 
