@@ -31,7 +31,9 @@ const productSchema = z.object({
     .number({ required_error: "Quantity is required" })
     .int()
     .positive("Quantity must be a positive integer"),
-  selectedVariant: z.record(z.string(), z.union([z.string(), variantOptionSchema])).optional(),
+  selectedVariant: z
+    .record(z.string(), z.union([z.string(), variantOptionSchema]))
+    .optional(),
 });
 
 const createOrderValidationSchema = z.object({
@@ -53,7 +55,9 @@ const createOrderValidationSchema = z.object({
   }),
   notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
   saveAddress: z.boolean().optional(),
-  userName: z.string({ required_error: "User name is required" }).min(1, "User name is required"),
+  userName: z
+    .string({ required_error: "User name is required" })
+    .min(1, "User name is required"),
 });
 
 const getCartPriceDataValidationSchema = z.object({
@@ -96,7 +100,7 @@ const AdminUpdateOrderSchema = z
       .optional()
       .or(z.literal("").transform(() => undefined)),
 
-    adminNotes: z
+    notes: z
       .string()
       .max(500, "Notes too long (max 500 chars)")
       .optional()

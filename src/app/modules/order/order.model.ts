@@ -57,6 +57,10 @@ const orderItemSchema = new Schema<IOrderItem>({
     type: Map,
     of: Schema.Types.Mixed,
   },
+  prePayment: {
+    hasPrePayment: { type: Boolean, default: false },
+    prePaymentAmount: { type: Number, default: 0 },
+  },
 });
 
 // Status History Schema

@@ -37,13 +37,14 @@ const orderWorker = new Worker(
                 ([key, value]) =>
                   v.attributes[key] === (typeof value === "string" ? value : value.id),
               );
+              const plain = JSON.parse(JSON.stringify(v));
               if (match) {
                 return {
-                  ...v,
+                  ...plain,
                   quantity: v.quantity - quantity,
                 };
               }
-              return v;
+              return plain;
             });
 
             await Product.findByIdAndUpdate(productId, {

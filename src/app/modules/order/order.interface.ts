@@ -20,6 +20,10 @@ export interface IOrderItem {
   shipping: number;
   supplier?: string;
   selectedVariant?: Record<string, string | TAttributeOption>;
+  prePayment: {
+    hasPrePayment: boolean;
+    prePaymentAmount: number;
+  };
 }
 
 // Interface for Status History

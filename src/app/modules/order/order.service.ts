@@ -147,8 +147,6 @@ const addOrderToDB = async (data: AddOrderPayload) => {
   payload.totalAmount = totalAmount;
   payload.subtotal = subtotal;
 
-  console.log({ items });
-
   const order = await Order.create(payload);
 
   if (data.saveAddress && thisUser) {
@@ -492,7 +490,7 @@ const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
 const adminUpdateOrderToDB = async (
   userId: Types.ObjectId,
   id: string,
-  updateData: Partial<IOrder> & { adminNotes?: string },
+  updateData: Partial<IOrder>,
 ) => {
   const order = await Order.findById(id);
   if (!order) throw new Error("Order not found");
@@ -507,7 +505,7 @@ const adminUpdateOrderToDB = async (
     order.statusHistory.push({
       status: updateData.currentStatus,
       notes:
-        updateData.adminNotes?.trim() ||
+        updateData.notes?.trim() ||
         `Status updated to ${updateData.currentStatus} by admin`,
       timestamp: new Date(),
       updatedBy: userId,
