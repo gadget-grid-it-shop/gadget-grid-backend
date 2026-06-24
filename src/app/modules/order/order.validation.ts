@@ -45,6 +45,7 @@ const createOrderValidationSchema = z.object({
   }),
   notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
   saveAddress: z.boolean().optional(),
+  userName: z.string({ required_error: "User name is required" }).min(1, "User name is required"),
 });
 
 const getCartPriceDataValidationSchema = z.object({

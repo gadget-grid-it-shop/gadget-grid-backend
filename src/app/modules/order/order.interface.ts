@@ -17,6 +17,7 @@ export interface IOrderItem {
   image?: string;
   tax: number;
   shipping: number;
+  supplier?: string;
 }
 
 // Interface for Status History
@@ -46,6 +47,7 @@ export interface IOrder {
   trackingNumber?: string;
   userEmail: string;
   userPhone: string;
+  userName: string;
   orderNumber: string;
   items: IOrderItem[];
   subtotal: number;
@@ -91,6 +93,7 @@ export type AddOrderPayload = {
   shippingAddress: IAddress;
   userEmail: string;
   userPhone: string;
+  userName: string;
   paymentMethod: "card" | "paypal" | "bank_transfer" | "cod";
   shippingMethod: "inside" | "outside";
   notes?: string;

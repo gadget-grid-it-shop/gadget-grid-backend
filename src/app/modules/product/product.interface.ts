@@ -66,6 +66,8 @@ export interface TProduct {
   sales?: number;
   createdBy: Types.ObjectId;
   shipping: TShipping;
+  supplier?: 'iuddokta' | 'dropshop' | 'gadgetgrid';
+  supplierProductLink?: string;
 }
 
 export type TPagination = {

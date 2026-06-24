@@ -143,6 +143,7 @@ const addOrderToDB = async (data: AddOrderPayload) => {
     ...(thisUser && { user: thisUser._id }),
     userEmail: data.userEmail,
     userPhone: data.userPhone,
+    userName: data.userName,
     orderNumber: await generateOrderNumber(Order.find()),
   };
 
@@ -381,6 +382,48 @@ const admingetAllOrdersFromDb = async (query: AdminOrderQuery) => {
         },
       },
     },
+    // Lookup product supplier for each order item
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "productLookup",
+      },
+    },
+    {
+      $addFields: {
+        items: {
+          $map: {
+            input: "$items",
+            as: "item",
+            in: {
+              $mergeObjects: [
+                "$$item",
+                {
+                  supplier: {
+                    $ifNull: [
+                      {
+                        $arrayElemAt: [
+                          "$productLookup.supplier",
+                          {
+                            $indexOfArray: [
+                              "$productLookup._id",
+                              "$$item.productId",
+                            ],
+                          },
+                        ],
+                      },
+                      "gadgetgrid",
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
     { $sort: sort },
     { $skip: skip },
     { $limit: limit },
@@ -392,6 +435,7 @@ const admingetAllOrdersFromDb = async (query: AdminOrderQuery) => {
         "userInfo.opt": 0,
         "userInfo.userType": 0,
         "userInfo.isVerified": 0,
+        productLookup: 0,
       },
     },
   ]);
@@ -416,9 +460,13 @@ const admingetAllOrdersFromDb = async (query: AdminOrderQuery) => {
 };
 
 const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
-  const result = Order.findOne({ orderNumber })
+  const result = await Order.findOne({ orderNumber })
     .populate("user")
     .populate([
+      {
+        path: "items.productId",
+        select: "supplier",
+      },
       {
         path: "statusHistory.updatedBy",
         select: "fullName name email profilePicture role",
@@ -430,6 +478,21 @@ const getOrderByOrderNumberFormDB = async (orderNumber: string) => {
         ],
       },
     ]);
+
+  if (result) {
+    const plain = result.toObject();
+    plain.items = plain.items.map((item) => {
+      const product = item.productId as any;
+      return {
+        ...item,
+        supplier: product?.supplier || "gadgetgrid",
+        productId:
+          typeof product === "object" ? product._id.toString() : product,
+      } as any;
+    });
+    return plain;
+  }
+
   return result;
 };
 

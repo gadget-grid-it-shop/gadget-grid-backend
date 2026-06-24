@@ -204,6 +204,10 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       required: true,
     },
+    userName: {
+      type: String,
+      required: true,
+    },
     notes: {
       type: String,
       trim: true,

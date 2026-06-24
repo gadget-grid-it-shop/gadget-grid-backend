@@ -30,6 +30,8 @@ export const createProductValidationSchema = z.object({
   sku: z.string({ required_error: "Product SKU is required" }),
   brand: z.string({ required_error: "Product brand is required" }),
   model: z.string().optional(),
+  supplier: z.enum(['iuddokta', 'dropshop', 'gadgetgrid']).optional(),
+  supplierProductLink: z.string().optional(),
   warranty: z.object({
     days: z.number(),
     lifetime: z.boolean(),

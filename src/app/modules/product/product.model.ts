@@ -57,6 +57,12 @@ const ProductSchema = new Schema<TProduct>(
       ref: "Brand",
     },
     model: { type: String, default: "" },
+    supplier: {
+      type: String,
+      enum: ['iuddokta', 'dropshop', 'gadgetgrid'],
+      default: 'gadgetgrid',
+    },
+    supplierProductLink: { type: String, default: '' },
     warranty: {
       days: { type: Number, default: 0 },
       lifetime: { type: Boolean, default: false },
