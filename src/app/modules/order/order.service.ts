@@ -15,6 +15,7 @@ import { TNotification } from "../notification/notification.interface";
 import { IAddress } from "../address/address.interface";
 import { EmailJobName, emailQueue } from "../../queues/email.queue";
 import { OrderJobName, orderQueue } from "./order.queue";
+import sendPurchaseEvent from "../../utils/sendMetaPurchaseEvent";
 
 let stripe: Stripe | null = null;
 
@@ -111,7 +112,11 @@ const getCartPriceDataFromDB = async (data: AddOrderPayload) => {
   return { shippingCost, taxAmount, totalAmount, subtotal, items };
 };
 
-const addOrderToDB = async (data: AddOrderPayload) => {
+const addOrderToDB = async (
+  data: AddOrderPayload,
+  clientIp?: string,
+  clientUserAgent?: string,
+) => {
   const thisUser = await User.findOne({ email: data.userEmail });
 
   const payload: Partial<IOrder> = {
@@ -146,6 +151,14 @@ const addOrderToDB = async (data: AddOrderPayload) => {
   payload.taxAmount = taxAmount;
   payload.totalAmount = totalAmount;
   payload.subtotal = subtotal;
+
+  payload.clientIp = clientIp || null;
+  payload.clientUserAgent = clientUserAgent || null;
+  payload.fbc = data?.fbc || null;
+  payload.fbp = data?.fbp || null;
+  payload.fbclid = data?.fbclid || null;
+
+  console.log({ payload });
 
   const order = await Order.create(payload);
 
@@ -532,6 +545,14 @@ const adminUpdateOrderToDB = async (
     },
     { new: true, runValidators: true },
   ).populate("user", "name email phone");
+
+  if (
+    updatedOrder &&
+    updateData.currentStatus === "confirmed" &&
+    !updatedOrder?.sentPurchaseEvent
+  ) {
+    await orderQueue.add(OrderJobName.sendMetaPurchaseEvent, updatedOrder);
+  }
 
   if (order && thisUser) {
     try {

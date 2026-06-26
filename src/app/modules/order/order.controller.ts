@@ -2,11 +2,16 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { OrderServices } from "./order.service";
+import { getClientIp } from "./order.utils";
+import { IOrder } from "./order.interface";
 
 const addOrder = catchAsync(async (req, res) => {
   const data = req.body;
 
-  const result = await OrderServices.addOrderToDB(data);
+  const userAgent = req.headers["user-agent"] || "";
+  const ip = getClientIp(req);
+
+  const result = await OrderServices.addOrderToDB(data, ip, userAgent);
 
   sendResponse(res, {
     success: true,

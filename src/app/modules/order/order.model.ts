@@ -221,6 +221,17 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       trim: true,
     },
+    fbc: {
+      type: String,
+    },
+    fbp: {
+      type: String,
+    },
+    fbclid: { type: String },
+    clientIp: { type: String },
+    clientUserAgent: { type: String },
+    eventId: { type: String },
+    sentPurchaseEvent: { type: Boolean, default: false },
   },
   {
     timestamps: true,

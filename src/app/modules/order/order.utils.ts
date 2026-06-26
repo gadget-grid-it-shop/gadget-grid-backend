@@ -1,12 +1,12 @@
-import { Model, Query } from "mongoose";
+import { Query } from "mongoose";
 import { TProduct } from "../product/product.interface";
 import Deal from "../deals/deals.model";
-import { TAttributeOption } from "../attribute/attribute.interface";
 import { AddOrderPayload, IOrderItem } from "./order.interface";
 import FlashSale from "../flashSales/flashSale.model";
 import { Product } from "../product/product.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
+import { Request } from "express";
 
 export const calculateDiscountPrice = (
   price: number,
@@ -216,4 +216,22 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
     activeDeals,
     activeSale,
   };
+};
+
+export const getClientIp = (req: Request): string => {
+  const ip =
+    // Cloudflare
+    (req.headers["cf-connecting-ip"] as string) ||
+    // Most common proxy header
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    // Alternative
+    (req.headers["x-real-ip"] as string) ||
+    // Express default
+    req.ip ||
+    // Fallbacks
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    "127.0.0.1";
+
+  return ip;
 };

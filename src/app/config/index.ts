@@ -25,4 +25,6 @@ export default {
   stripe_secret_key: process.env.STRIPE_SECRET_KEY,
   stripe_publishe_key: process.env.STRIPE_PUBLISH_KEY,
   stripe_enpoint_secret: process.env.STRIPE_ENDPOINT_SECRET,
+  meta_pixel_id: process.env.META_PIXEL_ID,
+  meta_capi_access_token: process.env.META_CAPI_ACCESS_TOKEN,
 };

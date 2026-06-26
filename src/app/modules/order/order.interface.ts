@@ -49,6 +49,7 @@ export interface IPaymentDetails {
 
 // Main Order Interface
 export interface IOrder {
+  _id: Types.ObjectId;
   user: Types.ObjectId;
   trackingNumber?: string;
   userEmail: string;
@@ -82,6 +83,13 @@ export interface IOrder {
     | "returned";
   shippingMethod: "inside" | "outside";
   notes?: string;
+  fbc?: string | null;
+  fbp?: string | null;
+  fbclid?: string | null;
+  clientIp?: string | null;
+  clientUserAgent?: string | null;
+  eventId: string;
+  sentPurchaseEvent: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,4 +113,7 @@ export type AddOrderPayload = {
   shippingMethod: "inside" | "outside";
   notes?: string;
   saveAddress?: boolean;
+  fbc?: string | null;
+  fbp?: string | null;
+  fbclid?: string | null;
 };
