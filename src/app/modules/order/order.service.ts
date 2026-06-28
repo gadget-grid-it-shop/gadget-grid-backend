@@ -158,8 +158,6 @@ const addOrderToDB = async (
   payload.fbp = data?.fbp || null;
   payload.fbclid = data?.fbclid || null;
 
-  console.log({ payload });
-
   const order = await Order.create(payload);
 
   if (data.saveAddress && thisUser) {
