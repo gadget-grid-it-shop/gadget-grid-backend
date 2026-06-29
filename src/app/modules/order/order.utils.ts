@@ -196,7 +196,7 @@ export const calculateOrderPricing = async (data: AddOrderPayload) => {
     0,
   );
 
-  const shippingCost = data.shippingMethod === "inside" ? 80 : 120;
+  const shippingCost = data.shippingMethod === "inside" ? 80 : 130;
 
   const taxAmount = items.reduce(
     (acc, item) => acc + item.tax * item.quantity,
