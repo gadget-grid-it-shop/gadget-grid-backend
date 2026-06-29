@@ -12,7 +12,7 @@ const addNotificationToDB = async (payload: TNotification) => {
 
 const getMyNotificationsFromDB = async (
   user: Types.ObjectId,
-  query: Record<string, unknown>
+  query: Record<string, unknown>,
 ) => {
   const unreadCount = await Notification.countDocuments({
     userTo: new ObjectId(user),
@@ -30,7 +30,7 @@ const getMyNotificationsFromDB = async (
 
   const notificationQuery = new QueryBuilder(
     Notification.find({ userTo: new ObjectId(user) }),
-    newQuery
+    newQuery,
   ).sort();
 
   await notificationQuery.paginate();
@@ -73,7 +73,28 @@ const getMyNotificationsFromDB = async (
     pagination,
   };
 };
+
+const markNotificationAsSeenToDB = async (id: string, user: Types.ObjectId) => {
+  const result = await Notification.findOneAndUpdate(
+    { _id: id, userTo: user },
+    { $set: { opened: true } },
+  );
+
+  return result;
+};
+
+const markAllNotificationSeenToDB = async (user: Types.ObjectId) => {
+  const result = await Notification.updateMany(
+    { userTo: user, opened: false },
+    { $set: { opened: true } },
+  );
+
+  return result;
+};
+
 export const NotificationService = {
   addNotificationToDB,
   getMyNotificationsFromDB,
+  markNotificationAsSeenToDB,
+  markAllNotificationSeenToDB,
 };

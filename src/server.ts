@@ -3,7 +3,6 @@ import app from "./app";
 import config from "./app/config";
 import { Server } from "http";
 import { initializeSocketIO } from "./socket";
-import Notification from "./app/modules/notification/notification.model";
 import { ValidateIOAuth } from "./app/middleware/socketAuth";
 import {
   ProductJobName,
@@ -35,29 +34,6 @@ const main = async () => {
         socket.join("admins");
       });
 
-      socket.on("notificationClicked", async (id) => {
-        const user = socket.user?.userData?._id;
-        console.log(user);
-        try {
-          const res = await Notification.findByIdAndUpdate(id, {
-            opened: true,
-          });
-          io.to(`${String(user)}`).emit("notificationRead", res);
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
-      socket.on("markAllRead", async () => {
-        const user = socket.user?.userData?._id;
-        const updateAll = await Notification.updateMany(
-          { userTo: user },
-          { opened: true }
-        );
-        if (updateAll) {
-          io.to(`${String(user)}`).emit("markedAllasRead");
-        }
-      });
     });
   } catch (err) {
     console.log("Something went wrong", err);
