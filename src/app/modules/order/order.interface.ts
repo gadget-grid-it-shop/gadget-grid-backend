@@ -106,7 +106,7 @@ export type AddOrderPayload = {
   }[];
   billingAddress: IAddress;
   shippingAddress: IAddress;
-  userEmail: string;
+  userEmail?: string;
   userPhone: string;
   userName: string;
   paymentMethod: "card" | "paypal" | "bank_transfer" | "cod";

@@ -207,7 +207,6 @@ const orderSchema = new Schema<IOrder>(
     },
     userEmail: {
       type: String,
-      required: true,
     },
     userPhone: {
       type: String,

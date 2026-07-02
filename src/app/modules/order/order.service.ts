@@ -117,7 +117,9 @@ const addOrderToDB = async (
   clientIp?: string,
   clientUserAgent?: string,
 ) => {
-  const thisUser = await User.findOne({ email: data.userEmail });
+  const thisUser = data.userEmail
+    ? await User.findOne({ email: data.userEmail })
+    : null;
 
   const payload: Partial<IOrder> = {
     billingAddress: data.billingAddress,
@@ -136,7 +138,7 @@ const addOrderToDB = async (
       },
     ],
     ...(thisUser && { user: thisUser._id }),
-    userEmail: data.userEmail,
+    userEmail: data.userEmail || "",
     userPhone: data.userPhone,
     userName: data.userName,
     orderNumber: await generateOrderNumber(Order.find()),
@@ -264,7 +266,7 @@ const addOrderToDB = async (
       client_reference_id: order._id.toString(),
       metadata: {
         orderId: order._id.toString(),
-        userEmail: data.userEmail,
+        userEmail: data.userEmail || "",
         userPhone: data.userPhone,
         ...(thisUser && { userRole: thisUser.role }),
         company: "Gadget Grid",
