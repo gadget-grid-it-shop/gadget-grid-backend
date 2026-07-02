@@ -7,6 +7,7 @@ import { SettingsController } from "../settings/settings.controller";
 import { validateRequest } from "../../middleware/validateRequest";
 import orderValidations from "../order/order.validation";
 import { OrderController } from "../order/order.controller";
+import { AnalyticsController } from "../analytics/analytics.controller";
 
 const router = Router();
 
@@ -54,5 +55,8 @@ router.post("/login", AuthController.userLogin);
 
 // ==== pc builder ====
 router.get("/settings/pc-builder", SettingsController.getPcBuilder);
+
+// =============== analytics (no auth required) ================
+router.post("/analytics/track", AnalyticsController.trackEvent);
 
 export const CustomerRoutes = router;
