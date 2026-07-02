@@ -2,6 +2,9 @@ import { AnalyticsEvent } from "./analytics.model";
 import { IAnalyticsEvent } from "./analytics.interface";
 import QueryBuilder from "../../builder/queryBuilder";
 import { TPagination } from "../product/product.interface";
+import { Product } from "../product/product.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const excludeFields = ["searchTerm", "sort", "limit", "page", "fields"];
 
@@ -91,8 +94,17 @@ const getEventStatsFromDB = async (query: Record<string, unknown>) => {
 };
 
 const getProductStatsFromDB = async (productId: string) => {
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      `Product with id ${productId} not found`,
+    );
+  }
+
   const stats = await AnalyticsEvent.aggregate([
-    { $match: { product: productId as any } },
+    { $match: { productSlug: product.slug as any } },
     {
       $group: {
         _id: "$eventType",
@@ -102,7 +114,12 @@ const getProductStatsFromDB = async (productId: string) => {
         totalRevenue: {
           $sum: {
             $cond: [
-              { $and: [{ $eq: ["$eventType", "purchase"] }, { $ifNull: ["$productPrice", false] }] },
+              {
+                $and: [
+                  { $eq: ["$eventType", "purchase"] },
+                  { $ifNull: ["$productPrice", false] },
+                ],
+              },
               "$productPrice",
               0,
             ],
@@ -122,7 +139,10 @@ const getProductStatsFromDB = async (productId: string) => {
     { $sort: { count: -1 } },
   ]);
 
-  const total = stats.reduce((sum: number, s: { count: number }) => sum + s.count, 0);
+  const total = stats.reduce(
+    (sum: number, s: { count: number }) => sum + s.count,
+    0,
+  );
 
   return { stats, totalEvents: total };
 };
@@ -131,7 +151,11 @@ const getTopProductsFromDB = async (limit: number = 10) => {
   const topProducts = await AnalyticsEvent.aggregate([
     {
       $group: {
-        _id: { product: "$product", productSlug: "$productSlug", productName: "$productName" },
+        _id: {
+          product: "$product",
+          productSlug: "$productSlug",
+          productName: "$productName",
+        },
         pageViews: {
           $sum: { $cond: [{ $eq: ["$eventType", "pageView"] }, 1, 0] },
         },
@@ -145,7 +169,12 @@ const getTopProductsFromDB = async (limit: number = 10) => {
         revenue: {
           $sum: {
             $cond: [
-              { $and: [{ $eq: ["$eventType", "purchase"] }, { $ifNull: ["$productPrice", false] }] },
+              {
+                $and: [
+                  { $eq: ["$eventType", "purchase"] },
+                  { $ifNull: ["$productPrice", false] },
+                ],
+              },
               "$productPrice",
               0,
             ],
